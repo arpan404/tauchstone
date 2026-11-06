@@ -33,11 +33,19 @@ def processed(tmp_path: Path) -> Path:
         {"sample_id": "s3", "group": "AD", "included": False},
     ]), base / "signatures" / "GSE132903__samples.parquet")
     _write(pd.DataFrame([
-        {"rank": 1, "pert_id": "BRD-1", "pert_iname": "Tiny drug",
+        {"col": 0, "entrez_id": "2532"},
+        {"col": 1, "entrez_id": "1746"},
+        {"col": 2, "entrez_id": "1234"},
+    ]), base / "lincs" / "landmark_order.parquet")
+    _write(pd.DataFrame([
+        {"pool_rank": 1, "rank": 3, "pert_id": "BRD-1", "pert_iname": "tiny drug",
          "consensus_median": -2.0, "consensus_q25": -2.2, "consensus_q75": -1.8,
-         "n_ranking_contexts": 4, "n_held_out_contexts": 2,
-         "z_wtcs_median": -1.9, "z_ks_median": -2.0, "z_cosine_median": -2.1},
-    ]), base / "scores" / "GSE132903__main__compound_ranking.parquet")
+         "consensus_iqr": 0.4, "n_ranking_contexts": 4,
+         "z_wtcs_median": -1.9, "z_ks_median": -2.0, "z_cosine_median": -2.1,
+         "chembl_id": "CHEMBL1", "drug_name": "TINY DRUG", "max_clinical_stage": "APPROVAL",
+         "stage_num": 4, "drug_type": "small molecule", "parent_chembl_id": None,
+         "match": "inchikey", "pool": "clinical", "is_demo": True},
+    ]), base / "scores" / "GSE132903__main__candidate_pool.parquet")
     _write(pd.DataFrame([
         {"pert_id": "BRD-1", "context_id": "MCF7|10 uM|24 h", "split": "ranking",
          "cell_id": "MCF7", "pert_idose": "10 uM", "pert_itime": "24 h", "consensus": -2.0,
@@ -80,9 +88,9 @@ def processed(tmp_path: Path) -> Path:
          "resolution_angstrom": 2.0, "local_path": "/structures/1ABC.cif"},
     ]), base / "evidence" / "structures.parquet")
     _write(pd.DataFrame([
-        {"candidate_id": "BRD-1", "context_id": "held_out_cohort:GSE173955",
+        {"candidate_id": "BRD-1", "context_id": "GSE173955",
          "context_type": "held_out_cohort", "label": "GSE173955", "value": -2.0,
-         "threshold": -1.8, "outcome": "survive", "rule": "top-5% rule",
+         "threshold": None, "outcome": "survive", "rule": "top-25% rule",
          "tissue": "brain", "region": "hippocampus", "platform": "RNA-seq TPM",
          "cell_id": None, "pert_idose": None, "pert_itime": None},
     ]), base / "tauchstone" / "truth_table.parquet")
@@ -122,7 +130,9 @@ def test_candidates_ranking_only(processed):
     cl = CandidateList.model_validate(repo.list_candidates(10))
     assert cl.n_ranked == 1
     cand = cl.candidates[0]
+    assert cand.rank == 1 and cand.name == "Tiny Drug"
     assert cand.by_cell_line[0].cell_id == "MCF7"  # held-out A549 row excluded
+    assert cand.n_held_out_contexts == 1
     assert cand.is_demo_candidate is True
 
 
