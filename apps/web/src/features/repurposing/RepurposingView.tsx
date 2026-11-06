@@ -206,7 +206,7 @@ export function RepurposingView() {
         )}
         {data && (
           <>
-            <section aria-label="Candidate comparison">
+            {compared.length > 0 && <section aria-label="Candidate comparison">
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -248,11 +248,11 @@ export function RepurposingView() {
                             <tr key={c.id}>
                               <td>{c.name}</td>
                               <td>{c.rank}</td>
-                              <td>{c.consensus}</td>
-                              <td>{c.consensus_iqr.join(" to ")}</td>
-                              <td>{c.scores.wtcs}</td>
-                              <td>{c.scores.ks}</td>
-                              <td>{c.scores.cosine}</td>
+                              <td>{c.consensus.toFixed(3)}</td>
+                              <td>{c.consensus_iqr.map(value => value.toFixed(3)).join(" to ")}</td>
+                              <td>{c.scores.wtcs.toFixed(3)}</td>
+                              <td>{c.scores.ks.toFixed(3)}</td>
+                              <td>{c.scores.cosine.toFixed(3)}</td>
                               <td>{c.n_ranking_contexts}</td>
                               <td>
                                 <Button
@@ -275,7 +275,7 @@ export function RepurposingView() {
                   </div>
                 </CardContent>
               </Card>
-            </section>
+            </section>}
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
               <section
                 aria-label="Candidate inspector"
@@ -293,12 +293,12 @@ export function RepurposingView() {
                           Consensus {selected.consensus.toFixed(3)}
                         </p>
                         <p>
-                          IQR {selected.consensus_iqr.join(" to ")} ·{" "}
+                          IQR {selected.consensus_iqr.map(value => value.toFixed(3)).join(" to ")} ·{" "}
                           {selected.n_ranking_contexts} ranking contexts
                         </p>
                         <p>
-                          WTCS {selected.scores.wtcs} · KS {selected.scores.ks}{" "}
-                          · Cosine {selected.scores.cosine}
+                          WTCS {selected.scores.wtcs.toFixed(3)} · KS {selected.scores.ks.toFixed(3)}{" "}
+                          · Cosine {selected.scores.cosine.toFixed(3)}
                         </p>
                         <div className="flex flex-wrap gap-4">
                           <Button
