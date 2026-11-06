@@ -1,5 +1,6 @@
-import { useSignature } from '@/api/hooks';
+import { useSignature, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
+import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,10 +9,12 @@ import { VolcanoPlot } from './VolcanoPlot';
 
 export function DiseaseSignatureView() {
   const { data, isLoading, isError } = useSignature('GSE132903');
+  const mockData = useMockStatus(data?.provenance);
 
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
+      <MockRibbon show={mockData} />
       <div className="flex-1 space-y-4 overflow-auto p-4">
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           <h2 className="text-xl font-semibold">Disease signature</h2>

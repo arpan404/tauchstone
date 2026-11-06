@@ -1,7 +1,8 @@
-import { useCandidates } from '@/api/hooks';
-import type { Schema } from '@/api/schema';
+import { useCandidates, useMockStatus } from '@/api/hooks';
+import type { Schema } from '@/api/types';
 import { MOCK_CELL_LINES } from '@/api/mock/candidates';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
+import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,13 +54,18 @@ function CandidateRow({
   const bar = iqrBar(c.consensus_iqr[0], c.consensus_iqr[1], iqrMin, iqrMax);
   return (
     <tr
+      role="button"
+      tabIndex={0}
+      aria-label={`Select ${c.name}, rank ${c.rank}, consensus ${c.consensus.toFixed(2)}`}
       onClick={onSelect}
       onKeyDown={(e) => {
-        if (e.key === 'Enter') onSelect();
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect();
+        }
       }}
-      tabIndex={0}
       aria-selected={selected}
-      className={`cursor-pointer border-b border-neutral-100 tabular-nums hover:bg-teal-50/50 ${
+      className={`cursor-pointer border-b border-neutral-100 tabular-nums hover:bg-teal-50/50 focus-visible:bg-teal-50/50 focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-inset focus-visible:outline-none ${
         selected ? 'bg-teal-50' : ''
       } ${c.is_demo_candidate ? 'border-l-2 border-l-teal-700' : ''}`}
     >
@@ -108,6 +114,7 @@ function CandidateRow({
 
 export function RepurposingView() {
   const { data, isLoading, isError } = useCandidates(50);
+  const mockData = useMockStatus(data?.provenance);
   const { selectedCandidateId, selectCandidate, setStep } = useUi();
   const [showTop, setShowTop] = useState(12);
 
@@ -126,6 +133,7 @@ export function RepurposingView() {
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
+      <MockRibbon show={mockData} />
       <div className="flex-1 space-y-4 overflow-auto p-4">
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
           <h2 className="text-xl font-semibold">Repurposing candidates</h2>

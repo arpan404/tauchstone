@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildVolcanoOption, classOf, toVolcanoPoints } from './volcanoOption';
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 type GeneStat = Schema<'GeneStat'>;
 

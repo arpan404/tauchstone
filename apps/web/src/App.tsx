@@ -1,4 +1,4 @@
-import { isMockMode } from '@/api/mock';
+import { useMockStatus } from '@/api/hooks';
 import { BenchmarkView } from '@/features/benchmark/BenchmarkView';
 import { DiseaseSignatureView } from '@/features/disease-signature/DiseaseSignatureView';
 import { EvidenceView } from '@/features/evidence/EvidenceView';
@@ -18,7 +18,7 @@ const VIEWS: Record<StepId, () => React.JSX.Element> = {
 
 export default function App() {
   const { step, setStep } = useUi();
-  const mock = isMockMode();
+  const mock = useMockStatus();
   const View = VIEWS[step];
 
   // Keyboard: 1–5 jump between steps.
