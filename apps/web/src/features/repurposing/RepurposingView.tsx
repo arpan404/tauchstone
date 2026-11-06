@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useUi } from "@/store/ui";
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
@@ -62,11 +62,11 @@ export function RepurposingView() {
     <div className="candidate-workspace flex h-full min-h-0 flex-col bg-background text-foreground">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          <h2 className="text-lg font-semibold">Repurposing candidates</h2>
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-auto p-5 lg:p-7">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <h2 className="text-[22px] font-semibold tracking-tight">Repurposing candidates</h2>
           {data && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {data.n_ranked} compounds ranked · signature {data.signature}
             </p>
           )}
@@ -75,23 +75,14 @@ export function RepurposingView() {
               <Tooltip>
                 <TooltipTrigger
                   aria-label={`Permutation control: ${perm.passed ? "passed" : "top-20 not all significant (gate: all 20 at p < 0.05)"}`}
-                  className="rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
                 >
-                  <span className="tabular-nums">
-                    Permutation control:{" "}
-                    <span
-                      className={
-                        perm.passed ? "text-primary" : "text-foreground"
-                      }
-                    >
-                      {perm.passed
-                        ? "passed"
-                        : "top-20 not all significant (gate: all 20 at p < 0.05)"}
-                    </span>
-                  </span>
+                  <Info className="size-3.5" aria-hidden="true" />
+                  <span>Permutation control</span>
+                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] text-secondary-foreground">{perm.passed ? "Passed" : "Gate unmet"}</span>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
-                  The disease labels are shuffled and the ranking is recomputed
+                  The gate requires all top-20 compounds at p &lt; 0.05. The disease labels are shuffled and the ranking is recomputed
                   ({perm.n_permutations ?? 200} permutations). The gate passes
                   only if all top-20 compounds beat the shuffled null at p &lt;
                   0.05.
@@ -207,14 +198,8 @@ export function RepurposingView() {
               </section>
 
               <section className="candidate-table-pane flex min-h-0 min-w-0 flex-col lg:col-start-1 lg:row-start-1">
-                <div className="mb-3 text-xs text-muted-foreground">
-                  <p>
-                    Discovery ranking · negative consensus = reversal. Select a
-                    row to inspect.
-                  </p>
-                </div>
                 <div className="flex min-h-0 flex-1 flex-col">
-                  <div className="mb-4 flex flex-wrap items-end gap-3">
+                  <div className="mb-3 flex flex-wrap items-end gap-3">
                     <div className="grid min-w-40 flex-1 gap-1.5">
                       <label htmlFor="candidate-search" className="text-xs text-muted-foreground">Search name or ID</label>
                       <div className="relative"><Search aria-hidden="true" className="absolute left-2.5 top-2 size-4 text-muted-foreground"/><Input id="candidate-search" aria-label="Search name or ID" className="pl-8" value={query} onChange={e => setQuery(e.target.value)} /></div>
@@ -228,10 +213,7 @@ export function RepurposingView() {
                     <Button variant="ghost" size="sm" onClick={() => {setQuery(""); setNegativeOnly(false); setSort("rank");}}>Clear controls</Button>
                   </div>
                   <p role="status" className="mb-2 text-xs text-muted-foreground">{candidates.length} of {data.candidates.length} loaded · {data.n_ranked} ranked</p>
-                  <p className="mb-3 text-xs">
-                    Filters use discovery ranking fields only. AD minus control;
-                    negative drug scores indicate reversal.
-                  </p>
+                  <p className="mb-3 text-[11px] text-muted-foreground">Negative consensus indicates reversal. Select a candidate to inspect its discovery scores.</p>
                   {candidates.length === 0 && (
                     <p>No candidates match these controls.</p>
                   )}
@@ -240,7 +222,7 @@ export function RepurposingView() {
                       <TableHeader className="sticky top-0 z-10 bg-card"><TableRow>
                         {["Rank", "Candidate", "Consensus", "Contexts"].map(h => <TableHead key={h}>{h}</TableHead>)}
                       </TableRow></TableHeader>
-                      <TableBody>{candidates.map(c => <TableRow key={c.id} aria-selected={c.id === selectedCandidateId} className={c.id === selectedCandidateId ? "bg-primary/10 hover:bg-primary/10" : ""}>
+                      <TableBody>{candidates.map(c => <TableRow key={c.id} aria-selected={c.id === selectedCandidateId} onClick={() => selectCandidate(c.id)} className={`cursor-pointer ${c.id === selectedCandidateId ? "bg-primary/8 hover:bg-primary/8" : ""}`}>
                         <TableCell className="font-mono text-xs text-muted-foreground">{c.rank}</TableCell>
                         <TableCell><Button variant="ghost" className="h-auto max-w-full justify-start px-1 py-0 text-left font-medium" aria-label={`Select ${c.name}, rank ${c.rank}, consensus ${c.consensus.toFixed(2)}`} onClick={() => selectCandidate(c.id)}><span className="truncate">{c.name}</span></Button></TableCell>
                         <TableCell className="font-mono text-xs tabular-nums">{c.consensus.toFixed(3)}</TableCell>
