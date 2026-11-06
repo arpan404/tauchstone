@@ -210,15 +210,7 @@ def _analyze(
             lo_e, hi_e = float(edges[i]), float(edges[i + 1])
             m = (pred >= lo_e) & (pred < hi_e if i < 9 else pred <= hi_e)
             if m.sum() == 0:
-                calibration.append(
-                    {
-                        "bin_lo": lo_e,
-                        "bin_hi": hi_e,
-                        "mean_predicted": float("nan"),
-                        "observed_rate": float("nan"),
-                        "n": 0,
-                    }
-                )
+                continue  # empty bins carry no estimate; omit them rather than emit NaN
             else:
                 calibration.append(
                     {
