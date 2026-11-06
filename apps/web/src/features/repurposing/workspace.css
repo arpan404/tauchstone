@@ -1,0 +1,12 @@
+.candidate-workspace [data-slot="card"] { background: var(--card); border: 1px solid var(--border); box-shadow: none; border-radius: 10px; gap: 12px; }
+.candidate-workspace .candidate-results { flex: 1; min-height: 220px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); }
+.candidate-workspace .candidate-results [data-slot="table-container"] { overflow: visible; }
+.candidate-workspace .candidate-results [data-slot="table-row"] { height: 44px; }
+.candidate-workspace .candidate-results [data-slot="table-cell"] { padding-block: 4px; }
+.candidate-workspace .candidate-results [data-slot="table"] { table-layout: fixed; }
+.candidate-workspace .candidate-results [data-slot="table-head"]:first-child { width: 54px; }
+.candidate-workspace .candidate-results [data-slot="table-head"]:nth-child(3) { width: 100px; }
+.candidate-workspace .candidate-results [data-slot="table-head"]:last-child { width: 80px; }
+@media (width < 1024px) { .candidate-workspace .candidate-results { height: 480px; } }
+
+.candidate-workspace .candidate-table-pane { overflow: hidden; }
