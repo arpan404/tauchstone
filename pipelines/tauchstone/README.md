@@ -45,18 +45,44 @@ Attack/Learn policies, replay benchmark, calibration. Output:
    tiny test worlds) are skipped for the fragile-recall CI.
 10. `select_lambda` uses 5 dev seeds `[20261105..20261109]` (spec fixes 20 seeds
     for the benchmark pool only); ties break toward the smaller lambda.
-11. No-data brain exposure = fail (spec: "no measured data = fail"); its
-    `value`/`threshold` are null (measures are heterogeneous; see evidence card).
+11. No *measured* exposure rows for a candidate = the `brain_exposure` context is
+    absent from S_d (untestable, not a failure); fail only when measured values
+    sit below the thresholds. Its `value`/`threshold` are null (measures are
+    heterogeneous; see evidence card).
 12. Cohort/adjusted truth rows carry `threshold: null` — the 5% rule is
     rank-based, so no scalar threshold exists. Theta is read from the primary
     permutation summary's provenance sidecar (`parameters.theta*`), falling
     back to a `theta` column.
+13. Step-0 rows carry `context_id: null`, `p_survive_before: NaN`,
+    `outcome: null`; Brier and calibration use step >= 1 only. `t_correct = 0`
+    when the step-0 verdict is decisive and matches the full-information
+    verdict.
+14. The oracle (`replay.ORACLE_POLICY`) picks the hidden context whose true
+    outcome moves P(C) furthest toward the full-information verdict (ties:
+    lower `context_id`). Synthetic dry-runs only; `summarize` filters rows to
+    `engine.POLICIES`, so the oracle can never leak into a real summary.
+15. `summarize` returns `{"contested", "all", "contested_share"}`; both blocks
+    have Benchmark-schema shape `{n_candidates, n_seeds, budget, policies,
+    calibration, tests}`. `build_summary` puts the contested (primary)
+    analysis at the top level and the same-shape all-candidates block under
+    `all_candidates` (+ `contested_share` in both places).
+16. Cross-type pairs (e.g. held-out cohort vs composition-adjusted) stay 0.1
+    even with identical platform/region; the "decisive structure" a smart
+    policy exploits is same-cell LINCS blocks (>= 0.7 mutual similarity).
 
 ## Synthetic world
 
-`make_synthetic_world(n, seed)`: latent robustness `rho ~ Beta(2,2)` per
-candidate; context survive probability = mean of `rho` and a type base rate,
-so same-candidate contexts are correlated and similarity weighting matters.
+`make_synthetic_world(n, seed)`: latent robustness `rho ~ Beta(2.0, 1.6)` plus a
+per-candidate per-cell-line latent effect `Uniform(0, 1)`; a LINCS context's
+survive probability = 0.5·rho + 0.3·(type base rate) + 0.2·(cell effect),
+clipped to [0.05, 0.95]; cohort/adjusted/exposure mix rho with their base rate
+only. Hidden LINCS contexts sit in two 3-context same-cell blocks plus one
+singleton; the 5 ranking observations land in the same cells, so similarity
+weighting can exploit the blocks. Brain exposure is included with probability
+0.6 (mirroring "no measured data → not in S_d"). Calibrated on seed 20261105
+(n=100): claim-holds rate 0.42, contested share 0.63 — asserted by
+`test_synthetic_world_calibration_claim_rate_and_contested_share`.
 `dry_run_synthetic` splits 100 candidates into benchmark pool (first 50) and
-development pool (ranks 51–100 analog), selects lambda on dev, and writes to
+development pool (ranks 51–100 analog), selects lambda on dev, replays the
+pool with the six policies plus the oracle, and writes to
 `processed/tauchstone/synthetic/` only, labelled synthetic.
