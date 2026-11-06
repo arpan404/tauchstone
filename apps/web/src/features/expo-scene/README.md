@@ -49,3 +49,27 @@ tests and check:api pass. Other existing lint warnings remain. `make test`
 reported 138 passed, 36 skipped and the same missing local LINCS
 sig_info.parquet failure. Real-data visibility from 3m and offline bundle
 verification remain with the orchestrator; there is no real-data bundle here.
+
+## Readout follow-up
+
+The centre readout now has an opaque graphite plate, larger type and its own SVG
+probability ring. The ring transitions to each API P(claim) update over 650ms;
+reduced motion disables that transition. The old Three.js ring is removed so it
+cannot disappear behind the plate. No extra WebGL geometry or rendering loop.
+
+The remaining-test readout matches Attack: minimum of budget remaining and the
+number of contexts whose status is hidden. One hidden test with budget 4 now
+reads `1 test left`. Validation is disabled when that count reaches zero.
+
+Dense synthetic 16k-point checks from the normal app passed at 1280×800 and
+1920×1080, reporting 61 and 60 fps respectively. Screenshots:
+`evidence/readout-1280.jpg`, `evidence/readout-1920.jpg`. A validation changed
+P(claim) from 0.62 to 0.6884 and the ring from 62% to 68.84%; Escape closed the
+scene. Real-data and physical 3m viewing remain for the orchestrator.
+
+Build, typecheck, lint, 48 web tests and check:api pass. Existing lint warnings
+remain; no new warnings. Regression tests cover two available contexts under a
+five-test budget, one remaining context under budget 4, exhaustion, budget caps,
+and paired numeric/ring updates. `make test`: 138 passed, 36 skipped, one missing
+LINCS sig_info.parquet failure. Offline check remains skipped because the
+real-data bundle is absent on this Mac.
