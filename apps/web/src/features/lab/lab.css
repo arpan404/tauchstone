@@ -1,1 +1,53 @@
-.research-lab{--background:#f7f8fa;--card:#fefefe;--foreground:#20242d;--primary:#3667d9;background:var(--background);color:var(--foreground);padding:24px;font-family:'Geist Variable',sans-serif}.research-lab header{padding:24px 0}.research-lab h1,.research-lab h2,.research-lab h3{font-family:'Manrope Variable',sans-serif}.research-lab h1{font-size:30px}.research-lab h2{font-size:21px;margin:20px 0 12px}.research-lab p{line-height:1.7;max-width:75ch;margin:12px 0}.lab-columns{display:grid;grid-template-columns:minmax(0,2fr) minmax(220px,1fr);gap:32px;margin-top:24px}.lab-columns section{background:var(--card);padding:24px;border:1px solid var(--border);border-radius:12px}.lab-columns aside{border-left:1px solid var(--border);padding-left:24px}.lab-transcript{min-height:220px}.lab-transcript article{padding:16px 0;border-bottom:1px solid var(--border)}.lab-answer{white-space:pre-wrap}.lab-suggestions{display:flex;flex-wrap:wrap;gap:8px}.research-lab form{display:grid;gap:12px;margin-top:20px}.research-lab form button{justify-self:end}.research-lab pre{white-space:pre-wrap;overflow-wrap:anywhere}.research-lab th,.research-lab td{text-align:left;padding:10px 24px 10px 0;border-bottom:1px solid var(--border)}@media(max-width:700px){.lab-columns{grid-template-columns:1fr}.lab-columns aside{border-left:0;padding-left:0}.research-lab{padding:16px}}
+.research-lab { background: var(--background); color: var(--foreground); }
+.lab-page-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 24px 28px 16px; }
+.lab-page-heading h1 { font-size: 23px; font-weight: 650; }
+.lab-page-heading p { margin-top: 5px; font-size: 12px; color: var(--muted-foreground); }
+.lab-page-tabs { flex: 1; min-height: 0; gap: 0; }
+.lab-tab-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 0 28px 10px; border-bottom: 1px solid var(--border); }
+.lab-provider-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted-foreground); }
+.copilot-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 280px; height: 100%; min-height: 0; }
+.copilot-conversation { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.copilot-transcript { flex: 1; min-height: 180px; overflow-y: auto; padding: 28px 32px; }
+.copilot-empty { display: flex; flex-direction: column; justify-content: center; min-height: 240px; max-width: 520px; margin: auto; }
+.copilot-icon { display: flex; align-items: center; justify-content: center; flex: none; width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 14px; color: var(--primary); background: var(--card); }
+.copilot-empty h2 { margin-top: 24px; font-size: 23px; font-weight: 600; }
+.copilot-empty p { margin-top: 12px; color: var(--muted-foreground); font-size: 13px; line-height: 1.8; }
+.copilot-turn { max-width: 760px; padding-bottom: 28px; margin: auto; }
+.copilot-turn h3 { font-size: 16px; font-weight: 600; line-height: 1.6; }
+.copilot-answer-label { margin: 18px 0 8px; font-size: 11px; color: var(--muted-foreground); }
+.copilot-answer { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; font-size: 13px; margin-bottom: 16px; }
+.copilot-composer { padding: 12px 28px 20px; }
+.copilot-composer form { border: 1px solid var(--input); border-radius: 12px; overflow: hidden; background: var(--card); box-shadow: 0 2px 8px #20242d04; }
+.copilot-sources { min-width: 0; overflow-y: auto; padding: 28px 22px; border-left: 1px solid var(--border); background: var(--card); }
+.lab-no-candidate { display: grid; justify-items: start; align-content: center; max-width: 560px; min-height: 360px; gap: 20px; margin: auto; padding: 32px; }
+.lab-no-candidate h2 { font-size: 23px; font-weight: 600; }
+.model-studio { max-width: 1000px; padding: 28px; margin: auto; }
+.studio-intro { display: flex; align-items: flex-start; gap: 20px; }
+.studio-intro h2 { font-size: 23px; font-weight: 600; }
+.studio-intro p { max-width: 660px; margin-top: 10px; color: var(--muted-foreground); font-size: 13px; line-height: 1.8; }
+.studio-training-plan { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; margin: 28px 0; padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--card); }
+.studio-training-plan div { display: grid; gap: 6px; }
+.studio-training-plan span, .studio-training-plan small { font-size: 11px; color: var(--muted-foreground); }
+.studio-training-plan strong { font-size: 13px; font-weight: 500; }
+.studio-results { padding-top: 28px; }
+.studio-results h3 { font-size: 14px; font-weight: 600; }
+.studio-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 24px 0; }
+.studio-metrics dt { font-size: 11px; color: var(--muted-foreground); }
+.studio-metrics dd { margin-top: 8px; font: 22px var(--font-readout); }
+.studio-predict { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 24px 0 16px; margin-top: 24px; border-top: 1px solid var(--border); }
+.studio-predict p { max-width: 550px; margin-top: 6px; font-size: 12px; color: var(--muted-foreground); line-height: 1.7; }
+.studio-details { margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 12px; color: var(--muted-foreground); line-height: 1.8; }
+.studio-details summary { cursor: pointer; color: var(--foreground); }
+.studio-details p, .studio-details ul { margin-top: 12px; }
+.studio-details li { margin: 6px 0 6px 16px; list-style: disc; }
+.studio-details pre { margin-top: 16px; font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .copilot-workspace { grid-template-columns: minmax(0, 1fr) 230px; } .lab-provider-status { max-width: 220px; } }
+@media (max-width: 767px) {
+  .lab-page-heading { padding: 20px 16px 12px; } .lab-tab-toolbar { padding: 0 16px 12px; }
+  .copilot-workspace { display: flex; flex-direction: column; height: auto; } .copilot-transcript { padding: 24px 16px; overflow: visible; }
+  .copilot-empty { min-height: 200px; } .copilot-composer { padding: 12px 16px 20px; }
+  .copilot-sources { padding: 24px 16px; border-left: 0; border-top: 1px solid var(--border); }
+  .model-studio { padding: 24px 16px; } .studio-intro { flex-direction: column; }
+  .studio-training-plan { flex-direction: column; align-items: flex-start; } .studio-training-plan > svg { transform: rotate(90deg); }
+  .studio-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

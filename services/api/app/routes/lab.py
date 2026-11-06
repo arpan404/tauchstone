@@ -161,12 +161,14 @@ def display_value(value):
         return "unspecified"
     if isinstance(value, bool):
         return "yes" if value else "no"
+    if isinstance(value, float):
+        return f"{value:.4g}"
     return str(value)
 
 
 def readable(fields):
     """Deterministic formatting; numbers and assertions come only from admitted fields."""
-    return "; ".join(f"{key.replace('_', ' ')}: {display_value(value)}"
+    return "\n".join(f"{key.replace('_', ' ').capitalize()}: {display_value(value)}"
                      for key, value in fields.items())
 
 
@@ -195,7 +197,7 @@ def sources(repo, candidate_id, history=()):
         fields.update({f"{k} score": v for k, v in scalar_fields(scores, ("wtcs", "ks", "cosine")).items()})
         iqr = candidate.get("consensus_iqr")
         if isinstance(iqr, list) and len(iqr) == 2 and all(isinstance(v, (int, float)) for v in iqr):
-            fields["consensus iqr"] = f"{iqr[0]} to {iqr[1]}"
+            fields["consensus iqr"] = f"{display_value(iqr[0])} to {display_value(iqr[1])}"
         flags = candidate.get("flags") or []
         fields["flags"] = ", ".join(f for f in flags if isinstance(f, str) and f in (
             "composition_sensitive", "few_contexts", "known_positive")) or "none recorded"

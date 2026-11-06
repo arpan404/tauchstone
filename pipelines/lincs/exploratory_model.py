@@ -162,6 +162,8 @@ def predict_candidate(data_dir: Path, candidate_id: str) -> dict:
         raise ValueError('Candidate absent from trained local artifact')
     row = found.iloc[0]
     return {'candidate_id': candidate_id, 'run_id': report['run_id'],
+            'prediction': float(row.predicted),
+            'training_membership': 'internal_test' if row['split'] == 'internal_test_scaffold' else 'train',
             'predicted': float(row.predicted), 'observed': float(row.consensus_median),
             'split': row['split'], 'task': TASK, 'limitations': report['limitations']}
 
