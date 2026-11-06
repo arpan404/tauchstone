@@ -124,6 +124,10 @@ def main() -> None:
     for name in TAUCHSTONE_FILES:
         copy_with_sidecar(processed, f"tauchstone/{name}", demo_processed, copied)
 
+    # Optional exploratory panel. Existing bundles still work before it is built.
+    if (processed / "singlecell/panel.json").is_file():
+        copy_with_sidecar(processed, "singlecell/panel.json", demo_processed, copied)
+
     # Theta sidecar (provenance JSON only, not the 26 MB null distribution).
     sidecar_src = processed / PERM_THETA_SIDECAR
     if not sidecar_src.exists():
