@@ -18,12 +18,53 @@ def test_make_synthetic_world_reproducible_and_correlated():
     for cand in w1:
         assert cand.ranking  # ranking observations exist
         types = {c.type for c in cand.hidden}
-        assert {"held_out_cohort", "composition_adjusted", "lincs_context", "brain_exposure"} <= types
+        assert {"held_out_cohort", "composition_adjusted", "lincs_context"} <= types
+        assert not any(c.context_id == "GSE53697" for c in cand.hidden)  # QC-excluded
+        assert any(c.context_id == "GSE173955" for c in cand.hidden)
         assert set(cand.truth) == {c.context_id for c in cand.hidden}
         assert all(isinstance(v, bool) for v in cand.truth.values())
     # Latent robustness induces variation across candidates (not all identical).
     rates = [np.mean(list(c.truth.values())) for c in w1]
     assert max(rates) > min(rates)
+    # Brain exposure is untestable-without-data: present for some, absent for others.
+    has_be = [any(c.type == "brain_exposure" for c in cand.hidden) for cand in w1]
+    assert any(has_be) and not all(has_be)
+
+
+def test_synthetic_world_calibration_claim_rate_and_contested_share():
+    """Fixed-seed calibration: claim holds for 40-60%, >= 50% contested at step 0."""
+    from pipelines.tauchstone.engine import EngineConfig, p_claim, verdict
+    from pipelines.tauchstone.evaluation import full_information_verdict
+
+    cfg = EngineConfig()
+    world = tt.make_synthetic_world(n_candidates=100, seed=20261105)
+    holds = sum(full_information_verdict(c.truth, cfg.q) == "SUPPORTED" for c in world)
+    assert 0.4 <= holds / len(world) <= 0.6
+    contested = 0
+    for c in world:
+        p = p_claim(c.hidden, list(c.ranking), len(c.hidden), cfg)
+        if verdict(p, cfg) == "INSUFFICIENT_EVIDENCE":
+            contested += 1
+    assert contested / len(world) >= 0.5
+
+
+def test_synthetic_world_exploitable_structure():
+    """Block cells hold >= 3 hidden LINCS contexts with high mutual similarity."""
+    from pipelines.tauchstone.engine import similarity
+
+    world = tt.make_synthetic_world(n_candidates=10, seed=11)
+    for cand in world:
+        block = [c for c in cand.hidden if c.type == "lincs_context" and c.cell_id]
+        by_cell: dict = {}
+        for c in block:
+            by_cell.setdefault(c.cell_id, []).append(c)
+        biggest = max(by_cell.values(), key=len)
+        assert len(biggest) >= 3  # a decisive block exists
+        # Same cell -> similarity >= 0.4 + 0.3; revealing one informs the block.
+        assert similarity(biggest[0], biggest[1]) >= 0.7
+        # Cross-type pairs stay 0.1 per the spec (cohort vs adjusted informs nothing).
+        by_id = {c.context_id: c for c in cand.hidden}
+        assert similarity(by_id["GSE173955"], by_id["GSE132903__composition_adjusted"]) == 0.1
 
 
 def test_synthetic_truth_table_schema_and_labels():
@@ -111,3 +152,39 @@ def test_cohort_and_exposure_rows_missing_inputs_raise(tmp_path):
         tt._cohort_rows(["C1"], "GSE173955", "held_out_cohort", "lbl", tmp_path)
     with pytest.raises(FileNotFoundError, match="missing upstream input"):
         tt._exposure_rows(["C1"], tmp_path)
+    with pytest.raises(FileNotFoundError, match="missing upstream input"):
+        tt.cohort_qc(tmp_path, "GSE173955")
+
+
+def _write_sig(tmp_path, cohort, fdr):
+    sig = tmp_path / "signatures"
+    sig.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"fdr": fdr}).to_parquet(sig / f"{cohort}__main.parquet")
+
+
+def test_cohort_qc_gate(tmp_path):
+    _write_sig(tmp_path, "GSE173955", [0.001] * 2182 + [0.5] * 100)
+    _write_sig(tmp_path, "GSE53697", [0.9] * 50)
+    assert tt.cohort_qc(tmp_path, "GSE173955") == (True, 2182)
+    assert tt.cohort_qc(tmp_path, "GSE53697") == (False, 0)
+    kept, gate = tt.gated_cohorts(tmp_path, ["GSE173955", "GSE53697"])
+    assert kept == ["GSE173955"]
+    assert gate == {"GSE173955": {"n_fdr05": 2182, "included": True},
+                    "GSE53697": {"n_fdr05": 0, "included": False}}
+
+
+def test_exposure_rows_untestable_excluded(tmp_path):
+    ev = tmp_path / "evidence"
+    ev.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(
+        {
+            "pert_id": ["E1", "E1", "E2", "E4", "E5", "E6"],
+            "measure": ["kp", "pampa_pe", "kp", "csf", "pampa_pe", "kp"],
+            "value": [0.5, 1e-7, 0.01, 1.0, 5e-6, 0.9],
+            "is_measured": [True, True, True, True, True, False],
+        }
+    ).to_parquet(ev / "exposure.parquet")
+    rows = tt._exposure_rows(["E1", "E2", "E3", "E4", "E5", "E6"], tmp_path)
+    by_cid = {r["candidate_id"]: r["outcome"] for r in rows}
+    assert by_cid == {"E1": "survive", "E2": "fail", "E4": "survive", "E5": "survive"}
+    # E3 (no measured rows) and E6 (predicted only) are untestable: not in S_d.
