@@ -1,6 +1,5 @@
 import { useCandidates, useMockStatus } from '@/api/hooks';
 import type { Schema } from '@/api/types';
-import { MOCK_CELL_LINES } from '@/api/mock/candidates';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
@@ -9,9 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUi } from '@/store/ui';
-import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useMemo, useState } from 'react';
-import { buildHeatmapOption, iqrBar } from './heatmapOption';
+import { iqrBar } from './heatmapOption';
 
 type Candidate = Schema<'Candidate'>;
 
@@ -117,18 +115,21 @@ export function RepurposingView() {
   const { data, isLoading, isError } = useCandidates(50);
   const mockData = useMockStatus(data?.provenance);
   const { selectedCandidateId, selectCandidate, setStep } = useUi();
-  const [showTop, setShowTop] = useState(12);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState('rank');
+  const [negativeOnly, setNegativeOnly] = useState(false);
+  const [compared, setCompared] = useState<string[]>([]);
+  const selected = data?.candidates.find(c => c.id === selectedCandidateId);
 
-  const candidates = useMemo(() => data?.candidates.slice(0, showTop) ?? [], [data, showTop]);
+  const candidates = useMemo(() => (data?.candidates ?? []).filter(c =>
+    (c.name.toLowerCase().includes(query.trim().toLowerCase()) || c.id.toLowerCase().includes(query.trim().toLowerCase())) &&
+    (!negativeOnly || c.consensus < 0)
+  ).slice().sort((a, b) => sort === 'name' ? a.name.localeCompare(b.name) : sort === 'contexts' ? b.n_ranking_contexts - a.n_ranking_contexts || a.rank - b.rank : sort === 'consensus' ? a.consensus - b.consensus || a.rank - b.rank : a.rank - b.rank), [data, query, sort, negativeOnly]);
   const iqrRange = useMemo(() => {
     const los = (data?.candidates ?? []).map((c) => c.consensus_iqr[0]);
     const his = (data?.candidates ?? []).map((c) => c.consensus_iqr[1]);
     return { min: Math.min(...los, 0), max: Math.max(...his, 0) };
   }, [data]);
-  const heatOption = useMemo(
-    () => (data ? buildHeatmapOption(candidates, [...MOCK_CELL_LINES]) : null),
-    [data, candidates],
-  );
   const perm = data?.permutation_control;
 
   return (
@@ -180,10 +181,21 @@ export function RepurposingView() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Leaderboard — consensus (negative = reversal). Click a row for evidence.
+                  Discovery ranking · negative consensus = reversal. Select a row to inspect.
                 </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
+                <div className="mb-4 flex flex-wrap items-center gap-3">
+                  <label>Search name or ID <input className="rounded border p-2" value={query} onChange={e => setQuery(e.target.value)} /></label>
+                  <label>Sort <select className="rounded border p-2" value={sort} onChange={e => setSort(e.target.value)}>
+                    <option value="rank">Discovery rank</option><option value="consensus">Consensus ascending</option><option value="name">Name</option><option value="contexts">Ranking contexts descending</option>
+                  </select></label>
+                  <label><input type="checkbox" checked={negativeOnly} onChange={e => setNegativeOnly(e.target.checked)} /> Negative consensus only</label>
+                  <button onClick={() => { setQuery(''); setNegativeOnly(false); setSort('rank'); }}>Clear controls</button>
+                  <span role="status">{candidates.length} of {data.candidates.length} loaded · {data.n_ranked} ranked</span>
+                </div>
+                <p className="mb-3 text-xs">Filters use discovery ranking fields only. AD minus control; negative drug scores indicate reversal.</p>
+                {candidates.length === 0 && <p>No candidates match these controls.</p>}
                 <table className="w-full min-w-[760px] text-sm">
                   <thead>
                     <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500">
@@ -209,51 +221,33 @@ export function RepurposingView() {
                         iqrMax={iqrRange.max}
                         onSelect={() => {
                           selectCandidate(c.id);
-                          setStep('evidence');
+
                         }}
                       />
                     ))}
                   </tbody>
                 </table>
-                <div className="mt-2 flex gap-2">
-                  {[12, 25, 50].map((n) => (
-                    <button
-                      key={n}
-                      onClick={() => setShowTop(n)}
-                      aria-pressed={showTop === n}
-                      className={`rounded border px-2 py-0.5 text-xs tabular-nums ${
-                        showTop === n
-                          ? 'border-teal-700 bg-teal-50 text-teal-900'
-                          : 'border-neutral-300 text-neutral-600'
-                      }`}
-                    >
-                      top {n}
-                    </button>
-                  ))}
-                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Connectivity heatmap — candidates × cell lines
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {heatOption && (
-                  <div role="img" aria-label="Heatmap of reversal consensus by cell line. Negative values in teal indicate reversal.">
-                    <ReactECharts
-                      option={heatOption}
-                      style={{ height: Math.max(260, candidates.length * 30 + 120) }}
-                    />
-                  </div>
-                )}
-                <p className="mt-1 text-xs font-medium text-teal-900">
-                  Negative = reverses the AD pattern.
-                </p>
+            {selected && <Card>
+              <CardHeader><CardTitle>{selected.name}</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p>ID {selected.id} · Discovery rank {selected.rank} · Consensus {selected.consensus.toFixed(3)}</p>
+                <p>IQR {selected.consensus_iqr.join(' to ')} · {selected.n_ranking_contexts} ranking contexts</p>
+                <p>WTCS {selected.scores.wtcs} · KS {selected.scores.ks} · Cosine {selected.scores.cosine}</p>
+                <div className="flex flex-wrap gap-4">
+                  <button onClick={() => setStep('evidence')}>Evidence</button>
+                  <button onClick={() => setStep('attack')}>Experiments</button>
+                  <button disabled={!compared.includes(selected.id) && compared.length >= 3} onClick={() => setCompared(ids => ids.includes(selected.id) ? ids.filter(id => id !== selected.id) : [...ids, selected.id])}>{compared.includes(selected.id) ? 'Remove from comparison' : 'Add to comparison'}</button>
+                </div>
               </CardContent>
-            </Card>
+            </Card>}
+            {compared.length > 0 && <Card><CardHeader><CardTitle>Discovery comparison ({compared.length}/3)</CardTitle></CardHeader><CardContent>
+              <button onClick={() => setCompared([])}>Clear comparison</button>
+              <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr>{['Candidate', 'Rank', 'Consensus', 'IQR', 'WTCS', 'KS', 'Cosine', 'Contexts', ''].map(h => <th key={h}>{h}</th>)}</tr></thead>
+              <tbody>{compared.map(id => data.candidates.find(c => c.id === id)).filter((c): c is Candidate => !!c).map(c => <tr key={c.id}><td>{c.name}</td><td>{c.rank}</td><td>{c.consensus}</td><td>{c.consensus_iqr.join(' to ')}</td><td>{c.scores.wtcs}</td><td>{c.scores.ks}</td><td>{c.scores.cosine}</td><td>{c.n_ranking_contexts}</td><td><button aria-label={`Remove ${c.name}`} onClick={() => setCompared(ids => ids.filter(id => id !== c.id))}>Remove</button></td></tr>)}</tbody></table></div>
+            </CardContent></Card>}
           </>
         )}
       </div>
