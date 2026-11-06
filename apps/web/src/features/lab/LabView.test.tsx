@@ -6,7 +6,7 @@ import {useUi} from '@/store/ui'
 afterEach(()=>{cleanup();vi.unstubAllGlobals()})
 // Network responses here are test fixtures, not generated evidence.
 it('requires candidate context and suggestions only prefill',async()=>{
- const fetcher=vi.fn(async()=>new Response(JSON.stringify({copilot:{ready:false,model:'test fixture',detail:'fixture'},candidates:[]})))
+ const fetcher=vi.fn(async(_input: RequestInfo | URL)=>new Response(JSON.stringify({copilot:{ready:false,model:'test fixture',detail:'fixture'},candidates:[]})))
  vi.stubGlobal('fetch',fetcher);useUi.setState({selectedCandidateId:null})
  render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false}}})}><LabView/></QueryClientProvider>)
  expect(screen.getByText('Select a candidate before sending a research question.')).toBeTruthy()
