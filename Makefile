@@ -100,3 +100,7 @@ record: ## Record the tour (TS_E2E_BASE_URL defaults to localhost:8080)
 
 release: ## Build and verify offline images, export archive and checksums
 	bash scripts/release_expo.sh
+
+.PHONY: singlecell
+singlecell: ## Validate exploratory metadata (analysis blocked pending verified donor map)
+	uv run python -m pipelines.singlecell
