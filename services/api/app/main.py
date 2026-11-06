@@ -8,7 +8,7 @@ Endpoints are defined in contracts/openapi.yaml; build against that, not this fi
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import attack, benchmark, candidates, signatures
+from app.routes import attack, benchmark, candidates, signatures, structures
 from app.schemas.models import Health
 from app.settings import settings
 
@@ -24,6 +24,7 @@ app.include_router(signatures.router)
 app.include_router(candidates.router)
 app.include_router(attack.router)
 app.include_router(benchmark.router)
+app.include_router(structures.router)
 
 
 @app.get("/health", response_model=Health, response_model_exclude_unset=True)

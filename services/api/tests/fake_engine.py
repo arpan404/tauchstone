@@ -91,5 +91,5 @@ class FakeSession:
 
 
 def make_fake_session(candidate_id, hidden, ranking, cfg, budget=5, mode="attack",
-                      seed=20261105, candidate_name=None):
+                      seed=20261105, candidate_name=None, engine_cfg=None):
     return FakeSession(candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name)
