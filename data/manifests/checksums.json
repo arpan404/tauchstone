@@ -231,6 +231,54 @@
     "upstream_sha512_verified": null,
     "frozen_at": "2026-11-06T02:50:34+00:00"
   },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00024-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00024-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00024-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 63591308,
+    "sha256": "eb3185af13e4c2abf2bfc58ae1c34f052c937505b9aae484c80e7ae5ea605123",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:54:25+00:00"
+  },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00025-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00025-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00025-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 63018512,
+    "sha256": "9c906d8ee203d28ac97c06b7591a4bd5f55b8edfe735fd8762eb3be732a15230",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:55:52+00:00"
+  },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00026-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00026-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00026-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 62837964,
+    "sha256": "b41aeae7505dbb363114e450782f57b1a58baec557ad6f56b1e8fae9d373edf3",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:57:15+00:00"
+  },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00027-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00027-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00027-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 57956906,
+    "sha256": "87f121654954ecf4696f1f1febf9ab7d513ea0f0d8fc9983cb34fb6d06442561",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:55:55+00:00"
+  },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00028-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00028-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00028-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 62538850,
+    "sha256": "f95b7e2010b9b74d15081ec25c99c1795e62fda0f46223af55be6f272bc90f2b",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:56:39+00:00"
+  },
+  "evidence/open_targets/26.09/association_overall_indirect/part-00029-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_indirect/part-00029-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_overall_indirect/part-00029-3674162f-e2e6-4aaa-bc45-86ea584c3d56-c000.zstd.parquet",
+    "bytes": 63145956,
+    "sha256": "3a4560da4f0c3b7a8786ec49ed2f8673c8af2fbc35dce71837e5ae0dfcd8ce42",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T02:56:35+00:00"
+  },
   "geo/GPL10558/GPL10558.annot.gz": {
     "url": "https://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL10nnn/GPL10558/annot/GPL10558.annot.gz",
     "path": "raw/geo/GPL10558/GPL10558.annot.gz",

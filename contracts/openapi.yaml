@@ -1,0 +1,532 @@
+openapi: 3.1.0
+info:
+  title: "Tauchstone: Second Life API"
+  version: 0.1.0
+  description: |
+    Contract between the API (WS6) and the web app (WS7). Frozen Nov 5 2026; changes go through
+    the engineering lead.
+
+    Conventions
+    - Gene IDs are Entrez IDs as strings. Candidate ids are LINCS pert_id (BRD-...).
+    - Reversal sign: NEGATIVE scores mean the drug reverses the AD signature.
+    - The truth table (hidden validation outcomes) is server-only. A hidden outcome appears in a
+      response only inside `revealed` of POST /attack/{session_id}/run, after that experiment is
+      committed. Hidden contexts are listed by id/label/type only, never with their value.
+    - Every result carries a `provenance` object.
+    - Wording: verdicts are SUPPORTED_SO_FAR / FRAGILE_CONTEXT_DEPENDENT / INSUFFICIENT_EVIDENCE.
+      Never true/false, never clinical language.
+servers:
+  - url: http://localhost:8000
+    description: dev (the web app calls it through /api)
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, mock]
+                properties:
+                  status: { type: string, enum: [ok] }
+                  mock: { type: boolean, description: true when serving mock data }
+
+  /signatures/{cohort}:
+    get:
+      operationId: getSignature
+      summary: Gene statistics for the volcano plot
+      parameters:
+        - name: cohort
+          in: path
+          required: true
+          schema: { type: string, enum: [GSE132903, GSE173955, GSE53697] }
+          description: |
+            Only GSE132903 (primary) is shown before an attack. Held-out cohorts return 403 until
+            an attack session has revealed them (pass session_id).
+        - name: variant
+          in: query
+          schema: { type: string, enum: [main, composition_adjusted], default: main }
+        - name: session_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: signature
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Signature" }
+        "403": { $ref: "#/components/responses/Hidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /candidates:
+    get:
+      operationId: listCandidates
+      summary: Ranked candidates with the three scores and the consensus
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, minimum: 1, maximum: 200 }
+      responses:
+        "200":
+          description: ranking
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CandidateList" }
+
+  /candidates/{candidate_id}/evidence:
+    get:
+      operationId: getEvidence
+      summary: Evidence card fields with evidence level and source links
+      parameters:
+        - { name: candidate_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: evidence card
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EvidenceCard" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /attack:
+    post:
+      operationId: startAttack
+      summary: Start an attack session; returns budget and the first recommended experiment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [candidate_id]
+              properties:
+                candidate_id: { type: string }
+                mode: { $ref: "#/components/schemas/Mode" }
+                budget: { type: integer, default: 5, minimum: 1, maximum: 10 }
+      responses:
+        "200":
+          description: session started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttackSession" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /attack/{session_id}/run:
+    post:
+      operationId: runExperiment
+      summary: Commit one experiment, reveal its hidden outcome, update belief, recommend next
+      parameters:
+        - { name: session_id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [context_id]
+              properties:
+                context_id:
+                  type: string
+                  description: Any still-hidden context; usually the recommended one, but the judge may pick another.
+                mode:
+                  $ref: "#/components/schemas/Mode"
+                  description: Mode used for the NEXT recommendation (the toggle). Defaults to the session's current mode.
+      responses:
+        "200":
+          description: outcome revealed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RunResult" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: context already revealed, unknown for this candidate, or budget exhausted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /benchmark:
+    get:
+      operationId: getBenchmark
+      summary: Aggregate policy results with CIs, calibration and tests
+      responses:
+        "200":
+          description: benchmark
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Benchmark" }
+        "404":
+          description: benchmark not run yet (it only runs after the preregistration hash is committed)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  responses:
+    NotFound:
+      description: not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Hidden:
+      description: held-out data not revealed yet
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [detail]
+      properties:
+        detail: { type: string }
+
+    Mode:
+      type: string
+      enum: [attack, learn]
+      default: attack
+      description: attack = pick the context most likely to break the claim; learn = largest expected change in belief.
+
+    Verdict:
+      type: string
+      enum: [SUPPORTED_SO_FAR, FRAGILE_CONTEXT_DEPENDENT, INSUFFICIENT_EVIDENCE]
+      description: |
+        Display labels: "Supported so far", "Fragile / context-dependent", "Insufficient evidence".
+
+    Provenance:
+      type: object
+      required: [dataset_accession, processing_version, git_commit, timestamp]
+      properties:
+        step: { type: string }
+        dataset_accession: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }
+        inputs: { type: object, additionalProperties: { type: [string, "null"] }, description: raw file key -> sha256 }
+        sample_filter: { type: string }
+        gene_mapping_version: { type: string }
+        model: { type: string }
+        parameters: { type: object }
+        random_seed: { type: [integer, "null"] }
+        validation_context: { type: [string, "null"] }
+        processing_version: { type: string }
+        git_commit: { type: string }
+        timestamp: { type: string, format: date-time }
+        output: { type: string }
+        output_sha256: { type: string }
+
+    SourceLink:
+      type: object
+      required: [label, url]
+      properties:
+        label: { type: string, examples: ["ChEMBL CHEMBL25"] }
+        url: { type: string, format: uri }
+
+    # ---------------- Signatures ----------------
+    GeneStat:
+      type: object
+      required: [entrez_id, symbol, log2fc, stat, p_value, fdr]
+      properties:
+        entrez_id: { type: string }
+        symbol: { type: string }
+        log2fc: { type: number, description: AD minus control }
+        stat: { type: number, description: moderated t or Wald; positive = higher in AD }
+        p_value: { type: number }
+        fdr: { type: number }
+        query_set: { type: [string, "null"], enum: [up, down, null], description: membership in the LINCS query sets }
+
+    Signature:
+      type: object
+      required: [cohort, variant, method, tissue, n_ad, n_control, genes, provenance]
+      properties:
+        cohort: { type: string }
+        variant: { type: string, enum: [main, composition_adjusted] }
+        method: { type: string, enum: [limma, limma-trend, deseq2] }
+        tissue: { type: string, examples: ["middle temporal gyrus"] }
+        platform: { type: string }
+        n_ad: { type: integer }
+        n_control: { type: integer }
+        n_fdr05: { type: integer, description: genes with FDR < 0.05 }
+        genes: { type: array, items: { $ref: "#/components/schemas/GeneStat" } }
+        sign_check:
+          type: array
+          description: Known AD genes and whether the observed direction matches expectation
+          items:
+            type: object
+            required: [symbol, expected, stat, matches]
+            properties:
+              symbol: { type: string }
+              expected: { type: string, enum: [up, down] }
+              stat: { type: number }
+              matches: { type: boolean }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    # ---------------- Candidates ----------------
+    MethodScores:
+      type: object
+      description: Median standardized score across ranking contexts. Negative = reversal.
+      required: [wtcs, ks, cosine]
+      properties:
+        wtcs: { type: number, description: CMap weighted connectivity (z) }
+        ks: { type: number, description: unweighted KS connectivity (z) }
+        cosine: { type: number, description: cosine similarity (z) }
+
+    Candidate:
+      type: object
+      required: [id, rank, name, consensus, consensus_iqr, n_ranking_contexts, scores, by_cell_line]
+      properties:
+        id: { type: string, description: LINCS pert_id }
+        rank: { type: integer, minimum: 1 }
+        name: { type: string, description: pert_iname }
+        consensus: { type: number, description: median consensus across ranking contexts; negative = reversal }
+        consensus_iqr: { type: array, items: { type: number }, minItems: 2, maxItems: 2 }
+        n_ranking_contexts: { type: integer }
+        n_held_out_contexts: { type: integer, description: count only; their scores are hidden }
+        scores: { $ref: "#/components/schemas/MethodScores" }
+        by_cell_line:
+          type: array
+          description: Heatmap cells. RANKING contexts only, never held-out ones.
+          items:
+            type: object
+            required: [cell_id, consensus, n_contexts]
+            properties:
+              cell_id: { type: string }
+              consensus: { type: number }
+              n_contexts: { type: integer }
+        approval_status: { $ref: "#/components/schemas/ApprovalStatus" }
+        flags:
+          type: array
+          items: { type: string, enum: [composition_sensitive, few_contexts, known_positive] }
+        is_demo_candidate: { type: boolean, description: chosen by the preregistered rule (ranks 1, 5, 12) }
+
+    CandidateList:
+      type: object
+      required: [signature, n_ranked, candidates, provenance]
+      properties:
+        signature: { type: string, examples: ["GSE132903__main"] }
+        n_ranked: { type: integer, description: compounds with >= 3 ranking contexts }
+        permutation_control:
+          type: object
+          description: Label-permutation control (Tier 1 gate)
+          properties:
+            n_permutations: { type: integer }
+            theta: { type: number, description: 5th percentile of the null; reversal threshold }
+            passed: { type: boolean }
+        candidates: { type: array, items: { $ref: "#/components/schemas/Candidate" } }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    # ---------------- Evidence ----------------
+    ApprovalStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [approved, investigational, preclinical, unknown] }
+        max_phase: { type: [number, "null"], description: ChEMBL max_phase }
+        source: { $ref: "#/components/schemas/SourceLink" }
+
+    ExposureLevel:
+      type: string
+      enum: [measured_human_cns, measured_preclinical, curated, predicted, none]
+      description: |
+        Hierarchy, strongest first: measured human CNS PK > measured preclinical brain/plasma or
+        BBB assay > curated > predicted. Always shown with its label.
+
+    Target:
+      type: object
+      required: [symbol, uniprot, entrez_id]
+      properties:
+        symbol: { type: string }
+        uniprot: { type: string }
+        entrez_id: { type: string }
+        ensembl_id: { type: string }
+        action_type: { type: [string, "null"], examples: [INHIBITOR, AGONIST] }
+        brain_expression:
+          type: array
+          items:
+            type: object
+            required: [context, ntpm]
+            properties:
+              context: { type: string, examples: ["cerebral cortex", "microglia"] }
+              kind: { type: string, enum: [region, cell_type] }
+              ntpm: { type: number }
+        ad_association_score: { type: [number, "null"], description: Open Targets overall association with MONDO_0004975 }
+        sources: { type: array, items: { $ref: "#/components/schemas/SourceLink" } }
+
+    Structure:
+      type: object
+      required: [pdb_id, uniprot, url, note]
+      properties:
+        pdb_id: { type: string }
+        uniprot: { type: string }
+        method: { type: string }
+        resolution_angstrom: { type: [number, "null"] }
+        url: { type: string, description: local path served by the API (offline), e.g. /structures/1ABC.cif }
+        note: { type: string, const: "Target context only. Not evidence that the drug binds this structure." }
+
+    EvidenceCard:
+      type: object
+      required: [candidate_id, name, targets, approval_status, brain_exposure, boundary, provenance]
+      properties:
+        candidate_id: { type: string }
+        name: { type: string }
+        chembl_id: { type: [string, "null"] }
+        mechanism: { type: [string, "null"] }
+        targets: { type: array, items: { $ref: "#/components/schemas/Target" } }
+        approval_status: { $ref: "#/components/schemas/ApprovalStatus" }
+        brain_exposure:
+          type: object
+          required: [level, summary]
+          description: |
+            Shown on the card BEFORE any attack: only the predicted level (physchem / CNS MPO).
+            Measured CNS exposure is a hidden validation context revealed by an attack.
+          properties:
+            level: { $ref: "#/components/schemas/ExposureLevel" }
+            summary: { type: string }
+            sources: { type: array, items: { $ref: "#/components/schemas/SourceLink" } }
+        structure: { oneOf: [{ $ref: "#/components/schemas/Structure" }, { type: "null" }] }
+        boundary:
+          type: string
+          const: "Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit."
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    # ---------------- Attack ----------------
+    ContextType:
+      type: string
+      enum: [held_out_cohort, composition_adjusted, lincs_context, brain_exposure, cell_type]
+
+    ContextState:
+      type: object
+      required: [context_id, type, label, status, p_survive]
+      properties:
+        context_id: { type: string }
+        type: { $ref: "#/components/schemas/ContextType" }
+        label: { type: string, examples: ["GSE173955 hippocampus (RNA-seq)", "MCF7 · 10 uM · 24 h"] }
+        status: { type: string, enum: [hidden, revealed] }
+        p_survive: { type: number, minimum: 0, maximum: 1, description: current predicted probability the claim survives this test }
+        acquisition: { type: [number, "null"], description: score under the current mode; null once revealed }
+        outcome: { type: [string, "null"], enum: [survive, fail, null], description: only set when revealed }
+
+    Claim:
+      type: object
+      required: [text, q, theta, n_contexts]
+      properties:
+        text: { type: string, examples: ["X reverses the AD signature in at least 70% of predefined validation contexts"] }
+        q: { type: number, const: 0.7 }
+        theta: { type: number }
+        n_contexts: { type: integer }
+
+    Belief:
+      type: object
+      required: [p_claim_holds]
+      properties:
+        p_claim_holds: { type: number, minimum: 0, maximum: 1 }
+        interval: { type: array, items: { type: number }, minItems: 2, maxItems: 2, description: bootstrap 90% interval }
+
+    AttackSession:
+      type: object
+      required: [session_id, candidate_id, mode, budget, budget_remaining, claim, belief, verdict, contexts, recommended_context_id, rationale]
+      properties:
+        session_id: { type: string }
+        candidate_id: { type: string }
+        candidate_name: { type: string }
+        mode: { $ref: "#/components/schemas/Mode" }
+        budget: { type: integer }
+        budget_remaining: { type: integer }
+        claim: { $ref: "#/components/schemas/Claim" }
+        belief: { $ref: "#/components/schemas/Belief" }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        contexts: { type: array, items: { $ref: "#/components/schemas/ContextState" } }
+        recommended_context_id: { type: [string, "null"] }
+        rationale: { type: string, description: one plain-language sentence on why this test is recommended }
+        history:
+          type: array
+          items: { $ref: "#/components/schemas/RevealedOutcome" }
+
+    RevealedOutcome:
+      type: object
+      required: [context_id, type, label, outcome, rule, belief_before, belief_after]
+      properties:
+        context_id: { type: string }
+        type: { $ref: "#/components/schemas/ContextType" }
+        label: { type: string }
+        outcome: { type: string, enum: [survive, fail] }
+        value: { type: [number, "null"], description: e.g. the reversal score in that context }
+        threshold: { type: [number, "null"] }
+        rule: { type: string, description: plain-language survive rule for this context type }
+        detail: { type: string }
+        belief_before: { type: number }
+        belief_after: { type: number }
+        mode_used: { $ref: "#/components/schemas/Mode" }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    RunResult:
+      allOf:
+        - $ref: "#/components/schemas/AttackSession"
+        - type: object
+          required: [revealed, done]
+          properties:
+            revealed: { $ref: "#/components/schemas/RevealedOutcome" }
+            done: { type: boolean, description: budget exhausted or no hidden contexts left }
+
+    # ---------------- Benchmark ----------------
+    Interval:
+      type: object
+      required: [estimate, ci95]
+      properties:
+        estimate: { type: number }
+        ci95: { type: array, items: { type: number }, minItems: 2, maxItems: 2 }
+
+    PolicyResult:
+      type: object
+      required: [policy, label, experiments_to_correct_verdict, fragile_recall_at_3, fragile_recall_at_5, decision_accuracy]
+      properties:
+        policy:
+          type: string
+          enum: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid]
+        label: { type: string }
+        experiments_to_correct_verdict:
+          type: object
+          required: [median, iqr, ci95]
+          properties:
+            median: { type: number }
+            iqr: { type: array, items: { type: number }, minItems: 2, maxItems: 2 }
+            ci95: { type: array, items: { type: number }, minItems: 2, maxItems: 2, description: bootstrap CI of the median }
+        fragile_recall_at_3: { $ref: "#/components/schemas/Interval" }
+        fragile_recall_at_5: { $ref: "#/components/schemas/Interval" }
+        decision_accuracy: { $ref: "#/components/schemas/Interval" }
+        brier: { type: [number, "null"] }
+
+    Benchmark:
+      type: object
+      required: [n_candidates, n_seeds, budget, policies, calibration, tests, preregistration_sha256, provenance]
+      properties:
+        n_candidates: { type: integer }
+        n_seeds: { type: integer }
+        budget: { type: integer }
+        policies: { type: array, items: { $ref: "#/components/schemas/PolicyResult" } }
+        calibration:
+          type: array
+          description: reliability curve for P(survive)
+          items:
+            type: object
+            required: [bin_lo, bin_hi, mean_predicted, observed_rate, n]
+            properties:
+              bin_lo: { type: number }
+              bin_hi: { type: number }
+              mean_predicted: { type: number }
+              observed_rate: { type: number }
+              n: { type: integer }
+        tests:
+          type: array
+          description: paired Wilcoxon signed-rank vs tauchstone_hybrid, Holm-corrected
+          items:
+            type: object
+            required: [policy_a, policy_b, metric, p_holm]
+            properties:
+              policy_a: { type: string }
+              policy_b: { type: string }
+              metric: { type: string }
+              statistic: { type: number }
+              p_holm: { type: number }
+        preregistration_sha256: { type: string }
+        preregistration_commit: { type: string }
+        provenance: { $ref: "#/components/schemas/Provenance" }
