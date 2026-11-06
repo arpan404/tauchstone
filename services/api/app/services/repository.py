@@ -56,6 +56,13 @@ SIGN_CHECK_EXPECTED = {
 }
 
 
+
+def display_name(name: object) -> str:
+    """Readable drug name: title-case plain names (RESVERATROL -> Resveratrol) but keep codes
+    with digits as they are (LY-2886721, CPI-1189)."""
+    s = str(name)
+    return s if any(ch.isdigit() for ch in s) else s.title()
+
 class NotFoundError(Exception):
     pass
 
@@ -420,7 +427,7 @@ class ParquetRepository:
         candidates = []
         for r in rows.itertuples():
             pid = str(r.pert_id)
-            name = str(r.drug_name).title() if pd.notna(r.drug_name) else str(r.pert_iname)
+            name = display_name(r.drug_name) if pd.notna(r.drug_name) else str(r.pert_iname)
             cells = []
             if pid in medians.index.get_level_values(0):
                 sub = medians.loc[pid]
@@ -503,7 +510,7 @@ class ParquetRepository:
         if hit.empty:
             raise NotFoundError(candidate_id)
         hrow = hit.iloc[0]
-        name = (str(hrow["drug_name"]).title() if pd.notna(hrow.get("drug_name"))
+        name = (display_name(hrow["drug_name"]) if pd.notna(hrow.get("drug_name"))
                 else str(hrow.get("pert_iname") or candidate_id))
         targets = [t for t in self._maybe_rows("evidence/targets.parquet")
                    if str(t.get("pert_id")) == candidate_id]
@@ -650,7 +657,7 @@ class ParquetRepository:
         hit = pool[pool["pert_id"].astype(str) == candidate_id]
         if not hit.empty:
             hrow = hit.iloc[0]
-            cname = (str(hrow["drug_name"]).title() if pd.notna(hrow.get("drug_name"))
+            cname = (display_name(hrow["drug_name"]) if pd.notna(hrow.get("drug_name"))
                      else str(hrow.get("pert_iname") or candidate_id))
         else:
             cname = candidate_id
