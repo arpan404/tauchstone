@@ -1,4 +1,4 @@
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 import { verdictLabel } from '@/api/mock/attack';
 
 export type Verdict = Schema<'Verdict'>;

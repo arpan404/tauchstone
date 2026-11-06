@@ -1,4 +1,5 @@
-import type { components, Schema } from '../schema';
+import type { components } from '../schema';
+import type { BenchmarkData, Schema } from '../types';
 import { resetMockAttack, runMockExperiment, startMockAttack } from './attack';
 import { getMockBenchmark } from './benchmark';
 import { getMockCandidate, getMockCandidates } from './candidates';
@@ -35,7 +36,7 @@ export const mockApi = {
     contextId: string,
     mode?: components['schemas']['Mode'],
   ): Promise<Schema<'RunResult'>> => asyncWrap(() => runMockExperiment(sessionId, contextId, mode)),
-  getBenchmark: (): Promise<Schema<'Benchmark'>> => asyncWrap(() => getMockBenchmark()),
+  getBenchmark: (): Promise<BenchmarkData> => asyncWrap(() => getMockBenchmark()),
   getCandidate: (rankOrId: number | string) => getMockCandidate(rankOrId),
 };
 

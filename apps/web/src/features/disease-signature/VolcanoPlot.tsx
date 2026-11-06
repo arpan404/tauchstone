@@ -1,7 +1,7 @@
 import ReactECharts from 'echarts-for-react';
 import { useMemo, useState } from 'react';
 import { buildVolcanoOption } from './volcanoOption';
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 export function VolcanoPlot({ genes }: { genes: Schema<'GeneStat'>[] }) {
   // Animate only on first mount (the demo opens on this view).

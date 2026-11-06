@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import { isMockMode, mockApi } from './mock';
-import type { Schema } from './schema';
+import type { BenchmarkData, Schema } from './types';
+import { isMockProvenance } from './types';
 
 type Mode = Schema<'Mode'>;
 
@@ -29,6 +30,31 @@ async function realRunExperiment(
 
 export function useMockFlag(): boolean {
   return isMockMode();
+}
+
+/** Server liveness + whether the server says it is serving mock data. */
+export function useHealth() {
+  return useQuery({
+    queryKey: ['health'],
+    queryFn: (): Promise<{ status: string; mock: boolean }> =>
+      isMockMode()
+        ? Promise.resolve({ status: 'ok', mock: true })
+        : api<{ status: string; mock: boolean }>('/health'),
+  });
+}
+
+type ProvenanceLike = { dataset_accession?: string | string[] } | null | undefined;
+
+/**
+ * Integrity signal: true when the numbers on screen may be mock/synthetic.
+ * Covers the in-browser mock (VITE_USE_MOCK=1), a live server in mock mode
+ * (/health.mock), and any view whose provenance says MOCK/synthetic.
+ */
+export function useMockStatus(provenance?: ProvenanceLike): boolean {
+  const health = useHealth();
+  if (isMockMode()) return true;
+  if (health.data?.mock) return true;
+  return isMockProvenance(provenance ?? null);
 }
 
 export function useSignature(cohort = 'GSE132903') {
@@ -66,7 +92,7 @@ export function useBenchmark() {
   return useQuery({
     queryKey: ['benchmark'],
     queryFn: () =>
-      isMockMode() ? mockApi.getBenchmark() : api<Schema<'Benchmark'>>('/benchmark'),
+      isMockMode() ? mockApi.getBenchmark() : api<BenchmarkData>('/benchmark'),
     retry: false,
   });
 }

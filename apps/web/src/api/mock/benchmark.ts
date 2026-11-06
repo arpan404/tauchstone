@@ -1,7 +1,7 @@
-import type { components } from '../schema';
+import type { BenchmarkData } from '../types';
 import { MOCK_SEED, roundTo, streamFor } from './prng';
 
-type Benchmark = components['schemas']['Benchmark'];
+type Benchmark = BenchmarkData;
 
 let cache: Benchmark | null = null;
 
@@ -65,9 +65,32 @@ export function getMockBenchmark(): Benchmark {
   }));
 
   cache = {
-    n_candidates: 50,
+    n_candidates: 32,
     n_seeds: 8,
     budget: 5,
+    contested_share: 0.64,
+    all_candidates: {
+      n_candidates: 50,
+      n_seeds: 8,
+      budget: 5,
+      policies: policies.map((p) => ({
+        ...p,
+        experiments_to_correct_verdict: {
+          ...p.experiments_to_correct_verdict,
+          median: roundTo(p.experiments_to_correct_verdict.median + 0.6, 2),
+        },
+        fragile_recall_at_3: {
+          ...p.fragile_recall_at_3,
+          estimate: roundTo(Math.max(0, p.fragile_recall_at_3.estimate - 0.08), 3),
+        },
+        fragile_recall_at_5: {
+          ...p.fragile_recall_at_5,
+          estimate: roundTo(Math.max(0, p.fragile_recall_at_5.estimate - 0.06), 3),
+        },
+      })),
+      calibration: calibration.map((b) => ({ ...b })),
+      tests: [],
+    },
     policies,
     calibration,
     tests: defs

@@ -1,4 +1,4 @@
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 function shortHash(s: string): string {
   return s.length > 14 ? `${s.slice(0, 10)}…` : s;

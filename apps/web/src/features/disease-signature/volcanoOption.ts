@@ -1,4 +1,4 @@
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 export type GeneStat = Schema<'GeneStat'>;
 
@@ -75,8 +75,8 @@ export function buildVolcanoOption(
 
   return {
     animationDuration: animate ? 700 : 0,
-    grid: { left: 56, right: 16, top: 36, bottom: 48 },
-    legend: { top: 0, type: 'scroll', width: '85%', textStyle: { fontSize: 11 } },
+    grid: { left: 52, right: 28, top: 16, bottom: 88 },
+    legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11 } },
     xAxis: {
       name: 'log2FC (AD minus control)',
       nameLocation: 'middle',
@@ -100,7 +100,7 @@ export function buildVolcanoOption(
         markLine: {
           symbol: 'none',
           lineStyle: { color: '#525252', type: 'dashed' },
-          label: { formatter: 'FDR 0.05', fontSize: 10 },
+          label: { formatter: 'FDR 0.05', fontSize: 10, position: 'insideStartTop' },
           data: [{ yAxis: fdrLine }],
         },
         data: [],
