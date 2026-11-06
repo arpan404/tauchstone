@@ -99,7 +99,7 @@ export function AttackView() {
     <div className="flex h-full flex-col">
       <BoundaryBanner />
       {(mockData || session) && (
-        <div className="sticky top-0 z-10 -mx-4 bg-[#fafaf9] px-4">
+        <div className="sticky top-0 z-10 bg-[#fafaf9]">
           <MockRibbon show={mockData} />
           {session && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 py-2">
