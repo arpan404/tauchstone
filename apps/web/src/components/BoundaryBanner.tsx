@@ -4,7 +4,7 @@ export const BOUNDARY_TEXT =
 
 export function BoundaryBanner() {
   return (
-    <div role="note" className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-sm text-amber-950">
+    <div role="note" className="shrink-0 border-b border-border bg-card px-5 py-2 text-[11px] leading-relaxed text-muted-foreground md:px-7">
       {BOUNDARY_TEXT}
     </div>
   )

@@ -14,6 +14,8 @@ vi.mock('@/features/benchmark/BenchmarkView', () => ({ BenchmarkView: () => <div
 vi.mock('@/features/about', () => ({ About: () => <div>Methods view</div> }));
 vi.mock('@/features/single-cell', () => ({ SingleCellPanel: () => <div>Cell view</div> }));
 
+Object.defineProperty(window, 'matchMedia', { writable: true, value: vi.fn().mockImplementation(query => ({ matches: false, media: query, onchange: null, addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn() })) });
+beforeEach(() => { localStorage.clear(); document.documentElement.classList.remove('dark'); });
 beforeEach(() => useUi.setState({ step: 'candidates', selectedCandidateId: null, sessionId: null, mode: 'attack' }));
 afterEach(cleanup);
 describe('research workspace shell', () => {
@@ -21,7 +23,7 @@ describe('research workspace shell', () => {
     render(<App />);
     expect(screen.getByRole('main', { name: 'Candidates' }).textContent).toContain('Candidate explorer');
     const nav = within(screen.getByRole('navigation', { name: 'Research workspace' }));
-    expect(nav.getAllByRole('button').map((b) => b.firstChild?.textContent)).toEqual([
+    expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual([
       'Candidates', 'Disease signature', 'Evidence', 'Experiments', 'Benchmark', 'Cell types', 'Methods',
     ]);
     expect(STEPS[0].id).toBe('candidates');
