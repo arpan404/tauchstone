@@ -12,22 +12,22 @@ import { useUi } from '@/store/ui';
 import ReactECharts from 'echarts-for-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { beliefPoints, buildBeliefOption } from './beliefOption';
+import { fmt2, hasIntervalWidth, observedText } from './format';
 
 type Session = Schema<'AttackSession'>;
 
-function BudgetPips({ budget, remaining }: { budget: number; remaining: number }) {
+function BudgetPips({ budget, remaining, hidden }: { budget: number; remaining: number; hidden: number }) {
+  const testsLeft = Math.min(remaining, hidden);
   return (
-    <div className="flex items-center gap-1.5" role="img" aria-label={`Budget: ${remaining} of ${budget} validations remaining`}>
-      {Array.from({ length: budget }, (_, i) => (
-        <span
-          key={i}
-          aria-hidden
-          className={`inline-block h-3 w-3 rounded-full ${i < remaining ? 'bg-teal-700' : 'bg-neutral-200'}`}
-        />
+    <div
+      className="flex items-center gap-1.5"
+      role="img"
+      aria-label={`Budget ${remaining} of ${budget}; ${hidden} hidden contexts; ${testsLeft} tests left`}
+    >
+      {Array.from({ length: testsLeft }, (_, i) => (
+        <span key={i} aria-hidden className="inline-block h-3 w-3 rounded-full bg-teal-700" />
       ))}
-      <span className="ml-1 text-sm tabular-nums text-neutral-600">
-        {remaining}/{budget}
-      </span>
+      <span className="ml-1 text-sm tabular-nums text-neutral-600">{testsLeft} tests left</span>
     </div>
   );
 }
@@ -43,6 +43,7 @@ export function AttackView() {
   const run = useRunExperiment(session?.session_id ?? null);
 
   const effectivePicked = picked ?? session?.recommended_context_id ?? null;
+  const hiddenCount = session ? session.contexts.filter((c) => c.status === 'hidden').length : 0;
   const beliefChart = useMemo(
     () => buildBeliefOption(beliefPoints(session?.history ?? [])),
     [session],
@@ -108,12 +109,18 @@ export function AttackView() {
                 <span className="text-2xl font-semibold tabular-nums text-teal-900" aria-live="polite">
                   {session.belief.p_claim_holds.toFixed(2)}
                 </span>{' '}
-                <span className="text-xs tabular-nums text-neutral-500">
-                  [{session.belief.interval?.[0].toFixed(2)}, {session.belief.interval?.[1].toFixed(2)}]
-                </span>
+                {hasIntervalWidth(session.belief.interval) && (
+                  <span className="text-xs tabular-nums text-neutral-500">
+                    [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]
+                  </span>
+                )}
               </p>
               <VerdictBadge verdict={session.verdict} size="sm" />
-              <BudgetPips budget={session.budget} remaining={session.budget_remaining} />
+              <BudgetPips
+                budget={session.budget}
+                remaining={session.budget_remaining}
+                hidden={hiddenCount}
+              />
               <label className="flex items-center gap-1.5 text-xs">
                 <span className={mode !== 'learn' ? 'font-semibold' : 'text-neutral-500'}>Attack</span>
                 <Switch
@@ -193,16 +200,19 @@ export function AttackView() {
                     <p className="text-5xl font-semibold tabular-nums text-teal-900" aria-live="polite">
                       {session.belief.p_claim_holds.toFixed(2)}
                     </p>
-                    {session.belief.interval && (
+                    {hasIntervalWidth(session.belief.interval) && (
                       <p className="text-xs tabular-nums text-neutral-500">
-                        90% interval [{session.belief.interval[0].toFixed(2)},{' '}
-                        {session.belief.interval[1].toFixed(2)}]
+                        90% interval [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]
                       </p>
                     )}
                   </div>
                   <div className="space-y-2">
                     <VerdictBadge verdict={session.verdict} />
-                    <BudgetPips budget={session.budget} remaining={session.budget_remaining} />
+                    <BudgetPips
+                      budget={session.budget}
+                      remaining={session.budget_remaining}
+                      hidden={hiddenCount}
+                    />
                   </div>
                 </div>
                 <div className="w-full" role="img" aria-label="P(claim holds) across reveals">
@@ -232,7 +242,7 @@ export function AttackView() {
                 </CardHeader>
                 <CardContent className="text-sm tabular-nums">
                   <p>
-                    Observed {lastRevealed.value} vs threshold {lastRevealed.threshold} · {lastRevealed.rule}
+                    {observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}
                   </p>
                   <p className="text-neutral-600">
                     Belief {lastRevealed.belief_before.toFixed(3)} →{' '}
@@ -315,8 +325,8 @@ export function AttackView() {
                         <span aria-hidden>{h.outcome === 'survive' ? '✓' : '✗'}</span>
                         <span className="font-medium">{h.label}</span>
                         <span className="text-neutral-500">
-                          {h.outcome} · {h.belief_before.toFixed(2)} → {h.belief_after.toFixed(2)} · mode{' '}
-                          {h.mode_used ?? session.mode}
+                          {h.outcome} · {observedText(h.value, h.threshold)} · {h.belief_before.toFixed(2)} →{' '}
+                          {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode}
                         </span>
                       </li>
                     ))}

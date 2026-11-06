@@ -10,6 +10,24 @@ import { buildCalibrationOption, buildPolicyOption } from './benchmarkOptions';
 
 import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
 
+/** Display labels for benchmark policies (API sends raw ids as labels). */
+export const POLICY_LABELS: Record<string, string> = {
+  random: 'Random',
+  greedy_strongest: 'Greedy strongest',
+  max_failure: 'Attack (max failure)',
+  max_uncertainty: 'Max uncertainty',
+  expected_decision_change: 'Learn (expected decision change)',
+  tauchstone_hybrid: 'Tauchstone (co-primary)',
+  decision_lookahead_hybrid: 'Decision-aware (co-primary)',
+};
+
+function withLabels(analysis: BenchmarkAnalysis): BenchmarkAnalysis {
+  return {
+    ...analysis,
+    policies: analysis.policies.map((p) => ({ ...p, label: POLICY_LABELS[p.policy] ?? p.label })),
+  };
+}
+
 function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): BenchmarkAnalysis {
   const all = data.all_candidates;
   if (scope === 'all' && all?.policies && all.policies.length > 0) {
@@ -38,7 +56,7 @@ export function BenchmarkView() {
   const [scope, setScope] = useState<'contested' | 'all'>('contested');
   const hasAll = !!data?.all_candidates?.policies && data.all_candidates.policies.length > 0;
   const analysis = useMemo(
-    () => (data ? activeAnalysis(data, hasAll ? scope : 'contested') : null),
+    () => (data ? withLabels(activeAnalysis(data, hasAll ? scope : 'contested')) : null),
     [data, scope, hasAll],
   );
   const policyOption = useMemo(
@@ -69,8 +87,8 @@ export function BenchmarkView() {
                 <>
                   Candidates undecided before testing (n ={' '}
                   <span className="tabular-nums">{analysis.n_candidates}</span>
-                  {data.contested_share !== undefined &&
-                    `, ${Math.round(data.contested_share * 100)}% of pool`}
+                  {(data.contested_share ?? data.all_candidates?.contested_share) !== undefined &&
+                    `, ${Math.round(((data.contested_share ?? data.all_candidates?.contested_share) ?? 0) * 100)}% of pool`}
                   )
                 </>
               )}{' '}
