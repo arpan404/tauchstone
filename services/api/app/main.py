@@ -8,6 +8,8 @@ Endpoints are defined in contracts/openapi.yaml; build against that, not this fi
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routes import attack, benchmark, candidates, signatures
+from app.schemas.models import Health
 from app.settings import settings
 
 app = FastAPI(title="Tauchstone: Second Life", version="0.1.0")
@@ -18,7 +20,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(signatures.router)
+app.include_router(candidates.router)
+app.include_router(attack.router)
+app.include_router(benchmark.router)
 
-@app.get("/health")
+
+@app.get("/health", response_model=Health, response_model_exclude_unset=True)
 def health() -> dict:
-    return {"status": "ok", "mock": settings.mock, "data_dir": str(settings.data_dir)}
+    return {"status": "ok", "mock": settings.mock}

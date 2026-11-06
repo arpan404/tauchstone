@@ -1,0 +1,340 @@
+{
+  "signature": "GSE132903__main",
+  "n_ranked": 50,
+  "permutation_control": {
+    "n_permutations": 200,
+    "theta": -1.05,
+    "passed": true
+  },
+  "candidates": [
+    {
+      "id": "MOCK-0002",
+      "rank": 1,
+      "name": "Mock compound 02",
+      "consensus": -2.607,
+      "consensus_iqr": [
+        -2.857,
+        -2.357
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -2.501,
+        "ks": -2.652,
+        "cosine": -2.584
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.578,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.702,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.55,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.543,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.758,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.729,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.519,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.728,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -3.004,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": true
+    },
+    {
+      "id": "MOCK-0003",
+      "rank": 2,
+      "name": "Mock compound 03",
+      "consensus": -2.597,
+      "consensus_iqr": [
+        -2.847,
+        -2.347
+      ],
+      "n_ranking_contexts": 6,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.501,
+        "ks": -2.539,
+        "cosine": -2.664
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.713,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.514,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.669,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.385,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.668,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.347,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.75,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false
+    },
+    {
+      "id": "MOCK-0001",
+      "rank": 3,
+      "name": "Mock compound 01",
+      "consensus": -2.588,
+      "consensus_iqr": [
+        -2.838,
+        -2.338
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -2.61,
+        "ks": -2.68,
+        "cosine": -2.487
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.74,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.506,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.414,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.694,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.843,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.583,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.182,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false
+    },
+    {
+      "id": "MOCK-0004",
+      "rank": 4,
+      "name": "Mock compound 04",
+      "consensus": -2.451,
+      "consensus_iqr": [
+        -2.701,
+        -2.201
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.4,
+        "ks": -2.409,
+        "cosine": -2.42
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.441,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.551,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.259,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.148,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.629,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.317,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.356,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false
+    },
+    {
+      "id": "MOCK-0006",
+      "rank": 5,
+      "name": "Mock compound 06",
+      "consensus": -2.392,
+      "consensus_iqr": [
+        -2.642,
+        -2.142
+      ],
+      "n_ranking_contexts": 7,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.35,
+        "ks": -2.525,
+        "cosine": -2.413
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -2.612,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.424,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.356,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.454,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.545,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": true
+    }
+  ],
+  "provenance": {
+    "step": "mock-world",
+    "dataset_accession": "MOCK",
+    "random_seed": 20261105,
+    "processing_version": "mock-0.1",
+    "git_commit": "mock",
+    "timestamp": "2026-11-06T00:00:00Z"
+  }
+}
