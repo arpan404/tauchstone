@@ -7,7 +7,7 @@ export TS_DATA_DIR
 LINCS_RAW := $(TS_DATA_DIR)/raw/lincs
 
 .PHONY: help setup setup-py setup-r setup-web data unpack-lincs checksums \
-        signatures rank evidence truth-table benchmark demo \
+        signatures rank permutation-control evidence truth-table benchmark demo \
         api web dev test test-r lint up
 
 help:
@@ -38,8 +38,14 @@ unpack-lincs: ## Decompress LINCS Level 5 GCTX (keeps the .gz)
 signatures: ## Disease signatures for all cohorts (R: limma / DESeq2)
 	Rscript pipelines/geo/R/run_all.R
 
-rank: ## LINCS reversal scores + consensus ranking
-	uv run python -m pipelines.lincs.rank --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__main.parquet --out-name GSE132903__main
+rank: ## LINCS reversal scores + consensus ranking (gold signatures) for the primary, held-out and adjusted signatures
+	uv run python -m pipelines.lincs.rank --gold-only --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__main.parquet --out-name GSE132903__main
+	uv run python -m pipelines.lincs.rank --gold-only --signature $(TS_DATA_DIR)/processed/signatures/GSE173955__main.parquet --out-name GSE173955__main
+	uv run python -m pipelines.lincs.rank --gold-only --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__composition_adjusted.parquet --out-name GSE132903__composition_adjusted
+	uv run python -m pipelines.evidence.candidate_pool --ranking GSE132903__main
+
+permutation-control: ## 200 label permutations of GSE132903, gold signatures (about 15 min)
+	uv run python -m pipelines.lincs.rank --gold-only --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__main.parquet --out-name GSE132903__gold_permctl --permutations $(TS_DATA_DIR)/processed/signatures/GSE132903__permutations.parquet --workers 12
 
 evidence: ## Evidence cards for the top 50
 	@echo "TODO workstream 4: pipelines/evidence" && exit 1

@@ -107,8 +107,13 @@ LINCS compounds are matched to Open Targets 26.09 `drug_molecule` by full InChIK
 The ranking itself covers every compound. The benchmark pool is the top 50 eligible compounds, the
 development pool is eligible ranks 51–100, and the demo candidates are eligible ranks 1, 5 and 12.
 
-**Signature set.** All trt_cp signatures are used (the person's decision). An optional `--gold-only`
-mode (distil_cc_q75 ≥ 0.2, 0 ≤ pct_self_rank_q25 ≤ 5, ≥ 2 replicates) exists for comparison only.
+**Signature set** (prereg). Only LINCS gold signatures are used: distil_cc_q75 ≥ 0.2,
+0 ≤ pct_self_rank_q25 ≤ 5 and ≥ 2 replicates (Subramanian et al. 2017). That leaves 113,310 of 312,438
+signatures and 5,690 rankable compounds. They are used for scaling, aggregation, held-out contexts and
+permutations. History, disclosed: the first run used all signatures. In the clinical pool, 0 of the
+top 20 ranked compounds were more extreme than the shuffled-label null at the same rank, against 15/20
+with gold only. Neither run passes the strict "all top 20 at p < 0.05" gate (14/20 vs 17/20), and that
+is reported as is.
 
 **Known-positive check.** Compounds reported in prior AD CMap papers should rank above the median.
 Report this; never tune toward it.
