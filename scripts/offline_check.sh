@@ -103,6 +103,15 @@ check("held-out signature 200 after reveal", s == 200, f"status={s}")
 s, bench, _ = req("GET", "/api/benchmark")
 check("benchmark 200", s == 200 and bench, f"status={s}")
 
+s, cells, _ = req("GET", "/api/exploratory/single-cell")
+check(
+    "exploratory single-cell 200 + labelled, real",
+    s == 200
+    and (cells or {}).get("label") == "Exploratory, not part of the preregistered benchmark"
+    and not ((cells or {}).get("provenance") or {}).get("parameters", {}).get("synthetic"),
+    f"status={s}",
+)
+
 if pdb_id:
     s, _, ct = req("GET", f"/api/structures/{pdb_id}.cif")
     check(f"structure {pdb_id}.cif 200", s == 200, f"status={s} ct={ct}")
