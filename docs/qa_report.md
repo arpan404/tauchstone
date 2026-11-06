@@ -93,20 +93,60 @@ Wortmannin 5061/5538/5640 (below median, positive/non-reversing scores);
 rapamycin not ranked under that name. 6/7 ranked names above median. Nothing
 changed on the basis of this.
 
-## 9. Exposure plausibility — PASS + advisory xfail
+## 9. Exposure plausibility, S4 review 2026-11-06
 
-`tests/redteam/test_exposure_bounds.py`. 22 measured rows cover pool drugs
-(13 Kp, 7 CSF, 2 PAMPA-BBB). Hard bounds pass: max Kp 14.44 (< 50), Pe values
-within 1e-8..1e-3 cm/s. **Advisory flags (strict xfail, for the lead):** one
-preclinical CSF row with ratio > 1 (unusual without active influx — confirm
-matrix/assay before trusting that brain_exposure outcome) and one CSF row with
-a `%` unit (confirm what the percent denotes). Identification query for the lead
-(no values reproduced here — they feed hidden contexts):
-`SELECT pert_id, level, measure, value, unit FROM read_parquet('.../evidence/exposure.parquet')
-WHERE is_measured AND measure = 'csf'` — full table prints in CI output
-(`pytest -s`), redacted from this doc by design. Deviation disclosed: the brief
-asked to print every measured row; printing is CI-only so the values are not
-baked into a shareable document.
+The 22 measured pool rows pass the physical-bound screen. S4 reviewed both
+advisory rows against the local read-only ChEMBL 37 SQLite cache at
+`raw/evidence/chembl/extracted/chembl_37/chembl_37_sqlite/chembl_37.db`.
+No live lookup or cache write was needed. These are held-out measured exposure
+facts, used only for QA, never ranking, thresholds or candidate choice.
+
+| Flag | ChEMBL evidence | Verdict |
+|---|---|---|
+| BRD-K04412738, CSF ratio above one | Assay CHEMBL1798468, activity 6263055, standard type `K(p,uu,CSF)`, no supplied unit. Description says unbound CSF to plasma concentration ratio in human; assay and target organisms both Homo sapiens. Document CHEMBL1795238, PMID 19764786, DOI [10.1021/jm901036q](https://doi.org/10.1021/jm901036q). | Real reported measured ratio, no parse error. The earlier preclinical description in this report was wrong. A ratio above one alone does not establish a parse error. |
+| BRD-K92723993, CSF percent | Assay CHEMBL1016182, activity 2279459, standard type `Drug uptake`, unit `%`. Description says drug level in rhesus monkey cerebrospinal fluid; organism Macaca mulatta. Document CHEMBL1153393, PMID 19296653, DOI [10.1021/jm801315b](https://doi.org/10.1021/jm801315b). | Real reported measured uptake percentage, no parse error. Preserve `%`; do not reinterpret as a concentration or Kp. The cached description does not specify the percentage denominator. |
+
+These verdicts concern faithful extraction of ChEMBL records, not independent
+validation of the underlying experiments. Neither requires an exposure code fix.
+No truth-table row or outcome would change from this review. The frozen rules
+accept human CNS PK presence, but do not evaluate preclinical CSF uptake.
+No frozen or processed output was regenerated. Human scientific sign-off remains required.
+
+The advisory test now asserts the exact reviewed flag set instead of xfail,
+so new flags still fail. It no longer prints per-drug measured values, including
+under `pytest -s`. Only aggregates and minimal assay facts appear here.
+
+## S4 structure audit, 2026-11-06
+
+Read-only join of candidate pool ranks 1-10 to frozen targets and structures.
+Seven candidates have no mapped target, so a structure cannot be confirmed for
+them. All four mapped targets have local files with atom sites parsed by Gemmi
+0.7.5 and byte-identical HTTP 200 responses from the real API on port 8200.
+Structures are target context, never binding evidence.
+
+| Pool rank | Target | Structure | Local .cif | Parses | Served |
+|---|---|---|---|---|---|
+| 1 | no mapped target | unavailable | n/a | n/a | n/a |
+| 2 | PTGS2 | 5F1A | yes | yes | 200, identical bytes |
+| 2 | PTGS1 | 6Y3C | yes | yes | 200, identical bytes |
+| 3 | no mapped target | unavailable | n/a | n/a | n/a |
+| 4 | HRH3 | 8YN5 | yes | yes | 200, identical bytes |
+| 5 | no mapped target | unavailable | n/a | n/a | n/a |
+| 6 | no mapped target | unavailable | n/a | n/a | n/a |
+| 7 | no mapped target | unavailable | n/a | n/a | n/a |
+| 8 | no mapped target | unavailable | n/a | n/a | n/a |
+| 9 | AR | 5JJM | yes | yes | 200, identical bytes |
+| 10 | no mapped target | unavailable | n/a | n/a | n/a |
+
+Repeatable data check:
+`uv run --with gemmi pytest tests/redteam/test_structure_files.py -q`.
+Gemmi is an optional audit dependency; without it this test skips explicitly.
+The check exercises the actual FastAPI route with the real Parquet repository,
+asserts mapped targets have structures, parses atoms and compares response bytes.
+The separate live-port check used the same four IDs and all passed.
+
+S4 part C remains blocked on Arpan registering a CLUE account and supplying
+`TS_CLUE_API_KEY`. No key was sought and no CLUE query or correlation was run.
 
 ## 10. Wording scan — PASS
 
@@ -120,7 +160,7 @@ baked into a shareable document.
   from current permutation files. Reconcile before the expo.
 - **F-02:** `prereg_guard` leaks a raw traceback outside git checkouts; move the
   rev-parse inside the try (one-line fix, WS5).
-- Advisory exposure flags in §9.
+- Exposure flags reviewed in §9; no parse correction needed.
 
 ## Not verified
 
@@ -128,3 +168,17 @@ baked into a shareable document.
 - The 403→200 gating test reveals one cohort context per candidate through
   committed experiment runs, as sanctioned (one value per committed experiment).
 - Scientific sign-off on signatures, θ and claim wording remains with the human.
+
+## S4 check results, 2026-11-06
+
+- `uv sync` completed with pinned dependencies.
+- `PYTHONPATH=/tmp/s4-cif-parser UV_CACHE_DIR=/tmp/s4-uv-cache make test`:
+  171 passed, 4 skipped; web typecheck passed. Gemmi 0.7.5 was installed only
+  under `/tmp/s4-cif-parser`, with no project dependency changes.
+- Explicit real-data exposure and structure tests: all 3 passed.
+- `cd apps/web && bun install && bun run build && bun run typecheck && bun run lint && bun run test && bun run check:api`:
+  passed; 7 web test files, 26 tests. Existing Vite chunk/config warnings and
+  React lint warnings remain. FastAPI tests emit a Starlette deprecation warning.
+- Ruff on both changed test files and `git diff --check`: passed.
+- Port-8200 real API checks: 4/4 HTTP 200, bytes match; server stopped afterward.
+- No UI changes; offline check skipped as instructed. No R tests or CLUE check run.
