@@ -4,7 +4,6 @@ import { BoundaryBanner } from "@/components/BoundaryBanner";
 import { MockRibbon } from "@/components/MockRibbon";
 import { ProvenanceStrip } from "@/components/ProvenanceStrip";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -15,7 +14,12 @@ import {
 } from "@/components/ui/tooltip";
 import { useUi } from "@/store/ui";
 import { useMemo, useState } from "react";
-import { iqrBar } from "./heatmapOption";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import "./workspace.css";
 
 type Candidate = Schema<"Candidate">;
 
@@ -26,102 +30,6 @@ function compareDiscovery(a: Candidate, b: Candidate, sort: string) {
   }
   if (sort === "consensus") return a.consensus - b.consensus || a.rank - b.rank;
   return a.rank - b.rank;
-}
-
-function SignedBar({ value, max }: { value: number; max: number }) {
-  const pct = Math.min(100, (Math.abs(value) / max) * 50);
-  const negative = value < 0;
-  return (
-    <span
-      className="relative inline-block h-3 w-20 overflow-hidden rounded-sm bg-neutral-100"
-      role="img"
-      aria-label={`${value.toFixed(2)} (${negative ? "reversal" : "mimic"})`}
-      title={`${value.toFixed(3)}`}
-    >
-      <span className="absolute top-0 bottom-0 left-1/2 w-px bg-neutral-400" />
-      <span
-        className={`absolute top-0 bottom-0 ${negative ? "bg-teal-700" : "bg-amber-600"}`}
-        style={
-          negative
-            ? { right: "50%", width: `${pct}%` }
-            : { left: "50%", width: `${pct}%` }
-        }
-      />
-    </span>
-  );
-}
-
-function CandidateRow({
-  c,
-  selected,
-  iqrMin,
-  iqrMax,
-  onSelect,
-}: {
-  c: Candidate;
-  selected: boolean;
-  iqrMin: number;
-  iqrMax: number;
-  onSelect: () => void;
-}) {
-  const maxScore = 3;
-  const bar = iqrBar(c.consensus_iqr[0], c.consensus_iqr[1], iqrMin, iqrMax);
-  return (
-    <tr
-      role="button"
-      tabIndex={0}
-      aria-label={`Select ${c.name}, rank ${c.rank}, consensus ${c.consensus.toFixed(2)}`}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-      aria-selected={selected}
-      className={`cursor-pointer border-b border-neutral-100 tabular-nums hover:bg-teal-50/50 focus-visible:bg-teal-50/50 focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-inset focus-visible:outline-none ${
-        selected ? "bg-teal-50" : ""
-      }`}
-    >
-      <td className="py-1.5 pr-2 pl-2 font-medium">{c.rank}</td>
-      <td className="py-1.5 pr-2">{c.name}</td>
-      <td className="py-1.5 pr-2 font-semibold text-teal-900">
-        {c.consensus.toFixed(2)}
-      </td>
-      <td className="py-1.5 pr-2">
-        <span
-          className="relative inline-block h-3 w-24 overflow-hidden rounded-sm bg-neutral-100"
-          role="img"
-          aria-label={`IQR ${c.consensus_iqr[0].toFixed(2)} to ${c.consensus_iqr[1].toFixed(2)}`}
-          title={`IQR [${c.consensus_iqr[0].toFixed(2)}, ${c.consensus_iqr[1].toFixed(2)}]`}
-        >
-          <span
-            className="absolute top-0 bottom-0 rounded-sm bg-teal-700/70"
-            style={{
-              left: `${bar.left}%`,
-              width: `${Math.max(4, bar.width)}%`,
-            }}
-          />
-        </span>
-      </td>
-      <td className="py-1.5 pr-2">
-        <SignedBar value={c.scores.wtcs} max={maxScore} />
-      </td>
-      <td className="py-1.5 pr-2">
-        <SignedBar value={c.scores.ks} max={maxScore} />
-      </td>
-      <td className="py-1.5 pr-2">
-        <SignedBar value={c.scores.cosine} max={maxScore} />
-      </td>
-      <td className="py-1.5 pr-2">{c.n_ranking_contexts}</td>
-      <td className="py-1.5 pr-2">
-        {c.approval_status && c.approval_status.status !== "unknown" && (
-          <Badge variant="secondary">{c.approval_status.status}</Badge>
-        )}
-      </td>
-      <td className="py-1.5 pr-2 text-neutral-500">{c.flags?.join(", ")}</td>
-    </tr>
-  );
 }
 
 export function RepurposingView() {
@@ -148,22 +56,17 @@ export function RepurposingView() {
 
     [data, query, sort, negativeOnly],
   );
-  const iqrRange = useMemo(() => {
-    const los = (data?.candidates ?? []).map((c) => c.consensus_iqr[0]);
-    const his = (data?.candidates ?? []).map((c) => c.consensus_iqr[1]);
-    return { min: Math.min(...los, 0), max: Math.max(...his, 0) };
-  }, [data]);
   const perm = data?.permutation_control;
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="candidate-workspace flex h-full min-h-0 flex-col bg-background text-foreground">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex-1 space-y-4 overflow-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-auto p-4">
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          <h2 className="text-xl font-semibold">Repurposing candidates</h2>
+          <h2 className="text-lg font-semibold">Repurposing candidates</h2>
           {data && (
-            <p className="text-sm text-neutral-500">
+            <p className="text-sm text-muted-foreground">
               {data.n_ranked} compounds ranked · signature {data.signature}
             </p>
           )}
@@ -172,13 +75,13 @@ export function RepurposingView() {
               <Tooltip>
                 <TooltipTrigger
                   aria-label={`Permutation control: ${perm.passed ? "passed" : "top-20 not all significant (gate: all 20 at p < 0.05)"}`}
-                  className="rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:outline-none"
+                  className="rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 >
                   <span className="tabular-nums">
                     Permutation control:{" "}
                     <span
                       className={
-                        perm.passed ? "text-teal-800" : "text-amber-800"
+                        perm.passed ? "text-primary" : "text-foreground"
                       }
                     >
                       {perm.passed
@@ -207,79 +110,25 @@ export function RepurposingView() {
         {data && (
           <>
             {compared.length > 0 && <section aria-label="Candidate comparison">
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    Discovery comparison ({compared.length}/3)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCompared([])}
-                  >
-                    Clear comparison
-                  </Button>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr>
-                          {[
-                            "Candidate",
-                            "Rank",
-                            "Consensus",
-                            "IQR",
-                            "WTCS",
-                            "KS",
-                            "Cosine",
-                            "Contexts",
-                            "",
-                          ].map((h) => (
-                            <th key={h}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {compared
-                          .map((id) => data.candidates.find((c) => c.id === id))
-                          .filter((c): c is Candidate => !!c)
-                          .map((c) => (
-                            <tr key={c.id}>
-                              <td>{c.name}</td>
-                              <td>{c.rank}</td>
-                              <td>{c.consensus.toFixed(3)}</td>
-                              <td>{c.consensus_iqr.map(value => value.toFixed(3)).join(" to ")}</td>
-                              <td>{c.scores.wtcs.toFixed(3)}</td>
-                              <td>{c.scores.ks.toFixed(3)}</td>
-                              <td>{c.scores.cosine.toFixed(3)}</td>
-                              <td>{c.n_ranking_contexts}</td>
-                              <td>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  aria-label={`Remove ${c.name}`}
-                                  onClick={() =>
-                                    setCompared((ids) =>
-                                      ids.filter((id) => id !== c.id),
-                                    )
-                                  }
-                                >
-                                  Remove
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex items-center justify-between gap-3 border-b border-border pb-2">
+                <h3 className="text-sm font-medium">Discovery comparison ({compared.length}/3)</h3>
+                <Button variant="ghost" size="sm" onClick={() => setCompared([])}>Clear comparison</Button>
+              </div>
+              <div className="grid gap-3 pt-3 md:grid-cols-3">
+                {compared.map(id => data.candidates.find(c => c.id === id)).filter((c): c is Candidate => !!c).map(c => <div key={c.id} className="min-w-0 rounded-lg border border-border bg-card p-3">
+                  <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-medium">{c.name}</span><Button variant="ghost" size="sm" aria-label={`Remove ${c.name}`} onClick={() => setCompared(ids => ids.filter(id => id !== c.id))}>Remove</Button></div>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">{[
+                    ["Rank", c.rank], ["Consensus", c.consensus.toFixed(3)],
+                    ["IQR", c.consensus_iqr.map(v => v.toFixed(3)).join(" to ")], ["Contexts", c.n_ranking_contexts],
+                    ["WTCS", c.scores.wtcs.toFixed(3)], ["KS", c.scores.ks.toFixed(3)], ["Cosine", c.scores.cosine.toFixed(3)],
+                  ].map(([label,value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="font-mono tabular-nums">{value}</dd></div>)}</dl>
+                </div>)}
+              </div>
             </section>}
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+            <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
               <section
                 aria-label="Candidate inspector"
-                className="order-first min-w-0 lg:order-last lg:col-start-2 lg:row-start-1"
+                className="order-first min-w-0 self-start lg:order-last lg:col-start-2 lg:row-start-1"
               >
                 <Card>
                   {selected ? (
@@ -288,18 +137,20 @@ export function RepurposingView() {
                         <CardTitle>{selected.name}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <p>
-                          ID {selected.id} · Discovery rank {selected.rank} ·
-                          Consensus {selected.consensus.toFixed(3)}
-                        </p>
-                        <p>
-                          IQR {selected.consensus_iqr.map(value => value.toFixed(3)).join(" to ")} ·{" "}
-                          {selected.n_ranking_contexts} ranking contexts
-                        </p>
-                        <p>
-                          WTCS {selected.scores.wtcs.toFixed(3)} · KS {selected.scores.ks.toFixed(3)}{" "}
-                          · Cosine {selected.scores.cosine.toFixed(3)}
-                        </p>
+                        <p className="break-all text-xs text-muted-foreground">{selected.id}</p>
+                        <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                          {[
+                            ["Discovery rank", selected.rank],
+                            ["Consensus", selected.consensus.toFixed(3)],
+                            ["IQR", selected.consensus_iqr.map(v => v.toFixed(3)).join(" to ")],
+                            ["Ranking contexts", selected.n_ranking_contexts],
+                            ["WTCS", selected.scores.wtcs.toFixed(3)],
+                            ["KS", selected.scores.ks.toFixed(3)],
+                            ["Cosine", selected.scores.cosine.toFixed(3)],
+                            ["Approval", selected.approval_status?.status ?? "unspecified"],
+                          ].map(([label, value]) => <div key={label}><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 font-mono text-xs tabular-nums">{value}</dd></div>)}
+                        </dl>
+                        {selected.flags?.length ? <p className="text-xs text-muted-foreground">Flags: {selected.flags.join(", ")}</p> : null}
                         <div className="flex flex-wrap gap-4">
                           <Button
                             variant="outline"
@@ -355,62 +206,28 @@ export function RepurposingView() {
                 </Card>
               </section>
 
-              <Card className="min-w-0 lg:col-start-1 lg:row-start-1">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
+              <section className="candidate-table-pane flex min-h-0 min-w-0 flex-col lg:col-start-1 lg:row-start-1">
+                <div className="mb-3 text-xs text-muted-foreground">
+                  <p>
                     Discovery ranking · negative consensus = reversal. Select a
                     row to inspect.
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <div className="mb-4 flex flex-wrap items-center gap-3">
-                    <label className="grid gap-1 text-xs font-medium">
-                      Search name or ID{" "}
-                      <input
-                        className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-ring"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                    </label>
-                    <label className="grid gap-1 text-xs font-medium">
-                      Sort{" "}
-                      <select
-                        className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-ring"
-                        value={sort}
-                        onChange={(e) => setSort(e.target.value)}
-                      >
-                        <option value="rank">Discovery rank</option>
-                        <option value="consensus">Consensus ascending</option>
-                        <option value="name">Name</option>
-                        <option value="contexts">
-                          Ranking contexts descending
-                        </option>
-                      </select>
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={negativeOnly}
-                        onChange={(e) => setNegativeOnly(e.target.checked)}
-                      />{" "}
-                      Negative consensus only
-                    </label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setQuery("");
-                        setNegativeOnly(false);
-                        setSort("rank");
-                      }}
-                    >
-                      Clear controls
-                    </Button>
-                    <span role="status">
-                      {candidates.length} of {data.candidates.length} loaded ·{" "}
-                      {data.n_ranked} ranked
-                    </span>
+                  </p>
+                </div>
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <div className="mb-4 flex flex-wrap items-end gap-3">
+                    <div className="grid min-w-40 flex-1 gap-1.5">
+                      <label htmlFor="candidate-search" className="text-xs text-muted-foreground">Search name or ID</label>
+                      <div className="relative"><Search aria-hidden="true" className="absolute left-2.5 top-2 size-4 text-muted-foreground"/><Input id="candidate-search" aria-label="Search name or ID" className="pl-8" value={query} onChange={e => setQuery(e.target.value)} /></div>
+                    </div>
+                    <div className="grid gap-1.5"><span id="candidate-sort-label" className="text-xs text-muted-foreground">Sort</span>
+                    <Select value={sort} onValueChange={v => setSort(v ?? "rank")}>
+                      <SelectTrigger aria-label="Sort"><SelectValue>{(value) => ({rank: "Discovery rank", consensus: "Consensus ascending", name: "Name", contexts: "Ranking contexts descending"}[String(value)])}</SelectValue></SelectTrigger>
+                      <SelectContent>{Object.entries({rank: "Discovery rank", consensus: "Consensus ascending", name: "Name", contexts: "Ranking contexts descending"}).map(([value,label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+                    </Select></div>
+                    <label className="flex h-8 items-center gap-2 text-xs"><Checkbox aria-label="Negative consensus only" checked={negativeOnly} onCheckedChange={setNegativeOnly}/>Negative consensus only</label>
+                    <Button variant="ghost" size="sm" onClick={() => {setQuery(""); setNegativeOnly(false); setSort("rank");}}>Clear controls</Button>
                   </div>
+                  <p role="status" className="mb-2 text-xs text-muted-foreground">{candidates.length} of {data.candidates.length} loaded · {data.n_ranked} ranked</p>
                   <p className="mb-3 text-xs">
                     Filters use discovery ranking fields only. AD minus control;
                     negative drug scores indicate reversal.
@@ -418,45 +235,21 @@ export function RepurposingView() {
                   {candidates.length === 0 && (
                     <p>No candidates match these controls.</p>
                   )}
-                  <div
-                    role="region"
-                    aria-label="Candidate results"
-                    tabIndex={0}
-                    className="max-h-[52vh] overflow-auto rounded border border-border"
-                  >
-                    <table className="w-full min-w-[760px] text-sm">
-                      <thead className="sticky top-0 z-10 bg-background">
-                        <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500">
-                          <th className="py-1 pr-2 pl-2 font-medium">Rank</th>
-                          <th className="py-1 pr-2 font-medium">Name</th>
-                          <th className="py-1 pr-2 font-medium">Consensus</th>
-                          <th className="py-1 pr-2 font-medium">IQR</th>
-                          <th className="py-1 pr-2 font-medium">WTCS</th>
-                          <th className="py-1 pr-2 font-medium">KS</th>
-                          <th className="py-1 pr-2 font-medium">Cos</th>
-                          <th className="py-1 pr-2 font-medium">n ctx</th>
-                          <th className="py-1 pr-2 font-medium">Approval</th>
-                          <th className="py-1 pr-2 font-medium">Flags</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {candidates.map((c) => (
-                          <CandidateRow
-                            key={c.id}
-                            c={c}
-                            selected={c.id === selectedCandidateId}
-                            iqrMin={iqrRange.min}
-                            iqrMax={iqrRange.max}
-                            onSelect={() => {
-                              selectCandidate(c.id);
-                            }}
-                          />
-                        ))}
-                      </tbody>
-                    </table>
+                  <div role="region" aria-label="Candidate results" className="candidate-results min-h-0 overflow-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 z-10 bg-card"><TableRow>
+                        {["Rank", "Candidate", "Consensus", "Contexts"].map(h => <TableHead key={h}>{h}</TableHead>)}
+                      </TableRow></TableHeader>
+                      <TableBody>{candidates.map(c => <TableRow key={c.id} aria-selected={c.id === selectedCandidateId} className={c.id === selectedCandidateId ? "bg-primary/10 hover:bg-primary/10" : ""}>
+                        <TableCell className="font-mono text-xs text-muted-foreground">{c.rank}</TableCell>
+                        <TableCell><Button variant="ghost" className="h-auto max-w-full justify-start px-1 py-0 text-left font-medium" aria-label={`Select ${c.name}, rank ${c.rank}, consensus ${c.consensus.toFixed(2)}`} onClick={() => selectCandidate(c.id)}><span className="truncate">{c.name}</span></Button></TableCell>
+                        <TableCell className="font-mono text-xs tabular-nums">{c.consensus.toFixed(3)}</TableCell>
+                        <TableCell className="font-mono text-xs tabular-nums">{c.n_ranking_contexts}</TableCell>
+                      </TableRow>)}</TableBody>
+                    </Table>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </section>
             </div>
           </>
         )}
