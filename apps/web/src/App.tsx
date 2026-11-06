@@ -6,6 +6,7 @@ import { ExpoScene } from '@/features/expo-scene';
 import { Landing } from '@/features/landing';
 import { RepurposingView } from '@/features/repurposing/RepurposingView';
 import { StoryMode } from '@/features/story';
+import { About } from '@/features/about';
 import { AttackView } from '@/features/tauchstone/AttackView';
 import { useStory } from '@/store/story';
 import { STEPS, useUi } from '@/store/ui';
@@ -32,7 +33,11 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [touring, setTouring] = useState(false);
   const [expo, setExpo] = useState(false);
-  const View = VIEWS[step];
+  // About remembers the step it opened on, so any step change (nav, keys or the tour) leaves it.
+  const [aboutAt, setAboutAt] = useState<StepId | null>(null);
+  const about = aboutAt === step;
+  const setAbout = (open: boolean) => setAboutAt(open ? step : null);
+  const View = about ? About : VIEWS[step];
 
   function startTour() {
     useStory.getState().go(0);
@@ -48,6 +53,7 @@ export default function App() {
       const idx = ['1', '2', '3', '4', '5'].indexOf(e.key);
       if (idx >= 0) {
         setScreen('app');
+        setAboutAt(null);
         setStep(STEPS[idx].id);
       } else if (e.key === 'e' || e.key === 'E') {
         setExpo(true);
@@ -105,18 +111,33 @@ export default function App() {
         {STEPS.map((s) => (
           <button
             key={s.id}
-            onClick={() => setStep(s.id)}
-            aria-current={step === s.id ? 'step' : undefined}
+            onClick={() => {
+              setAbout(false);
+              setStep(s.id);
+            }}
+            aria-current={!about && step === s.id ? 'step' : undefined}
             className={`rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-              step === s.id ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
+              !about && step === s.id ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
             }`}
           >
             <span className="block font-mono">{s.label}</span>
-            <span className={`block text-xs ${step === s.id ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+            <span className={`block text-xs ${!about && step === s.id ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
               {s.hint}
             </span>
           </button>
         ))}
+        <button
+          onClick={() => setAbout(true)}
+          aria-current={about ? 'page' : undefined}
+          className={`rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+            about ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
+          }`}
+        >
+          <span className="block font-mono">How it works</span>
+          <span className={`block text-xs ${about ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+            And how we kept it honest
+          </span>
+        </button>
         <div className="mt-4 flex flex-col gap-2">
           {!touring && (
             <button onClick={startTour} className={navButton}>
@@ -134,7 +155,7 @@ export default function App() {
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {touring && <StoryMode onExit={() => setTouring(false)} />}
-        <main className="min-h-0 flex-1" aria-label={`Step: ${step}`}>
+        <main className="min-h-0 flex-1" aria-label={about ? 'How it works' : `Step: ${step}`}>
           <View />
         </main>
       </div>
