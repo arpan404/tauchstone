@@ -29,6 +29,13 @@ POLICIES = (
 
 MODE_TO_POLICY = {"attack": "max_failure", "learn": "expected_decision_change"}
 
+#: EXPERIMENTAL candidate policies (lead review; not prereg, not in POLICIES).
+#: Selectable in replay by name. Do not add to POLICIES or a real summary.
+CANDIDATE_POLICIES = (
+    "decision_lookahead",
+    "decision_lookahead_hybrid",
+)
+
 _POLICY_LABELS = {
     "random": "random",
     "greedy_strongest": "confirmation (greedy strongest)",
@@ -228,6 +235,84 @@ def _learn_scores(
     return scores
 
 
+def decision_utility(p: float, cfg: EngineConfig) -> float:
+    """EXPERIMENTAL. Probability the verdict announced at belief p is correct.
+
+    p if p >= supported_threshold (announce SUPPORTED), 1 - p if
+    p <= fragile_threshold (announce FRAGILE), else 0 (INSUFFICIENT: no
+    announcement possible).
+    """
+    if p >= cfg.supported_threshold:
+        return p
+    if p <= cfg.fragile_threshold:
+        return 1.0 - p
+    return 0.0
+
+
+def decision_lookahead_scores(
+    hidden: Sequence[Context],
+    observations: Sequence[Observation],
+    n_total: int,
+    cfg: EngineConfig,
+    budget_remaining: int,
+    lam: float = 0.0,
+) -> tuple[dict[str, float], dict[str, float]]:
+    """EXPERIMENTAL two-step decision lookahead + learn tie-break scores.
+
+    Depth d = min(2, budget_remaining). d=1: a(x) = E_y[U(after)]. d=2:
+    a(x) = E_y[max(U(after), V1(after-state))] where V1 is the best d=1 value
+    from the after-state (stopping early when already decisive, hence the
+    max). Every hypothetical updates all other hidden posteriors via
+    similarity, exactly as in learn. P(C) evaluations are cached by
+    revealed-set key. Returns (scores with lam*(1-p_x) added, learn scores).
+    """
+    if budget_remaining < 1:
+        raise ValueError("budget_remaining must be >= 1")
+    d = min(2, budget_remaining)
+    hidden = list(hidden)
+    obs = list(observations)
+    cache: dict[tuple[frozenset, frozenset], float] = {}
+
+    def pc(hl: Sequence[Context], ob: list[Observation]) -> float:
+        key = (
+            frozenset(c.context_id for c in hl),
+            frozenset(
+                (o.context.context_id, bool(o.survive)) for o in ob if o.source == "revealed"
+            ),
+        )
+        if key not in cache:
+            cache[key] = p_claim(list(hl), list(ob), n_total, cfg)
+        return cache[key]
+
+    def v1(hl: Sequence[Context], ob: list[Observation]) -> float:
+        best = 0.0
+        for x2 in hl:
+            px2 = p_survive(x2, ob, cfg)
+            rest2 = [h for h in hl if h.context_id != x2.context_id]
+            val = 0.0
+            for y2 in (False, True):
+                ob3 = [*ob, Observation(context=x2, survive=y2, source="revealed")]
+                w = px2 if y2 else 1.0 - px2
+                val += w * decision_utility(pc(rest2, ob3), cfg)
+            best = max(best, val)
+        return best
+
+    learn = _learn_scores(hidden, obs, n_total, cfg)
+    scores: dict[str, float] = {}
+    for x in hidden:
+        px = p_survive(x, obs, cfg)
+        rest = [h for h in hidden if h.context_id != x.context_id]
+        a = 0.0
+        for y in (False, True):
+            ob2 = [*obs, Observation(context=x, survive=y, source="revealed")]
+            u = decision_utility(pc(rest, ob2), cfg)
+            if d >= 2 and rest:
+                u = max(u, v1(rest, ob2))
+            a += (px if y else 1.0 - px) * u
+        scores[x.context_id] = a + lam * (1.0 - px)
+    return scores, learn
+
+
 def acquisition(
     policy: str,
     hidden: Sequence[Context],
@@ -267,14 +352,35 @@ def choose(
     n_total: int,
     cfg: EngineConfig,
     rng: np.random.Generator,
+    budget_remaining: int | None = None,
 ) -> tuple[str, float, str]:
     """Pick the best hidden context: (context_id, score, rationale sentence).
 
     Ties break by lower context_id (random draws use the seed, so ties there
-    are effectively impossible). The rationale names the maximised quantity.
+    are effectively impossible); experimental lookahead policies break score
+    ties by the learn-mode score first. The rationale names the maximised
+    quantity. Experimental policies require ``budget_remaining``.
     """
     if not hidden:
         raise ValueError("no hidden contexts to choose from")
+    if policy in CANDIDATE_POLICIES:
+        if budget_remaining is None:
+            raise ValueError(f"policy {policy!r} requires budget_remaining")
+        lam = cfg.lam if policy == "decision_lookahead_hybrid" else 0.0
+        scores, learn = decision_lookahead_scores(
+            hidden, observations, n_total, cfg, budget_remaining, lam
+        )
+        best = min(
+            hidden,
+            key=lambda x: (-scores[x.context_id], -learn[x.context_id], x.context_id),
+        )
+        score = scores[best.context_id]
+        depth = min(2, budget_remaining)
+        rationale = (
+            f"Largest {depth}-step expected decision utility {score:.3f}: chance the "
+            "next test leaves the verdict correct and decisive."
+        )
+        return best.context_id, score, rationale
     scores = acquisition(policy, hidden, observations, n_total, cfg, rng)
     best = min(hidden, key=lambda x: (-scores[x.context_id], x.context_id))
     score = scores[best.context_id]
