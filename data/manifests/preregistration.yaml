@@ -1,7 +1,7 @@
 # Pre-registration. Fill in, review, then commit and record the hash of this file
 # BEFORE `make benchmark` runs. The benchmark refuses to run if this file changed
 # after its hash was committed.
-status: draft  # draft -> frozen
+status: frozen  # frozen 2026-11-05 with the person's sign-off; do not edit
 
 signature:
   primary_cohort: GSE132903
