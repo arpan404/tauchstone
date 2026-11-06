@@ -95,3 +95,22 @@ it("keeps a later-row selection visible in the inspector through search and sort
   expect(within(inspector).getByText("Candidate 50")).toBeTruthy();
   expect(useUi.getState().selectedCandidateId).toBe("BRD-50");
 });
+
+it("limits comparison to three candidates and frees a slot when one is removed", () => {
+  render(<RepurposingView />);
+  expect(screen.queryByRole("region", { name: "Candidate comparison" })).toBeNull();
+  for (const name of ["Alpha", "Beta", "Candidate 3"]) {
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(`Select ${name},`) }));
+    fireEvent.click(screen.getByRole("button", { name: "Add to comparison" }));
+  }
+  fireEvent.click(screen.getByRole("button", { name: /Select Candidate 4,/ }));
+  expect(screen.getByRole("button", { name: "Add to comparison" }).hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Remove Alpha", exact: true }));
+  expect(screen.getByRole("button", { name: "Add to comparison" }).hasAttribute("disabled")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Add to comparison" }));
+  const comparison = screen.getByRole("region", { name: "Candidate comparison" });
+  expect(within(comparison).getByText("Candidate 4")).toBeTruthy();
+  expect(within(comparison).queryByText("Alpha")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Clear comparison" }));
+  expect(screen.queryByRole("region", { name: "Candidate comparison" })).toBeNull();
+});
