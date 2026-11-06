@@ -16,6 +16,8 @@ export default defineConfig({
         target: process.env.TS_API_URL ?? 'http://localhost:8000',
         rewrite: (p) => p.replace(/^\/api/, ''),
       },
+      // Evidence cards link structures as /structures/{id}.cif (nginx proxies the same path).
+      '/structures': { target: process.env.TS_API_URL ?? 'http://localhost:8000' },
     },
   },
   test: {
