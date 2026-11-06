@@ -367,6 +367,98 @@ class MockAttackSession:
         return out
 
 
+class RealAttackSession:
+    """Wraps the WS5 engine (pipelines.tauchstone.session.AttackSession) behind the API interface.
+
+    Translates the API's value objects into the engine's, keeps the full revealed history
+    (the engine's own history omits beliefs), carries the held-out cohort accession used to
+    gate /signatures, and stops recommending once the budget is spent.
+    """
+
+    def __init__(
+        self,
+        candidate_id: str,
+        hidden: list[HiddenRow],
+        ranking: list[Observation],
+        cfg: EngineConfig,
+        budget: int = 5,
+        mode: str = "attack",
+        seed: int = 20261105,
+        candidate_name: str | None = None,
+    ) -> None:
+        from pipelines.tauchstone import engine as eng
+        from pipelines.tauchstone.session import AttackSession
+
+        def to_ctx(c: Context) -> eng.Context:
+            return eng.Context(
+                context_id=c.context_id, type=c.type, label=c.label, tissue=c.tissue,
+                region=c.region, platform=c.platform, cell_id=c.cell_id,
+                pert_idose=c.pert_idose, pert_itime=c.pert_itime,
+            )
+
+        self.candidate_name = candidate_name or candidate_id
+        self.budget = budget
+        self._rows = {h.context.context_id: h for h in hidden}
+        self._history: list[dict] = []
+        type_priors = {t: cfg.m(t) for t in
+                       ("held_out_cohort", "composition_adjusted", "lincs_context", "brain_exposure", "cell_type")}
+        self._session = AttackSession(
+            candidate_id,
+            hidden=[to_ctx(h.context) for h in hidden],
+            truth={h.context.context_id: h.outcome == "survive" for h in hidden},
+            ranking=[eng.Observation(context=to_ctx(o.context), survive=o.survive, source="ranking")
+                     for o in ranking],
+            cfg=eng.EngineConfig(q=cfg.q, kappa=cfg.kappa, type_priors=type_priors),
+            budget=budget,
+            mode=mode,
+            seed=seed,
+            values={h.context.context_id: h.value for h in hidden},
+            thresholds={h.context.context_id: h.threshold for h in hidden},
+            rules={h.context.context_id: h.rule for h in hidden},
+            theta=cfg.theta,
+        )
+
+    def state(self) -> dict:
+        st = self._session.state()
+        st["candidate_name"] = self.candidate_name
+        st["claim"]["text"] = (
+            f"{self.candidate_name} reverses the AD signature in at least "
+            f"{st['claim']['q']:.0%} of predefined validation contexts"
+        )
+        st["history"] = list(self._history)
+        if st["budget_remaining"] <= 0:
+            st["recommended_context_id"] = None
+            st["rationale"] = "Budget used up."
+            for c in st["contexts"]:
+                if c["status"] == "hidden":
+                    c["acquisition"] = None
+        return st
+
+    def recommend(self) -> tuple[str | None, float, str]:
+        if self.state()["budget_remaining"] <= 0:
+            return None, 0.0, "Budget used up."
+        try:
+            return self._session.recommend()
+        except ValueError:
+            return None, 0.0, "No hidden contexts remain."
+
+    def run(self, context_id: str, mode: str | None = None) -> dict:
+        if context_id not in self._rows:
+            raise ContextNotFoundError(f"unknown context for this candidate: {context_id}")
+        if any(h["context_id"] == context_id for h in self._history):
+            raise AlreadyRevealedError(f"context already revealed: {context_id}")
+        if len(self._history) >= self.budget:
+            raise BudgetExhaustedError("budget exhausted")
+        out = self._session.run(context_id, mode=mode if mode in ("attack", "learn") else None)
+        revealed = dict(out["revealed"])
+        revealed["detail"] = self._rows[context_id].detail
+        self._history.append(revealed)
+        state = self.state()
+        state["revealed"] = revealed | {"cohort": self._rows[context_id].context.cohort}
+        state["done"] = out["done"]
+        return state
+
+
 def create_attack_session(
     candidate_id: str,
     hidden: list[HiddenRow],
@@ -377,15 +469,9 @@ def create_attack_session(
     seed: int = 20261105,
     candidate_name: str | None = None,
 ):
-    """Build a session: real WS5 engine when importable, else the mock engine."""
-    if _REAL:  # pragma: no cover
-        raise NotImplementedError(
-            "pipelines.tauchstone is importable but the adapter mapping is not wired; "
-            "wire Context/Observation translation here"
-        )
-    return MockAttackSession(
-        candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name
-    )
+    """Build a session: the real WS5 engine when importable, else the mock engine."""
+    cls = RealAttackSession if _REAL else MockAttackSession
+    return cls(candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name)
 
 
 def is_real() -> bool:
