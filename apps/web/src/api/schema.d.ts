@@ -122,6 +122,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/exploratory/single-cell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Exploratory single-cell pseudobulk panel. Never part of the preregistered benchmark.
+         * @description Pseudobulk per donor and cell type from GSE272082 and GSE175814, limma-voom AD minus control
+         *     per cohort, cell type (and region where a cohort has several), then the top 20 benchmark-pool
+         *     drugs scored against each signature with the same three methods as the bulk ranking.
+         *     Cohorts are never merged. Nothing here feeds the ranking, truth table, engine or benchmark.
+         */
+        get: operations["getSingleCellExploratory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -438,6 +461,54 @@ export interface components {
             preregistration_commit?: string;
             provenance: components["schemas"]["Provenance"];
         };
+        /** @description One pseudobulk AD-minus-control signature (cohort x region x cell type). */
+        SingleCellSignature: {
+            /** @example GSE272082|PFC|astrocytes */
+            signature_id: string;
+            /** @example GSE272082 */
+            cohort: string;
+            /** @description brain region when a cohort has several; null otherwise */
+            region?: string | null;
+            /** @example astrocytes */
+            cell_type: string;
+            n_donors_ad: number;
+            n_donors_control: number;
+            n_nuclei: number;
+            n_genes_tested?: number | null;
+            /** @description genes at FDR < 0.05 (AD minus control) */
+            n_fdr05?: number | null;
+            /**
+             * @description insufficient_donors when either group has fewer than 3 donors; not scored
+             * @enum {string}
+             */
+            status: "ok" | "insufficient_donors";
+        };
+        SingleCellScore: {
+            signature_id: string;
+            /** @description same consensus as the bulk ranking; negative = reversal; null when not scored */
+            consensus: number | null;
+            scores?: components["schemas"]["MethodScores"] | null;
+        };
+        SingleCellDrug: {
+            /** @description LINCS pert_id */
+            candidate_id: string;
+            name: string;
+            pool_rank: number;
+            /** @description consensus against the primary bulk signature */
+            bulk_consensus: number;
+            scores: components["schemas"]["SingleCellScore"][];
+        };
+        SingleCellExploratory: {
+            /** @constant */
+            label: "Exploratory, not part of the preregistered benchmark";
+            /** @description plain-language limits (donor counts */
+            note?: string;
+            /** @description how nuclei were assigned to cell types */
+            cell_typing?: string;
+            signatures: components["schemas"]["SingleCellSignature"][];
+            drugs: components["schemas"]["SingleCellDrug"][];
+            provenance: components["schemas"]["Provenance"];
+        };
     };
     responses: {
         /** @description not found */
@@ -657,6 +728,35 @@ export interface operations {
                 };
             };
             /** @description benchmark not run yet (it only runs after the preregistration hash is committed) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getSingleCellExploratory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description exploratory panel */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SingleCellExploratory"];
+                };
+            };
+            /** @description panel not built yet */
             404: {
                 headers: {
                     [name: string]: unknown;
