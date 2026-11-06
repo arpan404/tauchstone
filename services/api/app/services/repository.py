@@ -8,13 +8,21 @@ $TS_DATA_DIR/processed via DuckDB per contracts/parquet/README.md.
 from __future__ import annotations
 
 import json
+import re
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Protocol
 
-from app.services.engine_adapter import Context, HiddenRow, Observation
+import pandas as pd
+
+from app.services.engine_adapter import (
+    Context,
+    HiddenRow,
+    Observation,
+    load_engine_config,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 MOCK_WORLD_PATH = REPO_ROOT / "contracts" / "fixtures" / "mock_world.json"
@@ -28,7 +36,7 @@ MOCK_PROVENANCE = {
 COHORT_TISSUE = {
     "GSE132903": "middle temporal gyrus",
     "GSE173955": "hippocampus",
-    "GSE53697": "unspecified",
+    "GSE53697": "brain (RNA-seq)",
 }
 COHORT_N = {  # (n_ad, n_control); see final report for the ordering assumption
     "GSE132903": (97, 98),
@@ -48,7 +56,7 @@ SIGN_CHECK_EXPECTED = {
 }
 
 
-class NotFoundError(KeyError):
+class NotFoundError(Exception):
     pass
 
 
@@ -66,6 +74,7 @@ class AttackWorld:
     hidden: list[HiddenRow] = field(default_factory=list)
     ranking: list[Observation] = field(default_factory=list)
     claim: ClaimInfo | None = None
+    engine_cfg: object = None  # real pipelines EngineConfig (parquet mode only)
 
 
 class Repository(Protocol):
@@ -74,6 +83,7 @@ class Repository(Protocol):
     def get_evidence(self, candidate_id: str) -> dict: ...
     def get_attack_world(self, candidate_id: str) -> AttackWorld: ...
     def get_benchmark(self) -> dict: ...
+    def get_structure_path(self, pdb_id: str) -> Path: ...
 
 
 def sign_check_for(genes: list[dict]) -> list[dict]:
@@ -203,14 +213,65 @@ class MockRepository:
             raise NotFoundError("benchmark")
         return bench
 
+    def get_structure_path(self, pdb_id: str) -> Path:
+        raise NotFoundError(f"no structure files in mock mode: {pdb_id}")
+
+
+
 
 # ----------------------------------------------------------------------------
-# Parquet repository (real-data mode; files do not exist yet)
+# Parquet repository (real-data mode)
 # ----------------------------------------------------------------------------
+
+
+PDB_ID_RE = re.compile(r"^[0-9A-Za-z]{4}$")
+SIG_METHODS = ("limma", "limma-trend", "deseq2")
+
+# Provenance sidecar fields mapped onto the contract Provenance schema; anything
+# else (or wrong-typed, e.g. random_seed: {}) is dropped, never passed through.
+_PROV_STR_KEYS = (
+    "step", "sample_filter", "gene_mapping_version", "model",
+    "validation_context", "output", "output_sha256",
+)
 
 
 def _utcnow() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def sanitise_provenance(sidecar: dict, accession: str) -> dict:
+    """Pick sidecar fields that fit the Provenance schema with the right types."""
+    prov: dict = {"dataset_accession": sidecar.get("dataset_accession") or accession}
+    if not isinstance(prov["dataset_accession"], (str, list)):
+        prov["dataset_accession"] = accession
+    inputs = sidecar.get("inputs")
+    if isinstance(inputs, dict):
+        prov["inputs"] = {str(k): (v if v is None or isinstance(v, str) else str(v))
+                          for k, v in inputs.items()}
+    for k in _PROV_STR_KEYS:
+        if isinstance(sidecar.get(k), str):
+            prov[k] = sidecar[k]
+    if isinstance(sidecar.get("parameters"), dict):
+        prov["parameters"] = sidecar["parameters"]
+    seed = sidecar.get("random_seed")
+    if isinstance(seed, bool):
+        pass
+    elif isinstance(seed, int):
+        prov["random_seed"] = seed
+    for k in ("processing_version", "git_commit", "timestamp"):
+        prov[k] = sidecar.get(k) if isinstance(sidecar.get(k), str) else (
+            {"processing_version": "unknown", "git_commit": "unknown",
+             "timestamp": _utcnow()}[k]
+        )
+    return prov
+
+
+def _sig4(p) -> float:
+    """p_value rounded to 4 significant digits (keeps the volcano payload small)."""
+    try:
+        return float(f"{float(p):.4g}")
+    except (TypeError, ValueError):
+        return p
 
 
 class ParquetRepository:
@@ -220,13 +281,16 @@ class ParquetRepository:
         self.base = Path(processed_dir)
 
     # -- low-level ---------------------------------------------------------
-    def _rows(self, rel: str, where: str = "", params: list | None = None) -> list[dict]:
+    def _duck(self):
         import duckdb
 
+        return duckdb.connect()
+
+    def _rows(self, rel: str, where: str = "", params: list | None = None) -> list[dict]:
         path = self.base / rel
         if not path.exists():
             raise NotFoundError(str(path))
-        con = duckdb.connect()
+        con = self._duck()
         try:
             sql = f"SELECT * FROM read_parquet(?) {where}"
             cur = con.execute(sql, [str(path)] + (params or []))
@@ -235,20 +299,31 @@ class ParquetRepository:
         finally:
             con.close()
 
+    def _maybe_rows(self, rel: str) -> list[dict]:
+        try:
+            return self._rows(rel)
+        except NotFoundError:
+            return []
+
+    def _frame(self, rel: str, sql_suffix: str = "", params: list | None = None) -> pd.DataFrame:
+        path = self.base / rel
+        if not path.exists():
+            raise NotFoundError(str(path))
+        con = self._duck()
+        try:
+            return con.execute(
+                f"SELECT * FROM read_parquet(?) {sql_suffix}", [str(path)] + (params or [])
+            ).fetchdf()
+        finally:
+            con.close()
+
     def _provenance(self, rel: str, accession: str) -> dict:
         sidecar = self.base / (rel + ".provenance.json")
         if sidecar.exists():
             try:
                 with open(sidecar) as f:
-                    prov = json.load(f)
-                for k in ("dataset_accession", "processing_version", "git_commit", "timestamp"):
-                    prov.setdefault(
-                        k,
-                        {"dataset_accession": accession, "processing_version": "unknown",
-                         "git_commit": "unknown", "timestamp": _utcnow()}[k],
-                    )
-                return prov
-            except (json.JSONDecodeError, OSError):
+                    return sanitise_provenance(json.load(f), accession)
+            except (json.JSONDecodeError, OSError, AttributeError):
                 pass
         return {
             "dataset_accession": accession,
@@ -257,40 +332,45 @@ class ParquetRepository:
             "timestamp": _utcnow(),
         }
 
-    def _ranking_prefix(self) -> str:
-        rels = sorted(
-            str(p.relative_to(self.base))
-            for p in self.base.glob("scores/*__compound_ranking.parquet")
-        )
-        if not rels:
-            raise NotFoundError("scores/*__compound_ranking.parquet")
-        return rels[0][len("scores/"):-len("__compound_ranking.parquet")]
-
-    # -- API ---------------------------------------------------------------
+    # -- signatures ----------------------------------------------------------
     def get_signature(self, cohort: str, variant: str) -> dict:
+        from pipelines.lincs.scoring import build_query_sets
+
         rel = f"signatures/{cohort}__{variant}.parquet"
-        rows = self._rows(rel)
-        if not rows:
+        df = self._frame(rel)
+        if df.empty:
             raise NotFoundError(rel)
+        landmarks = self._frame("lincs/landmark_order.parquet").sort_values("col")
+        landmark_entrez = [str(e) for e in landmarks["entrez_id"].tolist()]
+        sets = build_query_sets(
+            df[["entrez_id", "stat", "fdr", "p_value"]], landmark_entrez
+        )
+        up = {landmark_entrez[i] for i in sets.up_idx.tolist()}
+        down = {landmark_entrez[i] for i in sets.down_idx.tolist()}
         genes = [
             {
-                "entrez_id": str(r["entrez_id"]),
-                "symbol": r.get("symbol") or r["entrez_id"],
-                "log2fc": float(r["log2fc"]),
-                "stat": float(r["stat"]),
-                "p_value": float(r["p_value"]),
-                "fdr": float(r["fdr"]),
-                "query_set": None,
+                "entrez_id": str(r.entrez_id),
+                "symbol": str(r.symbol) if pd.notna(r.symbol) else str(r.entrez_id),
+                "log2fc": float(r.log2fc),
+                "stat": float(r.stat),
+                "p_value": _sig4(r.p_value),
+                "fdr": float(r.fdr),
+                "query_set": (
+                    "up" if str(r.entrez_id) in up
+                    else ("down" if str(r.entrez_id) in down else None)
+                ),
             }
-            for r in rows
+            for r in df.itertuples()
         ]
-        method = str(rows[0].get("method") or COHORT_METHOD.get(cohort, "limma"))
+        method = str(df["method"].iloc[0])
+        if method not in SIG_METHODS:
+            method = COHORT_METHOD.get(cohort, "limma")
         n_ad, n_control = COHORT_N.get(cohort, (0, 0))
         try:
-            samples = self._rows(f"signatures/{cohort}__samples.parquet")
-            inc = [s for s in samples if s.get("included")]
-            n_ad = sum(1 for s in inc if s.get("group") == "AD")
-            n_control = sum(1 for s in inc if s.get("group") == "control")
+            samples = self._frame(f"signatures/{cohort}__samples.parquet")
+            inc = samples[samples["included"].astype(str) == "True"]
+            n_ad = int((inc["group"] == "AD").sum())
+            n_control = int((inc["group"] == "control").sum())
         except NotFoundError:
             pass
         return {
@@ -300,208 +380,226 @@ class ParquetRepository:
             "tissue": COHORT_TISSUE.get(cohort, "unspecified"),
             "n_ad": n_ad,
             "n_control": n_control,
-            "n_fdr05": sum(1 for g in genes if g["fdr"] < 0.05),
+            "n_fdr05": int((df["fdr"] < 0.05).sum()),
             "genes": genes,
             "sign_check": sign_check_for(genes),
             "provenance": self._provenance(rel, cohort),
         }
 
-    def list_candidates(self, limit: int) -> dict:
-        prefix = self._ranking_prefix()
-        rows = sorted(
-            self._rows(f"scores/{prefix}__compound_ranking.parquet"), key=lambda r: r["rank"]
+    # -- candidates ----------------------------------------------------------
+    def _pool(self) -> pd.DataFrame:
+        return self._frame(
+            "scores/GSE132903__main__candidate_pool.parquet", "ORDER BY pool_rank"
         )
-        try:
-            ctx = self._rows(f"scores/{prefix}__context_scores.parquet", "WHERE split = 'ranking'")
-        except NotFoundError:
-            ctx = []
-        by_pert: dict[str, list[dict]] = {}
-        for c in ctx:
-            by_pert.setdefault(str(c["pert_id"]), []).append(c)
-        try:
-            approvals = {str(a["pert_id"]): a for a in self._rows("evidence/approval.parquet")}
-        except NotFoundError:
-            approvals = {}
+
+    def list_candidates(self, limit: int) -> dict:
+        pool = self._pool()
+        rows = pool.head(int(limit))
+        wanted = [str(p) for p in rows["pert_id"].tolist()]
+        ctx = self._frame(
+            "scores/GSE132903__main__context_scores.parquet",
+            "WHERE split IN ('ranking', 'held_out')",
+        )
+        ctx = ctx[ctx["pert_id"].astype(str).isin(wanted)]
+        rank_ctx = ctx[ctx["split"] == "ranking"]
+        by_cell: dict[str, dict[str, list[float]]] = {}
+        held_counts: dict[str, int] = {}
+        for r in rank_ctx.itertuples():
+            by_cell.setdefault(str(r.pert_id), {}).setdefault(
+                str(r.cell_id), []).append(float(r.consensus))
+        for pid, grp in ctx[ctx["split"] == "held_out"].groupby(
+            ctx["pert_id"].astype(str)
+        ):
+            held_counts[str(pid)] = int(len(grp))
+        medians = (
+            rank_ctx.assign(_pid=rank_ctx["pert_id"].astype(str))
+            .groupby(["_pid", "cell_id"])["consensus"]
+            .agg(["median", "count"])
+        )
+        approvals = {str(a["pert_id"]): a for a in self._maybe_rows("evidence/approval.parquet")}
         candidates = []
-        for r in rows[:limit]:
-            pid = str(r["pert_id"])
-            cells: dict[str, list[float]] = {}
-            for c in by_pert.get(pid, []):
-                cells.setdefault(str(c.get("cell_id") or "unspecified"), []).append(
-                    float(c["consensus"])
-                )
-            by_cell_line = [
-                {
-                    "cell_id": cell,
-                    "consensus": sum(v) / len(v),
-                    "n_contexts": len(v),
-                }
-                for cell, v in sorted(cells.items())
-            ]
+        for r in rows.itertuples():
+            pid = str(r.pert_id)
+            name = str(r.drug_name).title() if pd.notna(r.drug_name) else str(r.pert_iname)
+            cells = []
+            if pid in medians.index.get_level_values(0):
+                sub = medians.loc[pid]
+                for cell_id, mrow in sub.iterrows():
+                    cells.append({
+                        "cell_id": str(cell_id),
+                        "consensus": float(mrow["median"]),
+                        "n_contexts": int(mrow["count"]),
+                    })
+                cells.sort(key=lambda c: c["cell_id"])
             appr = approvals.get(pid)
-            candidates.append(
-                {
-                    "id": pid,
-                    "rank": int(r["rank"]),
-                    "name": str(r.get("pert_iname") or pid),
-                    "consensus": float(r["consensus_median"]),
-                    "consensus_iqr": [float(r["consensus_q25"]), float(r["consensus_q75"])],
-                    "n_ranking_contexts": int(r["n_ranking_contexts"]),
-                    "n_held_out_contexts": int(r.get("n_held_out_contexts") or 0),
-                    "scores": {
-                        "wtcs": float(r["z_wtcs_median"]),
-                        "ks": float(r["z_ks_median"]),
-                        "cosine": float(r["z_cosine_median"]),
-                    },
-                    "by_cell_line": by_cell_line,
-                    "approval_status": (
-                        {
-                            "status": appr.get("status", "unknown"),
-                            "max_phase": appr.get("max_phase"),
-                            "source": (
-                                {"label": "ChEMBL", "url": appr["source_url"]}
-                                if appr.get("source_url")
-                                else None
-                            ),
-                        }
-                        if appr
-                        else {"status": "unknown"}
+            if appr is not None:
+                approval_status = {
+                    "status": str(appr.get("status") or "unknown"),
+                    "max_phase": (float(appr["max_phase"]) if appr.get("max_phase") is not None
+                                  and pd.notna(appr.get("max_phase")) else None),
+                    "source": (
+                        {"label": "ChEMBL", "url": str(appr["source_url"])}
+                        if appr.get("source_url") and pd.notna(appr.get("source_url"))
+                        else None
                     ),
-                    "flags": (
-                        ["few_contexts"] if int(r["n_ranking_contexts"]) < 5 else []
-                    ),
-                    "is_demo_candidate": int(r["rank"]) in (1, 5, 12),
                 }
-            )
-        theta, n_perms, passed = None, None, None
-        try:
-            summ = self._rows(f"scores/{prefix}__permutation_summary.parquet")
-            n_perms = 200
-            passed = all(float(s.get("p_perm", 1.0)) < 0.05 for s in summ[:20])
-        except NotFoundError:
-            pass
+            else:
+                stage = str(getattr(r, "max_clinical_stage", "") or "")
+                approval_status = {
+                    "status": (
+                        "approved" if stage == "APPROVAL"
+                        else ("investigational" if stage.startswith("PHASE") or stage == "PREAPPROVAL"
+                              else "unknown")
+                    ),
+                    "max_phase": None,
+                    "source": None,
+                }
+            candidates.append({
+                "id": pid,
+                "rank": int(r.pool_rank),
+                "name": name,
+                "consensus": float(r.consensus_median),
+                "consensus_iqr": [float(r.consensus_q25), float(r.consensus_q75)],
+                "n_ranking_contexts": int(r.n_ranking_contexts),
+                "n_held_out_contexts": int(held_counts.get(pid, 0)),
+                "scores": {
+                    "wtcs": float(r.z_wtcs_median),
+                    "ks": float(r.z_ks_median),
+                    "cosine": float(r.z_cosine_median),
+                },
+                "by_cell_line": cells,
+                "approval_status": approval_status,
+                "flags": (["few_contexts"] if int(r.n_ranking_contexts) < 5 else []),
+                "is_demo_candidate": bool(r.is_demo),
+            })
+        perm_params: dict = {}
+        prov_path = self.base / (
+            "scores/GSE132903__gold_permctl__permutation_null.parquet.provenance.json"
+        )
+        if prov_path.exists():
+            try:
+                perm_params = json.loads(prov_path.read_text()).get("parameters", {})
+            except (json.JSONDecodeError, OSError):
+                perm_params = {}
         return {
-            "signature": f"{prefix}",
-            "n_ranked": len(rows),
+            "signature": "GSE132903__main",
+            "n_ranked": int(len(pool)),
             "permutation_control": {
-                "n_permutations": n_perms,
-                "theta": theta,
-                "passed": passed,
+                "n_permutations": int(perm_params.get("n_perms", 200)),
+                "theta": (float(perm_params["theta"]) if perm_params.get("theta") is not None
+                          else None),
+                "passed": perm_params.get("perm_control_passes_top20"),
             },
             "candidates": candidates,
             "provenance": self._provenance(
-                f"scores/{prefix}__compound_ranking.parquet", prefix
+                "scores/GSE132903__main__candidate_pool.parquet", "GSE132903__main"
             ),
         }
 
+    # -- evidence ------------------------------------------------------------
     def get_evidence(self, candidate_id: str) -> dict:
-        prefix = self._ranking_prefix()
-        ranking = self._rows(f"scores/{prefix}__compound_ranking.parquet")
-        hit = next((r for r in ranking if str(r["pert_id"]) == candidate_id), None)
-        if hit is None:
+        pool = self._pool()
+        hit = pool[pool["pert_id"].astype(str) == candidate_id]
+        if hit.empty:
             raise NotFoundError(candidate_id)
-        name = str(hit.get("pert_iname") or candidate_id)
-        targets = [t for t in self._rows("evidence/targets.parquet") if str(t["pert_id"]) == candidate_id]
-        expr = {str(e["entrez_id"]): e for e in self._rows("evidence/brain_expression.parquet")}
-        assoc = {str(a["entrez_id"]): a for a in self._rows("evidence/ad_association.parquet")}
-        exposures = [
-            e for e in self._rows("evidence/exposure.parquet") if str(e["pert_id"]) == candidate_id
-        ]
+        hrow = hit.iloc[0]
+        name = (str(hrow["drug_name"]).title() if pd.notna(hrow.get("drug_name"))
+                else str(hrow.get("pert_iname") or candidate_id))
+        targets = [t for t in self._maybe_rows("evidence/targets.parquet")
+                   if str(t.get("pert_id")) == candidate_id]
+        expr_rows = self._maybe_rows("evidence/brain_expression.parquet")
+        assoc = {str(a.get("entrez_id")): a
+                 for a in self._maybe_rows("evidence/ad_association.parquet")}
+        exposures = [e for e in self._maybe_rows("evidence/exposure.parquet")
+                     if str(e.get("pert_id")) == candidate_id]
         # Measured exposure is hidden validation data: show predicted only.
-        shown = [e for e in exposures if not e.get("is_measured")] or [
-            {"level": "none", "summary": "No predicted exposure data.", "source_url": None}
-        ]
-        e0 = shown[0]
-        try:
-            structs = self._rows("evidence/structures.parquet")
-        except NotFoundError:
-            structs = []
+        predicted = [e for e in exposures if str(e.get("level")) == "predicted"]
+        e0 = predicted[0] if predicted else None
+        structs = self._maybe_rows("evidence/structures.parquet")
+        have = {str(s.get("uniprot")) for s in structs}
         struct = None
-        if targets and structs:
-            have = {str(s["uniprot"]) for s in structs}
-            t0 = next((t for t in targets if str(t.get("uniprot")) in have), None)
-            if t0 is not None:
-                s0 = next(s for s in structs if str(s["uniprot"]) == str(t0["uniprot"]))
+        for t in targets:
+            if str(t.get("uniprot")) in have:
+                s0 = next(s for s in structs if str(s.get("uniprot")) == str(t.get("uniprot")))
                 struct = {
                     "pdb_id": str(s0["pdb_id"]),
                     "uniprot": str(s0["uniprot"]),
-                    "url": str(s0.get("local_path") or ""),
-                    "method": s0.get("method"),
-                    "resolution_angstrom": s0.get("resolution_angstrom"),
+                    "url": f"/structures/{s0['pdb_id']}.cif",
+                    "method": (str(s0["method"]) if s0.get("method") is not None
+                               and pd.notna(s0.get("method")) else None),
+                    "resolution_angstrom": (float(s0["resolution_angstrom"])
+                                            if s0.get("resolution_angstrom") is not None
+                                            and pd.notna(s0.get("resolution_angstrom")) else None),
                     "note": "Target context only. Not evidence that the drug binds this structure.",
                 }
-        approvals = {str(a["pert_id"]): a for a in self._rows("evidence/approval.parquet")}
-        appr = approvals.get(candidate_id, {})
+                break
+        appr_rows = [a for a in self._maybe_rows("evidence/approval.parquet")
+                     if str(a.get("pert_id")) == candidate_id]
+        appr = appr_rows[0] if appr_rows else {}
         out_targets = []
         for t in targets:
-            ent = str(t.get("entrez_id") or "")
-            ex = expr.get(ent, {})
+            ent = "" if t.get("entrez_id") is None or pd.isna(t.get("entrez_id")) else str(t["entrez_id"])
             ad = assoc.get(ent, {})
-            src = (
-                [{"label": "ChEMBL", "url": t["source_url"]}] if t.get("source_url") else []
-            )
-            out_targets.append(
-                {
-                    "symbol": str(t.get("target_symbol") or ""),
-                    "uniprot": str(t.get("uniprot") or ""),
-                    "entrez_id": ent,
-                    "ensembl_id": t.get("ensembl_id"),
-                    "action_type": t.get("action_type"),
-                    "brain_expression": (
-                        [
-                            {
-                                "context": str(ex.get("context") or ""),
-                                "kind": ex.get("kind"),
-                                "ntpm": float(ex.get("ntpm") or 0.0),
-                            }
-                        ]
-                        if ex
-                        else []
-                    ),
-                    "ad_association_score": (
-                        float(ad["score"]) if ad.get("score") is not None else None
-                    ),
-                    "sources": src,
-                }
-            )
+            src = ([{"label": "ChEMBL", "url": str(t["source_url"])}]
+                   if t.get("source_url") and pd.notna(t.get("source_url")) else [])
+            brain = [
+                {"context": str(x.get("context") or ""),
+                 "kind": (str(x["kind"]) if x.get("kind") in ("region", "cell_type") else None),
+                 "ntpm": float(x.get("ntpm") or 0.0)}
+                for x in expr_rows if str(x.get("entrez_id")) == ent
+            ]
+            out_targets.append({
+                "symbol": str(t.get("target_symbol") or ""),
+                "uniprot": "" if t.get("uniprot") is None or pd.isna(t.get("uniprot")) else str(t["uniprot"]),
+                "entrez_id": ent,
+                "ensembl_id": (None if t.get("ensembl_id") is None or pd.isna(t.get("ensembl_id"))
+                               else str(t["ensembl_id"])),
+                "action_type": (None if t.get("action_type") is None or pd.isna(t.get("action_type"))
+                                else str(t["action_type"])),
+                "brain_expression": brain,
+                "ad_association_score": (None if ad.get("score") is None
+                                         or (isinstance(ad.get("score"), float) and pd.isna(ad["score"]))
+                                         else float(ad["score"])),
+                "sources": src,
+            })
+        chembl = targets[0].get("chembl_id") if targets else hrow.get("chembl_id")
+        mech = targets[0].get("mechanism") if targets else None
         return {
             "candidate_id": candidate_id,
             "name": name,
-            "chembl_id": targets[0].get("chembl_id") if targets else None,
-            "mechanism": targets[0].get("mechanism") if targets else None,
+            "chembl_id": (None if chembl is None or pd.isna(chembl) else str(chembl)),
+            "mechanism": (None if mech is None or pd.isna(mech) else str(mech)),
             "targets": out_targets,
             "approval_status": {
-                "status": appr.get("status", "unknown"),
-                "max_phase": appr.get("max_phase"),
-                "source": (
-                    {"label": "ChEMBL", "url": appr["source_url"]}
-                    if appr.get("source_url")
-                    else None
-                ),
+                "status": str(appr.get("status") or "unknown"),
+                "max_phase": (None if appr.get("max_phase") is None or pd.isna(appr.get("max_phase"))
+                              else float(appr["max_phase"])),
+                "source": ({"label": "ChEMBL", "url": str(appr["source_url"])}
+                           if appr.get("source_url") and pd.notna(appr.get("source_url")) else None),
             },
-            "brain_exposure": {
-                "level": e0.get("level", "predicted"),
-                "summary": str(e0.get("summary") or ""),
-                "sources": (
-                    [{"label": "exposure", "url": e0["source_url"]}]
-                    if e0.get("source_url")
-                    else []
-                ),
-            },
+            "brain_exposure": (
+                {"level": "predicted", "summary": str(e0.get("summary") or ""),
+                 "sources": ([{"label": "exposure", "url": str(e0["source_url"])}]
+                             if e0.get("source_url") and pd.notna(e0.get("source_url")) else [])}
+                if e0 is not None else
+                {"level": "none", "summary": "No predicted exposure data.", "sources": []}
+            ),
             "structure": struct,
             "boundary": "Research hypothesis only. Not a treatment recommendation. Gene expression "
             "reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.",
             "provenance": self._provenance("evidence/targets.parquet", candidate_id),
         }
 
-    def get_attack_world(self, candidate_id: str) -> AttackWorld:
+    # -- attack --------------------------------------------------------------
+    def get_attack_world(self, candidate_id: str):  # -> AttackWorld (import cycle-safe)
+
+
         rows = [
-            r
-            for r in self._rows("tauchstone/truth_table.parquet")
-            if str(r["candidate_id"]) == candidate_id
+            r for r in self._maybe_rows("tauchstone/truth_table.parquet")
+            if str(r.get("candidate_id")) == candidate_id
         ]
         if not rows:
-            raise NotFoundError(candidate_id)
+            raise NotFoundError(f"no hidden tests prepared for this candidate: {candidate_id}")
         hidden = [
             HiddenRow(
                 context=Context(
@@ -514,65 +612,84 @@ class ParquetRepository:
                     cell_id=r.get("cell_id"),
                     pert_idose=r.get("pert_idose"),
                     pert_itime=r.get("pert_itime"),
-                    cohort=(
-                        str(r["context_id"]).split(":")[-1]
-                        if str(r["context_type"]) == "held_out_cohort"
-                        else None
-                    ),
+                    cohort=(str(r["context_id"])
+                            if str(r["context_type"]) == "held_out_cohort" else None),
                 ),
                 outcome=str(r["outcome"]),
-                value=float(r["value"]) if r.get("value") is not None else None,
-                threshold=float(r["threshold"]) if r.get("threshold") is not None else None,
+                value=(None if r.get("value") is None or pd.isna(r.get("value"))
+                       else float(r["value"])),
+                threshold=(None if r.get("threshold") is None or pd.isna(r.get("threshold"))
+                           else float(r["threshold"])),
                 rule=str(r.get("rule") or ""),
                 detail="",
             )
             for r in rows
         ]
-        prefix = self._ranking_prefix()
-        try:
-            ctx = self._rows(
-                f"scores/{prefix}__context_scores.parquet",
-                "WHERE split = 'ranking' AND pert_id = ?",
-                [candidate_id],
-            )
-        except NotFoundError:
-            ctx = []
-        theta_vals = [
-            float(h.threshold)
-            for h in hidden
-            if h.context.type == "lincs_context" and h.threshold is not None
-        ]
-        theta = sorted(theta_vals)[len(theta_vals) // 2] if theta_vals else -1.0
+        cfg = load_engine_config(str(REPO_ROOT / "data" / "manifests" / "preregistration.yaml"))
+        ctx = self._frame(
+            "scores/GSE132903__main__context_scores.parquet",
+            "WHERE split = 'ranking' AND pert_id = ?",
+            [candidate_id],
+        )
         ranking = [
             Observation(
                 context=Context(
-                    context_id=str(c["context_id"]),
+                    context_id=str(c.context_id),
                     type="lincs_context",
-                    label=str(c["context_id"]),
-                    cell_id=c.get("cell_id"),
-                    pert_idose=c.get("pert_idose"),
-                    pert_itime=c.get("pert_itime"),
+                    label=str(c.context_id),
+                    cell_id=None if pd.isna(c.cell_id) else str(c.cell_id),
+                    pert_idose=None if pd.isna(c.pert_idose) else str(c.pert_idose),
+                    pert_itime=None if pd.isna(c.pert_itime) else str(c.pert_itime),
                 ),
-                survive=float(c["consensus"]) <= theta,
+                survive=float(c.consensus) <= cfg.theta,
                 source="ranking",
             )
-            for c in ctx
+            for c in ctx.itertuples()
         ]
+        pool = self._pool()
+        hit = pool[pool["pert_id"].astype(str) == candidate_id]
+        if not hit.empty:
+            hrow = hit.iloc[0]
+            cname = (str(hrow["drug_name"]).title() if pd.notna(hrow.get("drug_name"))
+                     else str(hrow.get("pert_iname") or candidate_id))
+        else:
+            cname = candidate_id
         return AttackWorld(
             candidate_id=candidate_id,
-            candidate_name=candidate_id,
+            candidate_name=cname,
             hidden=hidden,
             ranking=ranking,
             claim=ClaimInfo(
-                text=f"{candidate_id} reverses the AD signature in at least 70% of predefined "
+                text=f"{cname} reverses the AD signature in at least 70% of predefined "
                 "validation contexts",
-                theta=theta,
+                theta=cfg.theta,
             ),
+            engine_cfg=None,  # rebuilt from cfg by the adapter; prereg is the source of truth
         )
 
+    # -- benchmark / structures ----------------------------------------------
     def get_benchmark(self) -> dict:
         path = self.base / "tauchstone" / "benchmark_summary.json"
         if not path.exists():
             raise NotFoundError("benchmark_summary.json")
         with open(path) as f:
-            return json.load(f)
+            bench = json.load(f)
+        # Empty reliability bins (n == 0) carry NaN stats, which are not valid
+        # JSON numbers and violate the contract's required numeric fields, so
+        # only bins with observations are served. Reported in the WS6 notes.
+        for scope in (bench, bench.get("all_candidates") or {}):
+            cal = scope.get("calibration")
+            if isinstance(cal, list):
+                scope["calibration"] = [b for b in cal if (b.get("n") or 0) > 0]
+        return bench
+
+    def get_structure_path(self, pdb_id: str) -> Path:
+        if not PDB_ID_RE.match(pdb_id or ""):
+            raise NotFoundError(f"invalid pdb_id: {pdb_id}")
+        for row in self._maybe_rows("evidence/structures.parquet"):
+            if str(row.get("pdb_id")) == pdb_id:
+                local = self.base / "evidence" / str(row.get("local_path") or "")
+                if local.exists():
+                    return local
+                raise NotFoundError(f"structure file missing: {pdb_id}")
+        raise NotFoundError(f"unknown structure: {pdb_id}")

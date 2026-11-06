@@ -17,6 +17,7 @@ import importlib.util
 import logging
 import math
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 log = logging.getLogger(__name__)
 
@@ -72,16 +73,47 @@ class HiddenRow:
 
 @dataclass
 class EngineConfig:
-    """Claim/belief hyperparameters (prereg values from contracts/algorithms.md)."""
+    """Claim/belief hyperparameters (prereg values from data/manifests/preregistration.yaml)."""
 
     q: float = 0.7
     kappa: float = 2.0
     m_t: dict[str, float] = field(default_factory=dict)  # per-type prior survive rate
     theta: float = -1.0
     claim_text: str = ""
+    lam: float = 0.0
+    lam_lookahead: float = 0.0
+    ranking_weight_cap: float = 4.0
+    supported_threshold: float = 0.8
+    fragile_threshold: float = 0.2
 
     def m(self, t: str) -> float:
         return self.m_t.get(t, 0.5)
+
+
+@lru_cache(maxsize=4)
+def load_engine_config(manifest_path: str) -> EngineConfig:
+    """EngineConfig built only from the frozen preregistration (never code defaults).
+
+    Reuses pipelines.tauchstone.replay.engine_config_from_prereg(); cached per path.
+    Raises ImportError when the WS5 module is absent (mock mode never calls this).
+    """
+    from pathlib import Path
+
+    from pipelines.tauchstone.replay import engine_config_from_prereg
+
+    eng_cfg, prereg = engine_config_from_prereg(Path(manifest_path))
+    theta = float(prereg["tauchstone_engine"]["theta_value"])
+    return EngineConfig(
+        q=float(eng_cfg.q),
+        kappa=float(eng_cfg.kappa),
+        m_t={str(k): float(v) for k, v in dict(eng_cfg.type_priors).items()},
+        theta=theta,
+        lam=float(eng_cfg.lam),
+        lam_lookahead=float(eng_cfg.lam_lookahead),
+        ranking_weight_cap=float(eng_cfg.ranking_weight_cap),
+        supported_threshold=float(eng_cfg.supported_threshold),
+        fragile_threshold=float(eng_cfg.fragile_threshold),
+    )
 
 
 # ----------------------------------------------------------------------------
@@ -217,6 +249,13 @@ class MockAttackSession:
         half = 0.12 / math.sqrt(1 + len(self.revealed))  # mock interval, deterministic
         return p, [max(0.0, p - half), min(1.0, p + half)]
 
+    def _verdict(self, p: float) -> str:
+        if p >= self.cfg.supported_threshold:
+            return "SUPPORTED_SO_FAR"
+        if p <= self.cfg.fragile_threshold:
+            return "FRAGILE_CONTEXT_DEPENDENT"
+        return "INSUFFICIENT_EVIDENCE"
+
     def _acquisition(self, cid: str, ps: dict[str, float], p_claim: float) -> float:
         if self.mode == "learn":
             # expected decision change: hypothetical y updates every other hidden posterior
@@ -291,7 +330,7 @@ class MockAttackSession:
                 "n_contexts": len(self.hidden),
             },
             "belief": {"p_claim_holds": p_claim, "interval": interval},
-            "verdict": verdict_for(p_claim),
+            "verdict": self._verdict(p_claim),
             "contexts": contexts,
             "recommended_context_id": rec_id,
             "rationale": rationale,
@@ -385,6 +424,7 @@ class RealAttackSession:
         mode: str = "attack",
         seed: int = 20261105,
         candidate_name: str | None = None,
+        engine_cfg=None,
     ) -> None:
         from pipelines.tauchstone import engine as eng
         from pipelines.tauchstone.session import AttackSession
@@ -400,15 +440,23 @@ class RealAttackSession:
         self.budget = budget
         self._rows = {h.context.context_id: h for h in hidden}
         self._history: list[dict] = []
-        type_priors = {t: cfg.m(t) for t in
-                       ("held_out_cohort", "composition_adjusted", "lincs_context", "brain_exposure", "cell_type")}
+        if engine_cfg is None:
+            type_priors = {t: cfg.m(t) for t in
+                           ("held_out_cohort", "composition_adjusted", "lincs_context",
+                            "brain_exposure", "cell_type")}
+            engine_cfg = eng.EngineConfig(
+                q=cfg.q, kappa=cfg.kappa, ranking_weight_cap=cfg.ranking_weight_cap,
+                type_priors=type_priors, lam=cfg.lam, lam_lookahead=cfg.lam_lookahead,
+                supported_threshold=cfg.supported_threshold,
+                fragile_threshold=cfg.fragile_threshold,
+            )
         self._session = AttackSession(
             candidate_id,
             hidden=[to_ctx(h.context) for h in hidden],
             truth={h.context.context_id: h.outcome == "survive" for h in hidden},
             ranking=[eng.Observation(context=to_ctx(o.context), survive=o.survive, source="ranking")
                      for o in ranking],
-            cfg=eng.EngineConfig(q=cfg.q, kappa=cfg.kappa, type_priors=type_priors),
+            cfg=engine_cfg,
             budget=budget,
             mode=mode,
             seed=seed,
@@ -468,10 +516,20 @@ def create_attack_session(
     mode: str = "attack",
     seed: int = 20261105,
     candidate_name: str | None = None,
+    engine_cfg=None,
 ):
-    """Build a session: the real WS5 engine when importable, else the mock engine."""
-    cls = RealAttackSession if _REAL else MockAttackSession
-    return cls(candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name)
+    """Build a session: the real WS5 engine when importable, else the mock engine.
+
+    engine_cfg is a real pipelines.tauchstone.engine.EngineConfig (from the frozen
+    preregistration); the mock engine ignores it.
+    """
+    if _REAL:
+        return RealAttackSession(
+            candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name, engine_cfg
+        )
+    return MockAttackSession(
+        candidate_id, hidden, ranking, cfg, budget, mode, seed, candidate_name
+    )
 
 
 def is_real() -> bool:

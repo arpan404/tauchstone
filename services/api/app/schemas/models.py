@@ -268,6 +268,7 @@ class PolicyResult(BaseModel):
         "max_uncertainty",
         "expected_decision_change",
         "tauchstone_hybrid",
+        "decision_lookahead_hybrid",
     ]
     label: str
     experiments_to_correct_verdict: ExperimentsToCorrect
@@ -302,4 +303,5 @@ class Benchmark(BaseModel):
     tests: list[BenchmarkTest] | None = None
     preregistration_sha256: str
     preregistration_commit: str | None = None
+    all_candidates: dict | None = None
     provenance: Provenance

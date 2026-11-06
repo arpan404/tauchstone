@@ -56,7 +56,7 @@ def start_attack(
     engine = make_session(
         world.candidate_id, world.hidden, world.ranking, cfg,
         budget=body.budget, mode=body.mode, seed=SEED,
-        candidate_name=world.candidate_name,
+        candidate_name=world.candidate_name, engine_cfg=world.engine_cfg,
     )
     rec = store.create(engine, world.candidate_id)
     return public(_to_session_payload(rec.session_id, engine.state()))
