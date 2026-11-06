@@ -8,7 +8,7 @@ LINCS_RAW := $(TS_DATA_DIR)/raw/lincs
 
 .PHONY: help setup setup-py setup-r setup-web data unpack-lincs checksums \
         signatures rank permutation-control evidence truth-table benchmark demo \
-        api web dev test test-r lint up
+        api web dev test test-r lint up down
 
 help:
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -61,8 +61,8 @@ benchmark: ## Replay benchmark (refuses to run without a committed preregistrati
 calibrate: ## Development-only calibration (type priors, lam/lam_L -> proposed values yaml)
 	uv run python -m pipelines.tauchstone.calibrate
 
-demo: ## Freeze data/demo bundle and build Docker images
-	@echo "TODO workstream 6/8: copy processed outputs into data/demo" && exit 1
+demo: ## Freeze data/demo bundle and build Docker images (fully offline at expo)
+	python3 scripts/make_demo_bundle.py
 	docker compose build
 
 ## ---- Run --------------------------------------------------------------
@@ -75,8 +75,12 @@ web: ## Vite dev server on :5173 (proxies /api to :8000)
 dev: ## API + web together
 	$(MAKE) -j2 api web
 
-up: ## Offline expo stack on :8080
-	docker compose up
+up: ## Offline expo stack on :8080 (waits for /health)
+	docker compose up -d
+	sh scripts/wait_for_health.sh
+
+down: ## Stop the expo stack
+	docker compose down
 
 ## ---- Quality -----------------------------------------------------------
 test: ## Python tests (+ web typecheck)
