@@ -3,6 +3,10 @@ WORKDIR /app
 COPY apps/web/package.json apps/web/bun.lock ./
 RUN bun install --frozen-lockfile
 COPY apps/web ./
+# VITE_USE_MOCK=0: the expo image must never fall back to in-browser mock data.
+# Real environment wins over .env.development (which sets VITE_USE_MOCK=1).
+ARG VITE_USE_MOCK=0
+ENV VITE_USE_MOCK=${VITE_USE_MOCK}
 RUN bun run build
 
 FROM nginx:1.27-alpine
