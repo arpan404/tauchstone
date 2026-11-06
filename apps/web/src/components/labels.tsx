@@ -1,23 +1,24 @@
 import type { Schema } from '@/api/types';
 import { verdictLabel } from '@/api/mock/attack';
+import { Badge } from '@/components/ui/badge';
 
 export type Verdict = Schema<'Verdict'>;
 
 export function VerdictBadge({ verdict, size = 'md' }: { verdict: Verdict; size?: 'sm' | 'md' }) {
   const styles: Record<Verdict, string> = {
-    SUPPORTED_SO_FAR: 'bg-teal-50 text-teal-900 border-teal-300',
-    FRAGILE_CONTEXT_DEPENDENT: 'bg-amber-50 text-amber-950 border-amber-300',
-    INSUFFICIENT_EVIDENCE: 'bg-neutral-100 text-neutral-700 border-neutral-300',
+    SUPPORTED_SO_FAR: 'bg-[var(--success-surface)] text-[var(--success)] border-transparent',
+    FRAGILE_CONTEXT_DEPENDENT: 'bg-[var(--warning-surface)] text-[var(--warning)] border-transparent',
+    INSUFFICIENT_EVIDENCE: 'bg-secondary text-secondary-foreground border-transparent',
   };
   const sizing = size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-sm';
   return (
-    <span
+    <Badge
       role="status"
       aria-label={`Verdict: ${verdictLabel(verdict)}`}
-      className={`inline-flex items-center rounded-full border font-medium ${styles[verdict]} ${sizing}`}
+      className={`rounded-md font-medium ${styles[verdict]} ${sizing}`}
     >
       {verdictLabel(verdict)}
-    </span>
+    </Badge>
   );
 }
 

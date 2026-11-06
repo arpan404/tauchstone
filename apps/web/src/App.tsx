@@ -1,87 +1,147 @@
+import { useEffect, useState, type CSSProperties } from 'react';
+import { ArrowUpRight, BookOpen, ChartNoAxesCombined, ChevronRight, Dna, FlaskConical, Layers3, Microscope, Moon, Search, ShieldCheck, Sun, Table2 } from 'lucide-react';
 import { useCandidates, useMockStatus } from '@/api/hooks';
+import { About } from '@/features/about';
 import { BenchmarkView } from '@/features/benchmark/BenchmarkView';
 import { DiseaseSignatureView } from '@/features/disease-signature/DiseaseSignatureView';
 import { EvidenceView } from '@/features/evidence/EvidenceView';
 import { RepurposingView } from '@/features/repurposing/RepurposingView';
-import { About } from '@/features/about';
 import { SingleCellPanel } from '@/features/single-cell';
 import { AttackView } from '@/features/tauchstone/AttackView';
-import { STEPS, useUi } from '@/store/ui';
-import type { StepId } from '@/store/ui';
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command';
+import { Separator } from '@/components/ui/separator';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { useUi, type StepId } from '@/store/ui';
 
 const VIEWS: Record<StepId, () => React.JSX.Element> = {
-  signature: DiseaseSignatureView,
   candidates: RepurposingView,
+  signature: DiseaseSignatureView,
   evidence: EvidenceView,
   attack: AttackView,
   benchmark: BenchmarkView,
 };
+const ITEMS = [
+  { id: 'candidates', label: 'Candidates', icon: Table2, group: 'Research' },
+  { id: 'signature', label: 'Disease signature', icon: Dna, group: 'Research' },
+  { id: 'evidence', label: 'Evidence', icon: Layers3, group: 'Research' },
+  { id: 'attack', label: 'Experiments', icon: FlaskConical, group: 'Validation' },
+  { id: 'benchmark', label: 'Benchmark', icon: ChartNoAxesCombined, group: 'Validation' },
+  { id: 'cells', label: 'Cell types', icon: Microscope, group: 'Analysis' },
+  { id: 'about', label: 'Methods', icon: BookOpen, group: 'Analysis' },
+] as const;
+type PageId = typeof ITEMS[number]['id'];
 type ExtraId = 'cells' | 'about';
-const EXTRAS = {
-  cells: { view: SingleCellPanel, label: 'Cell types', hint: 'Exploratory analysis' },
-  about: { view: About, label: 'Methods', hint: 'Design and limitations' },
-};
+
+function WorkspaceSidebar({ page, navigate }: { page: PageId; navigate: (id: PageId) => void }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  function open(id: PageId) {
+    navigate(id);
+    if (isMobile) setOpenMobile(false);
+  }
+  return (
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      <SidebarHeader className="h-20 justify-center px-4 group-data-[collapsible=icon]:px-2">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><FlaskConical className="size-[19px]" strokeWidth={1.7} aria-hidden="true" /></span>
+          <div className="group-data-[collapsible=icon]:hidden"><p className="font-heading text-[17px] font-bold tracking-tight text-foreground">Tauchstone</p><p className="mt-0.5 text-[11px] text-muted-foreground">Second Life research</p></div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent className="gap-1">
+        <nav aria-label="Research workspace">
+          {['Research', 'Validation', 'Analysis'].map(group => (
+            <SidebarGroup key={group} className="px-3 py-2">
+              <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-medium tracking-wider text-muted-foreground">{group}</SidebarGroupLabel>
+              <SidebarGroupContent><SidebarMenu className="gap-1">
+                {ITEMS.filter(item => item.group === group).map(({ id, label, icon: Icon }) => (
+                  <SidebarMenuItem key={id}>
+                    <SidebarMenuButton onClick={() => open(id)} isActive={page === id} aria-current={page === id ? 'page' : undefined} tooltip={label} className="h-9 gap-2.5 rounded-lg px-2.5 text-[13px] data-active:font-medium">
+                      <Icon strokeWidth={1.6} aria-hidden="true" /><span>{label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu></SidebarGroupContent>
+            </SidebarGroup>
+          ))}
+        </nav>
+      </SidebarContent>
+      <SidebarFooter className="gap-3 p-4 group-data-[collapsible=icon]:px-2">
+        <div className="rounded-lg border border-sidebar-border bg-background/60 px-3 py-3 group-data-[collapsible=icon]:hidden">
+          <p className="text-[11px] text-muted-foreground">Discovery cohort</p><p className="mt-1 font-mono text-xs font-medium text-foreground">GSE132903</p><p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">AD minus control. Negative drug scores indicate reversal.</p>
+        </div>
+        <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><ShieldCheck className="size-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Research hypotheses only</span></div>
+      </SidebarFooter>
+    </Sidebar>
+  );
+}
 
 export default function App() {
-  const { step, setStep, selectedCandidateId } = useUi();
+  const { step, setStep, selectedCandidateId, selectCandidate } = useUi();
   const { data } = useCandidates();
   const mock = useMockStatus(data?.provenance);
   const [extraAt, setExtraAt] = useState<{ page: ExtraId; step: StepId } | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [dark, setDark] = useState(() => localStorage.getItem('tauchstone-theme') === 'dark');
   const extra = extraAt?.step === step ? extraAt.page : null;
-  const View = extra ? EXTRAS[extra].view : VIEWS[step];
-  const title = extra ? EXTRAS[extra].label : STEPS.find((s) => s.id === step)!.label;
-  const candidate = data?.candidates.find((c) => c.id === selectedCandidateId);
-  function navigate(next: StepId) {
-    setExtraAt(null);
-    setStep(next);
+  const page = extra ?? step;
+  const title = ITEMS.find(item => item.id === page)!.label;
+  const View = extra === 'cells' ? SingleCellPanel : extra === 'about' ? About : VIEWS[step];
+  const candidate = data?.candidates.find(c => c.id === selectedCandidateId);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('tauchstone-theme', dark ? 'dark' : 'light');
+  }, [dark]);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setSearchOpen(open => !open);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  function navigate(id: PageId) {
+    if (id === 'cells' || id === 'about') setExtraAt({ page: id, step });
+    else { setExtraAt(null); setStep(id); }
+    setSearchOpen(false);
   }
 
   return (
-    <div className="lab-shell">
-      <a className="lab-skip" href="#workspace">Skip to workspace</a>
-      <aside className="lab-sidebar">
-        <div className="lab-brand">
-          <span className="lab-wordmark">Tauchstone</span>
-          <span className="text-xs text-muted-foreground">Second Life · Research lab</span>
+    <TooltipProvider>
+      <SidebarProvider className="h-dvh min-h-0 overflow-hidden" style={{ '--sidebar-width': '14rem' } as CSSProperties}>
+        <a className="workspace-skip" href="#workspace">Skip to workspace</a>
+        <WorkspaceSidebar page={page} navigate={navigate} />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
+            <SidebarTrigger className="text-muted-foreground" />
+            <Separator orientation="vertical" className="mr-1 h-4" />
+            <Breadcrumb><BreadcrumbList className="text-xs"><BreadcrumbItem className="hidden sm:block">Second Life</BreadcrumbItem><BreadcrumbSeparator className="hidden sm:block" /><BreadcrumbItem><BreadcrumbPage className="font-medium">{title}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb>
+            <div className="ml-auto flex items-center gap-2">
+              {mock && <Badge variant="outline" className="text-[10px] text-[var(--warning)]" role="status" aria-label="Mock data mode">Synthetic data</Badge>}
+              <Button variant="outline" onClick={() => setSearchOpen(true)} aria-label="Search workspace" className="h-8 gap-2 text-xs text-muted-foreground"><Search className="size-3.5" /><span className="hidden sm:inline">Search workspace</span><kbd className="ml-3 hidden rounded border border-border bg-muted px-1 font-mono text-[10px] sm:inline">⌘ K</kbd></Button>
+              <Button variant="ghost" size="icon" onClick={() => setDark(value => !value)} aria-label={dark ? 'Use light theme' : 'Use dark theme'}>{dark ? <Sun className="size-4" /> : <Moon className="size-4" />}</Button>
+            </div>
+          </header>
+          <section aria-label="Selected candidate" className="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b border-border bg-card px-4 py-2 text-xs md:px-6">
+            <span className="text-muted-foreground">Selected candidate</span><ChevronRight className="size-3 text-muted-foreground" aria-hidden="true" />
+            <strong className="text-xs font-medium">{candidate?.name ?? selectedCandidateId ?? 'No candidate selected'}</strong>
+            {selectedCandidateId && <span className="hidden font-mono text-[10px] text-muted-foreground md:inline">{selectedCandidateId}</span>}
+            <div className="ml-auto flex items-center gap-1">
+              {selectedCandidateId ? <><Button size="xs" variant="ghost" onClick={() => navigate('evidence')}>View evidence</Button><Button size="xs" variant="secondary" onClick={() => navigate('attack')}>Open experiments<ArrowUpRight className="size-3" /></Button></> : <Button size="xs" variant="ghost" onClick={() => navigate('candidates')}>Choose a candidate</Button>}
+            </div>
+          </section>
+          <main id="workspace" tabIndex={-1} className="workspace-main min-h-0 flex-1 overflow-auto outline-none" aria-label={title}><View /></main>
         </div>
-        <nav aria-label="Research workspace" className="lab-nav">
-          {STEPS.map((s) => (
-            <button key={s.id} onClick={() => navigate(s.id)} aria-current={!extra && step === s.id ? 'page' : undefined}>
-              <span>{s.label}</span><small>{s.hint}</small>
-            </button>
-          ))}
-          {(Object.keys(EXTRAS) as ExtraId[]).map((id) => (
-            <button key={id} onClick={() => setExtraAt({ page: id, step })} aria-current={extra === id ? 'page' : undefined}>
-              <span>{EXTRAS[id].label}</span><small>{EXTRAS[id].hint}</small>
-            </button>
-          ))}
-        </nav>
-        <div className="lab-sidebar-note">
-          <span className="font-mono text-xs">AD − control</span>
-          <p>Negative scores indicate expression reversal. Held-out evidence tests a claim; it does not set the ranking.</p>
-        </div>
-      </aside>
-      <div className="lab-workspace">
-        <header className="lab-header">
-          <div><span className="lab-eyebrow">Research workspace</span><h1>{title}</h1></div>
-          {mock && <span role="status" aria-label="Mock data mode" className="lab-mock">MOCK DATA · Not real results</span>}
-        </header>
-        <section aria-label="Selected candidate" className="lab-context">
-          <div className="lab-context-name">
-            <span className="lab-eyebrow">Selected candidate</span>
-            <strong>{candidate?.name ?? selectedCandidateId ?? 'No candidate selected'}</strong>
-            {selectedCandidateId && <span className="font-mono text-xs text-muted-foreground">{selectedCandidateId}</span>}
-          </div>
-          <div className="lab-context-actions">
-            {selectedCandidateId ? <>
-              <button onClick={() => navigate('evidence')}>View evidence</button>
-              <button onClick={() => navigate('attack')}>Open experiments</button>
-            </> : <button onClick={() => navigate('candidates')}>Choose a candidate</button>}
-          </div>
-        </section>
-        <main id="workspace" tabIndex={-1} className="lab-main" aria-label={title}><View /></main>
-      </div>
-    </div>
+        <CommandDialog open={searchOpen} onOpenChange={setSearchOpen} title="Search workspace" description="Open a research view or inspect a discovery candidate.">
+          <Command><CommandInput placeholder="Search views or candidates…" /><CommandList><CommandEmpty>No matching views or loaded candidates.</CommandEmpty><CommandGroup heading="Workspace">{ITEMS.map(({ id, label, icon: Icon }) => <CommandItem key={id} value={label} onSelect={() => navigate(id)}><Icon className="size-4 text-muted-foreground" /><span>{label}</span></CommandItem>)}</CommandGroup><CommandSeparator /><CommandGroup heading="Discovery candidates">{data?.candidates.map(c => <CommandItem key={c.id} value={`${c.name} ${c.id}`} onSelect={() => { selectCandidate(c.id); navigate('evidence'); }}><span className="flex-1">{c.name}</span><span className="font-mono text-[11px] text-muted-foreground">#{c.rank}</span></CommandItem>)}</CommandGroup></CommandList></Command>
+        </CommandDialog>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 }

@@ -12,21 +12,21 @@ export function ProvenanceStrip({ provenance }: { provenance?: Schema<'Provenanc
   return (
     <footer
       aria-label="Data provenance"
-      className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-neutral-200 bg-neutral-50 px-4 py-2 font-mono text-[11px] text-neutral-500 tabular-nums"
+      className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-border bg-card px-5 py-2 text-[10px] text-muted-foreground md:px-7"
     >
       <span>
-        dataset <span className="text-neutral-700">{accession}</span>
+        Dataset <span className="text-foreground/75">{accession}</span>
       </span>
       <span>
-        commit <span className="text-neutral-700">{shortHash(provenance.git_commit)}</span>
+        Commit <span className="font-mono text-foreground/75">{shortHash(provenance.git_commit)}</span>
       </span>
       {provenance.random_seed !== undefined && provenance.random_seed !== null && (
         <span>
-          seed <span className="text-neutral-700">{provenance.random_seed}</span>
+          Seed <span className="font-mono text-foreground/75">{provenance.random_seed}</span>
         </span>
       )}
       <span>
-        processed <span className="text-neutral-700">{provenance.processing_version}</span>
+        Processed <span className="text-foreground/75">{provenance.processing_version}</span>
       </span>
     </footer>
   );
