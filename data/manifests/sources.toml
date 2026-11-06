@@ -1,0 +1,172 @@
+# Every raw file the project uses. `make data` downloads each one into
+# $TS_DATA_DIR/raw/<group>/ and records its SHA-256 in data/manifests/checksums.json.
+# `sha512_list` points at an upstream checksum file to verify against, when GEO publishes one.
+# `tier`: core (Tier 1-3) or stretch (Tier 4). `make data` fetches both; `--tier core` for core only.
+
+[[source]]
+group = "lincs/GSE92742"
+tier = "core"
+sha512_list = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE92nnn/GSE92742/suppl/GSE92742_SHA512SUMS.txt.gz"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE92nnn/GSE92742/suppl/"
+files = [
+  "GSE92742_Broad_LINCS_Level5_COMPZ.MODZ_n473647x12328.gctx.gz",
+  "GSE92742_Broad_LINCS_sig_info.txt.gz",
+  "GSE92742_Broad_LINCS_sig_metrics.txt.gz",
+  "GSE92742_Broad_LINCS_gene_info.txt.gz",
+  "GSE92742_Broad_LINCS_pert_info.txt.gz",
+  "GSE92742_Broad_LINCS_pert_metrics.txt.gz",
+  "GSE92742_Broad_LINCS_cell_info.txt.gz",
+  "GSE92742_Broad_LINCS_README.pdf",
+]
+
+[[source]]
+group = "lincs/GSE70138"
+tier = "core"
+sha512_list = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE70nnn/GSE70138/suppl/GSE70138_SHA512SUMS.txt.gz"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE70nnn/GSE70138/suppl/"
+files = [
+  "GSE70138_Broad_LINCS_Level5_COMPZ_n118050x12328_2017-03-06.gctx.gz",
+  "GSE70138_Broad_LINCS_sig_info_2017-03-06.txt.gz",
+  "GSE70138_Broad_LINCS_sig_metrics_2017-03-06.txt.gz",
+  "GSE70138_Broad_LINCS_gene_info_2017-03-06.txt.gz",
+  "GSE70138_Broad_LINCS_pert_info_2017-03-06.txt.gz",
+  "GSE70138_Broad_LINCS_cell_info_2017-04-28.txt.gz",
+  "GSE70138_Broad_LINCS_README.pdf",
+]
+
+# Primary AD signature: middle temporal gyrus, Illumina HT-12 v4 (GPL10558), 97 AD + 98 ND.
+[[source]]
+group = "geo/GSE132903"
+tier = "core"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE132nnn/GSE132903/"
+files = [
+  "matrix/GSE132903_series_matrix.txt.gz",
+  "suppl/GSE132903_Non-normalized_data.txt.gz",
+  "suppl/GSE132903_Matrix_Normalized.xlsx",
+]
+
+[[source]]
+group = "geo/GPL10558"
+tier = "core"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL10nnn/GPL10558/annot/"
+files = ["GPL10558.annot.gz"]
+
+# Held-out cohort 1: hippocampus RNA-seq, 8 AD + 10 non-AD.
+# GEO only provides TPM (no counts), so DESeq2 cannot run on it; see contracts/README.md.
+[[source]]
+group = "geo/GSE173955"
+tier = "core"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE173nnn/GSE173955/"
+files = [
+  "matrix/GSE173955_series_matrix.txt.gz",
+  "suppl/GSE173955_Table_1_gene_level_expression.xlsx",
+]
+
+# Held-out cohort 2: brain RNA-seq, 8 control + 9 AD, raw (partly non-integer) counts + RPKM.
+[[source]]
+group = "geo/GSE53697"
+tier = "core"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE53nnn/GSE53697/"
+files = [
+  "matrix/GSE53697_series_matrix.txt.gz",
+  "suppl/GSE53697_RNAseq_AD.txt.gz",
+]
+
+# Human Protein Atlas: download once, never call live during the demo.
+[[source]]
+group = "evidence/hpa"
+tier = "core"
+base = "https://www.proteinatlas.org/download/tsv/"
+files = [
+  "rna_brain_region_hpa.tsv.zip",
+  "rna_brain_hpa.tsv.zip",
+  "rna_single_cell_type.tsv.zip",
+  "rna_tissue_consensus.tsv.zip",
+]
+
+# ChEMBL SQLite dump: targets, mechanisms, max_phase (approval status), BBB/PAMPA assays.
+[[source]]
+group = "evidence/chembl"
+tier = "core"
+base = "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/"
+files = ["chembl_37_sqlite.tar.gz", "checksums.txt"]
+
+# ---- Evidence: Open Targets 26.09 bulk Parquet (AD = MONDO_0004975). Pinned release, not "latest".
+[[source]]
+group = "evidence/open_targets/26.09"
+tier = "core"
+base = "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/"
+pattern = "\\.parquet$"
+listing = [
+  "association_overall_indirect/",
+  "association_overall_direct/",
+  "association_by_datatype_indirect/",
+  "drug_molecule/",
+  "drug_mechanism_of_action/",
+  "target/",
+  "target_tractability/",
+  "disease/",
+]
+
+# ---- Evidence: UniProt reviewed (Swiss-Prot) human proteome with Entrez, Ensembl, PDB, ChEMBL xrefs.
+[[source]]
+group = "evidence/uniprot"
+tier = "core"
+single_connection = true  # streamed endpoint, no byte ranges
+base = "https://rest.uniprot.org/uniprotkb/"
+files = [
+  { name = "uniprot_human_swissprot.tsv.gz", path = "stream?compressed=true&format=tsv&query=%28organism_id%3A9606%29%20AND%20%28reviewed%3Atrue%29&fields=accession%2Cid%2Cgene_primary%2Cgene_names%2Cprotein_name%2Cxref_geneid%2Cxref_ensembl%2Cxref_pdb%2Cxref_chembl%2Clength" },
+]
+
+# ---- Evidence: PDB chain <-> UniProt mapping (SIFTS) and resolution index, to pick one structure per target.
+# Structure files themselves are fetched per target once the top-10 targets are known (WS4).
+[[source]]
+group = "evidence/pdb"
+tier = "core"
+base = ""
+files = [
+  "https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/tsv/pdb_chain_uniprot.tsv.gz",
+  "https://files.wwpdb.org/pub/pdb/derived_data/index/resolu.idx",
+  "https://files.wwpdb.org/pub/pdb/derived_data/pdb_entry_type.txt",
+]
+
+# ---- Stretch: single-cell contexts. Exploratory only.
+# GSE175814: 2 AD + 2 control, 10x matrices (284 MB tar).
+[[source]]
+group = "geo/GSE175814"
+tier = "stretch"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/series/GSE175nnn/GSE175814/"
+files = ["matrix/GSE175814_series_matrix.txt.gz", "suppl/GSE175814_RAW.tar", "suppl/filelist.txt"]
+
+# GSE272082: sEOAD multiome, 70k+ nuclei, 9 donors, PFC/EC/HIP. RNA matrices only (filtered 10x h5,
+# per sample). The 37 GB of ATAC fragment files are not used by the plan and are skipped.
+[[source]]
+group = "geo/GSE272082"
+tier = "stretch"
+base = "https://ftp.ncbi.nlm.nih.gov/geo/"
+files = [
+  "series/GSE272nnn/GSE272082/matrix/GSE272082-GPL24676_series_matrix.txt.gz",
+  "series/GSE272nnn/GSE272082/matrix/GSE272082-GPL34281_series_matrix.txt.gz",
+  "series/GSE272nnn/GSE272082/suppl/filelist.txt",
+  "samples/GSM8392nnn/GSM8392674/suppl/GSM8392674_NIH01_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392675/suppl/GSM8392675_NIH02_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392676/suppl/GSM8392676_NIH03_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392677/suppl/GSM8392677_NIH04_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392678/suppl/GSM8392678_NIH05_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392679/suppl/GSM8392679_NIH06_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392680/suppl/GSM8392680_NIH10_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392681/suppl/GSM8392681_NIH11_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392682/suppl/GSM8392682_NIH12_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392683/suppl/GSM8392683_NIH13_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392684/suppl/GSM8392684_NIH14_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392685/suppl/GSM8392685_NIH15_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392686/suppl/GSM8392686_NIH16_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392687/suppl/GSM8392687_NIH17_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392688/suppl/GSM8392688_NIH18_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392689/suppl/GSM8392689_NIH28_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392690/suppl/GSM8392690_NIH29_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392691/suppl/GSM8392691_UT04_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392692/suppl/GSM8392692_UT09_filtered_feature_bc_matrix.h5",
+  "samples/GSM8392nnn/GSM8392693/suppl/GSM8392693_UT2105_filtered_feature_bc_matrix.h5",
+  "samples/GSM9294nnn/GSM9294031/suppl/GSM9294031_NIH30_filtered_feature_bc_matrix.h5",
+]
