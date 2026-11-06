@@ -1,0 +1,46 @@
+# Pre-registration. Fill in, review, then commit and record the hash of this file
+# BEFORE `make benchmark` runs. The benchmark refuses to run if this file changed
+# after its hash was committed.
+status: draft  # draft -> frozen
+
+signature:
+  primary_cohort: GSE132903
+  contrast: AD_minus_control
+  up_down_set_size: 150
+  fdr_method: BH
+
+ranking:
+  methods: [cmap_wtcs, gsea, neg_cosine]
+  weights: [0.3333, 0.3333, 0.3333]   # fixed in advance
+  gene_space: landmark_978           # tier 2: + best-inferred
+  min_contexts_to_rank: 3
+  lincs_context_split:
+    seed: null                        # TODO
+    held_out_fraction: null           # TODO: per-drug share of contexts hidden from ranking
+
+claim:
+  q: 0.7
+  theta: from_permutation_null_p05    # computed on GSE132903 label permutations only
+  permutations: 200
+  permutation_seed: null              # TODO
+
+validation_contexts:                  # the hidden pool
+  - {type: held_out_cohort, id: GSE173955, survive_rule: TODO}
+  - {type: held_out_cohort, id: GSE53697, survive_rule: TODO}
+  - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: TODO}
+  - {type: lincs_context, id: per_drug_held_out_split, survive_rule: TODO}
+  - {type: brain_exposure, id: chembl_literature, survive_rule: TODO}
+
+tauchstone:
+  budget: 5
+  lambda: null                        # TODO: fixed on development candidates only
+  development_candidates: []          # TODO: must not overlap benchmark pool
+
+benchmark:
+  candidate_pool: top_50
+  seeds: 20
+  seed_base: null                     # TODO
+  policies: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid]
+
+demo:
+  candidate_rule: "ranks 1, 5 and 12 of the consensus ranking"

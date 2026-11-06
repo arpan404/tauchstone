@@ -1,0 +1,26 @@
+# Expo stack. Runs fully offline once images are built:
+#   make demo        (build images + freeze the demo bundle)
+#   docker compose up
+# The api container only sees the frozen demo bundle, never raw data.
+services:
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+    environment:
+      TS_API_MOCK: ${TS_API_MOCK:-0}
+      TS_DATA_DIR: /data
+      TS_CORS_ORIGINS: http://localhost:8080
+    volumes:
+      - ./data/demo:/data:ro
+    ports:
+      - "8000:8000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:80"

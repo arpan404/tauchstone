@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+.ipynb_checkpoints/
+
+# R (renv keeps its own .gitignore under renv/)
+.Rhistory
+.RData
+.Rproj.user/
+
+# Node
+node_modules/
+apps/web/dist/
+
+# Data never goes in git. Raw/processed data live in $TS_DATA_DIR.
+data/raw/
+data/processed/
+*.parquet
+*.gctx
+*.gctx.gz
+data/demo/*
+!data/demo/README.md
+
+# Env and OS
+.env
+.DS_Store
