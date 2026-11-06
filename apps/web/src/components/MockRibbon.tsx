@@ -9,7 +9,7 @@ export function MockRibbon({ show }: { show: boolean }) {
     <div
       role="status"
       aria-label="Mock data warning"
-      className="sticky top-0 z-20 border-b-2 border-amber-600 bg-amber-400 px-4 py-1 text-center text-sm font-bold tracking-wide text-amber-950 uppercase"
+      className="sticky top-0 z-20 border-b-2 border-amber-600 bg-[var(--warning-surface)] px-4 py-1 text-center text-sm font-bold tracking-wide text-amber-950 uppercase"
     >
       Mock data: not real results
     </div>

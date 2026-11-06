@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUi } from '@/store/ui';
-import ReactECharts from 'echarts-for-react';
+import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useMemo, useState } from 'react';
 import { buildHeatmapOption, iqrBar } from './heatmapOption';
 

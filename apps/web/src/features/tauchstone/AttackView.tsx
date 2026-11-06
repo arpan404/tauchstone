@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { useUi } from '@/store/ui';
-import ReactECharts from 'echarts-for-react';
+import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { beliefPoints, buildBeliefOption } from './beliefOption';
 import { fmt2, hasIntervalWidth, observedText } from './format';
@@ -45,7 +45,11 @@ export function AttackView() {
   const effectivePicked = picked ?? session?.recommended_context_id ?? null;
   const hiddenCount = session ? session.contexts.filter((c) => c.status === 'hidden').length : 0;
   const beliefChart = useMemo(
-    () => buildBeliefOption(beliefPoints(session?.history ?? [])),
+    () => buildBeliefOption(
+      session && !session.history?.length
+        ? [{ step: 0, p: session.belief.p_claim_holds }]
+        : beliefPoints(session?.history ?? []),
+    ),
     [session],
   );
 
@@ -130,18 +134,11 @@ export function AttackView() {
                 />
                 <span className={mode === 'learn' ? 'font-semibold' : 'text-neutral-500'}>Learn</span>
               </label>
-              <Button
-                size="sm"
-                onClick={handleRun}
-                disabled={!effectivePicked || run.isPending || session.budget_remaining <= 0}
-              >
-                {run.isPending ? 'Running…' : 'Run validation'}
-              </Button>
             </div>
           )}
         </div>
       )}
-      <div className="flex-1 space-y-4 overflow-auto p-4">
+      <div className="attack-body flex-1 overflow-auto p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <h2 className="text-xl font-semibold">Attack the claim</h2>
           <label className="flex items-center gap-2 text-sm">
@@ -189,7 +186,7 @@ export function AttackView() {
 
         {session && (
           <>
-            <Card>
+            <Card className="claim-panel">
               <CardContent className="space-y-3 pt-4">
                 <p className="text-sm text-neutral-600" aria-label="Claim under test">
                   Claim: “{session.claim.text}”
@@ -197,7 +194,7 @@ export function AttackView() {
                 <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
                   <div>
                     <p className="text-xs text-neutral-500">P(claim holds)</p>
-                    <p className="text-5xl font-semibold tabular-nums text-teal-900" aria-live="polite">
+                    <p className="claim-readout font-semibold tabular-nums" aria-live="polite">
                       {session.belief.p_claim_holds.toFixed(2)}
                     </p>
                     {hasIntervalWidth(session.belief.interval) && (
@@ -229,14 +226,14 @@ export function AttackView() {
             {lastRevealed && (
               <Card
                 key={session.history?.length ?? 0}
-                className={`motion-safe:animate-[reveal_.5s_ease-out] ${lastRevealed.outcome === 'survive' ? 'border-teal-600' : 'border-amber-500'}`}
+                className={`reveal-panel motion-safe:animate-[reveal_.5s_ease-out] ${lastRevealed.outcome === 'survive' ? 'border-[var(--success)]' : 'border-[var(--failure)]'}`}
               >
                 <CardHeader className="pb-1">
                   <CardTitle className="text-sm font-medium">
                     {lastRevealed.outcome === 'survive' ? (
-                      <span className="text-teal-800">✓ Survived — {lastRevealed.label}</span>
+                      <span className="text-[var(--success)]">✓ Survived — {lastRevealed.label}</span>
                     ) : (
-                      <span className="text-amber-800">✗ Failed — {lastRevealed.label}</span>
+                      <span className="text-[var(--failure)]">✗ Failed — {lastRevealed.label}</span>
                     )}
                   </CardTitle>
                 </CardHeader>
@@ -252,50 +249,55 @@ export function AttackView() {
               </Card>
             )}
 
-            <Card>
+            <Card className="validation-panel">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Hidden validation contexts</CardTitle>
+                <CardTitle className="text-sm font-medium">Sample wells · sealed validation contexts</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {session.contexts.map((c) => {
-                  const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
-                  const isPicked = c.context_id === effectivePicked;
-                  return (
-                    <button
-                      key={c.context_id}
-                      disabled={c.status === 'revealed'}
-                      onClick={() => setPicked(c.context_id)}
-                      aria-pressed={isPicked}
-                      className={`flex w-full items-center gap-3 rounded border px-3 py-2 text-left text-sm tabular-nums disabled:cursor-default disabled:opacity-60 ${
-                        isRec
-                          ? 'border-teal-700 bg-teal-50/60'
-                          : isPicked
-                            ? 'border-neutral-500 bg-neutral-50'
-                            : 'border-neutral-200'
-                      }`}
-                    >
-                      <span aria-hidden className="text-base">{contextIcon(c.type)}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{c.label}</span>
-                        <span className="block text-xs text-neutral-500">
-                          {c.status === 'revealed'
-                            ? `revealed: ${c.outcome}`
-                            : `p(survive) ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}
+              <CardContent className="space-y-3">
+                <div className="sample-wells">
+                  {session.contexts.map((c) => {
+                    const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
+                    const isPicked = c.context_id === effectivePicked;
+                    return (
+                      <button
+                        data-recommended={isRec}
+                        data-outcome={c.outcome}
+                        key={c.context_id}
+                        disabled={c.status === 'revealed'}
+                        onClick={() => setPicked(c.context_id)}
+                        aria-pressed={isPicked}
+                        className={`sample-well flex w-full items-center gap-3 rounded border px-3 py-2 text-left text-sm tabular-nums disabled:cursor-default disabled:opacity-60 ${
+                          isRec
+                            ? 'border-teal-700 bg-teal-50/60'
+                            : isPicked
+                              ? 'border-neutral-500 bg-neutral-50'
+                              : 'border-neutral-200'
+                        }`}
+                      >
+                        <span aria-hidden className="text-base">{contextIcon(c.type)}</span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium">{c.label}</span>
+                          <span className="block text-xs text-neutral-500">
+                            {c.status === 'revealed'
+                              ? `revealed: ${c.outcome}`
+                              : `sealed · p(survive) ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}
+                          </span>
                         </span>
-                      </span>
-                      {isRec && (
-                        <span className="shrink-0 rounded-full bg-teal-700 px-2 py-0.5 text-xs text-white">
-                          recommended
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
+                        {isRec && (
+                          <span className="shrink-0 rounded-full bg-teal-700 px-2 py-0.5 text-xs text-white">
+                            recommended
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
                 {session.recommended_context_id && (
                   <p className="text-xs text-neutral-500">Rationale: {session.rationale}</p>
                 )}
                 <div className="flex items-center gap-3 pt-1">
                   <Button
+                    className="run-validation"
                     onClick={handleRun}
                     disabled={!effectivePicked || run.isPending || session.budget_remaining <= 0}
                   >
