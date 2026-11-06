@@ -3,7 +3,7 @@
 import pandas as pd
 import pytest
 
-from pipelines.tauchstone.engine import POLICIES, EngineConfig
+from pipelines.tauchstone.engine import BASELINES, CO_PRIMARY, POLICIES, EngineConfig
 from pipelines.tauchstone.evaluation import (
     contested_candidates,
     full_information_verdict,
@@ -94,9 +94,14 @@ def _check_block(block):
         assert p["brier"] is None or 0.0 <= p["brier"] <= 1.0
     assert len(block["calibration"]) == 10
     assert set(block["calibration"][0]) == {"bin_lo", "bin_hi", "mean_predicted", "observed_rate", "n"}
-    for t in block["tests"]:
-        assert t["policy_a"] == "tauchstone_hybrid"
+    holm = [t for t in block["tests"] if t["metric"] == "experiments_to_correct_verdict"]
+    assert len(holm) == 10  # each co-primary vs each of the 5 baselines
+    for t in holm:
+        assert t["policy_a"] in CO_PRIMARY and t["policy_b"] in BASELINES
         assert 0.0 <= t["p_holm"] <= 1.0
+    desc = [t for t in block["tests"] if "descriptive" in t["metric"]]
+    assert len(desc) == 1  # co-primary head-to-head, uncorrected p, labelled descriptive
+    assert {desc[0]["policy_a"], desc[0]["policy_b"]} == set(CO_PRIMARY)
 
 
 def test_summarize_two_blocks_and_contested_share():
@@ -110,8 +115,8 @@ def test_summarize_two_blocks_and_contested_share():
     _check_block(result["all"])
     assert 0.0 <= result["contested_share"] <= 1.0
     assert result["contested"]["n_candidates"] <= result["all"]["n_candidates"] == 12
-    # Wilcoxon+Holm run on the contested set.
-    assert len(result["contested"]["tests"]) == 5
+    # Wilcoxon+Holm run on the contested set: 10 co-primary-vs-baseline + 1 descriptive H2H.
+    assert len(result["contested"]["tests"]) == 11
 
 
 def test_oracle_never_in_summary_policies():

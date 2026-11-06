@@ -16,7 +16,7 @@ import pandas as pd
 from scipy.stats import wilcoxon
 from statsmodels.stats.multitest import multipletests
 
-from pipelines.tauchstone.engine import POLICIES, EngineConfig
+from pipelines.tauchstone.engine import BASELINES, CO_PRIMARY, POLICIES, EngineConfig
 from pipelines.tauchstone.truth_table import SyntheticCandidate
 
 BOOTSTRAP_REPS = 2000
@@ -223,39 +223,52 @@ def _analyze(
                     }
                 )
 
-    # Paired Wilcoxon (per-candidate seed-means) hybrid vs each other + Holm.
+    # Paired Wilcoxon: each co-primary vs each baseline (10 comparisons, Holm).
+    # Co-primary head-to-head reported descriptively (uncorrected p, labelled
+    # in the metric name).
+    def _wilcoxon(a: np.ndarray, b: np.ndarray) -> tuple[float, float]:
+        mask = ~(np.isnan(a) | np.isnan(b))
+        dd = a[mask] - b[mask]
+        if dd.size == 0 or np.all(dd == 0):
+            return 0.0, 1.0
+        try:
+            res = wilcoxon(dd)
+            return float(res.statistic), float(res.pvalue)
+        except ValueError:
+            return 0.0, 1.0
+
     tests: list[dict] = []
-    if "tauchstone_hybrid" in test_metric_by_policy:
-        ref = test_metric_by_policy["tauchstone_hybrid"]
-        raw: list[tuple[str, float, float]] = []
-        for pol in POLICIES:
-            if pol == "tauchstone_hybrid" or pol not in test_metric_by_policy:
-                continue
-            x = test_metric_by_policy[pol]
-            mask = ~(np.isnan(x) | np.isnan(ref))
-            d = x[mask] - ref[mask]
-            if d.size == 0 or np.all(d == 0):
-                stat, p = 0.0, 1.0
-            else:
-                try:
-                    res = wilcoxon(d)
-                    stat, p = float(res.statistic), float(res.pvalue)
-                except ValueError:
-                    stat, p = 0.0, 1.0
-            raw.append((pol, stat, p))
-        if raw:
-            pvals = [p for _, _, p in raw]
-            _, p_holm, _, _ = multipletests(pvals, method="holm")
-            for (pol, stat, _), ph in zip(raw, p_holm, strict=True):
-                tests.append(
-                    {
-                        "policy_a": "tauchstone_hybrid",
-                        "policy_b": pol,
-                        "metric": "experiments_to_correct_verdict",
-                        "statistic": stat,
-                        "p_holm": float(ph),
-                    }
-                )
+    pairs = [(c, b) for c in CO_PRIMARY for b in BASELINES]
+    raw: list[tuple[str, str, float, float]] = []
+    for a, b in pairs:
+        if a not in test_metric_by_policy or b not in test_metric_by_policy:
+            continue
+        stat, p = _wilcoxon(test_metric_by_policy[a], test_metric_by_policy[b])
+        raw.append((a, b, stat, p))
+    if raw:
+        pvals = [p for _, _, _, p in raw]
+        _, p_holm, _, _ = multipletests(pvals, method="holm")
+        for (a, b, stat, _), ph in zip(raw, p_holm, strict=True):
+            tests.append(
+                {
+                    "policy_a": a,
+                    "policy_b": b,
+                    "metric": "experiments_to_correct_verdict",
+                    "statistic": stat,
+                    "p_holm": float(ph),
+                }
+            )
+    if all(c in test_metric_by_policy for c in CO_PRIMARY):
+        stat, p = _wilcoxon(test_metric_by_policy[CO_PRIMARY[0]], test_metric_by_policy[CO_PRIMARY[1]])
+        tests.append(
+            {
+                "policy_a": CO_PRIMARY[0],
+                "policy_b": CO_PRIMARY[1],
+                "metric": "experiments_to_correct_verdict_head_to_head_descriptive",
+                "statistic": stat,
+                "p_holm": float(p),  # uncorrected; descriptive only (see metric name)
+            }
+        )
     return {
         "n_candidates": int(runs["candidate_id"].nunique()) if len(runs) else 0,
         "n_seeds": int(runs["seed"].nunique()) if len(runs) else 0,
