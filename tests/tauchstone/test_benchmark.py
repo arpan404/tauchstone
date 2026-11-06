@@ -179,3 +179,14 @@ def test_verdict_carried_forward_when_run_ends_before_budget():
     assert row["verdict_at_3"] == "SUPPORTED_SO_FAR"
     assert row["verdict_at_5"] == "SUPPORTED_SO_FAR"
     assert bool(row["correct_at_5"]) and bool(row["correct_at_budget"])
+
+
+def test_real_benchmark_config_comes_from_preregistration():
+    from pipelines.tauchstone.replay import engine_config_from_prereg
+
+    cfg, prereg = engine_config_from_prereg()
+    eng = prereg["tauchstone_engine"]
+    assert cfg.lam == float(eng["lambda"]) and cfg.lam_lookahead == float(eng["lambda_lookahead"])
+    assert cfg.q == float(prereg["claim"]["q"])
+    for k, v in eng["type_priors"].items():
+        assert cfg.type_priors[k] == float(v)
