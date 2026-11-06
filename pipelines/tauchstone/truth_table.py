@@ -663,7 +663,8 @@ def prereg_guard() -> tuple[str, str]:
             f"refusing: {prereg} status is {status!r}, expected 'frozen'. "
             "Freeze the preregistration and commit it before running the benchmark."
         )
-    repo = prereg.parents[1]
+    repo = Path(subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=prereg.parent,
+                               check=True, capture_output=True, text=True).stdout.strip())
     try:
         rel = str(prereg.relative_to(repo))
         subprocess.run(
