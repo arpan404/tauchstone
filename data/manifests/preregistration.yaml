@@ -13,7 +13,8 @@ ranking:
   methods: [wtcs, ks, cosine]          # all negative = reversal; consensus = mean of z-scores
   weights: [0.3333, 0.3333, 0.3333]   # fixed in advance
   gene_space: landmark_978           # tier 2: + best-inferred
-  signature_set: all_trt_cp          # gold-only exists for comparison only
+  signature_set: gold                # distil_cc_q75 >= 0.2, 0 <= pct_self_rank_q25 <= 5, >= 2 replicates (person's decision after the permutation comparison)
+  permutation_control_run: GSE132903__gold_permctl
   candidate_pool: {source: open_targets_26.09_drug_molecule, match: [inchikey, inchikey_connectivity14], min_stage: PHASE_1}
   min_contexts_to_rank: 3
   lincs_context_split:

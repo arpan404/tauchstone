@@ -7,6 +7,14 @@
     "upstream_sha512_verified": null,
     "frozen_at": "2026-11-06T01:49:07+00:00"
   },
+  "evidence/chembl/chembl_37_sqlite.tar.gz": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/chembl/ChEMBLdb/latest/chembl_37_sqlite.tar.gz",
+    "path": "raw/evidence/chembl/chembl_37_sqlite.tar.gz",
+    "bytes": 5764252857,
+    "sha256": "33c203740555f96067710cdfc1c3c55d890660e5908ec5cbf5817492c290d281",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T04:07:53+00:00"
+  },
   "evidence/hpa/rna_brain_hpa.tsv.zip": {
     "url": "https://www.proteinatlas.org/download/tsv/rna_brain_hpa.tsv.zip",
     "path": "raw/evidence/hpa/rna_brain_hpa.tsv.zip",
