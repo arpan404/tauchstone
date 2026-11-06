@@ -75,9 +75,20 @@ def load_lincs(block: int = 50_000) -> dict:
             "landmark": landmark["entrez_id"].astype(str).tolist()}
 
 
-def ranking_mask(sig_info: pd.DataFrame, split: pd.DataFrame) -> np.ndarray:
+def gold_mask(sig_info: pd.DataFrame) -> np.ndarray:
+    """LINCS 'gold' signatures (Subramanian et al. 2017): replicates agree (distil_cc_q75 >= 0.2),
+    the profile is distinct (0 <= pct_self_rank_q25 <= 5, percent units) and >= 2 replicates.
+    The -666 sentinel (missing) counts as not gold."""
+    cc = sig_info["distil_cc_q75"].to_numpy()
+    sr = sig_info["pct_self_rank_q25"].to_numpy()
+    ns = sig_info["distil_nsample"].to_numpy()
+    return (cc >= 0.2) & (sr >= 0) & (sr <= 5) & (ns >= 2)
+
+
+def ranking_mask(sig_info: pd.DataFrame, split: pd.DataFrame, gold_only: bool = False) -> np.ndarray:
     m = split.set_index(["pert_id", "context_id"])["split"]
-    return np.asarray(sig_info.set_index(["pert_id", "context_id"]).index.map(m) == "ranking")
+    mask = np.asarray(sig_info.set_index(["pert_id", "context_id"]).index.map(m) == "ranking")
+    return mask & gold_mask(sig_info) if gold_only else mask
 
 
 def run_query(scorer: Scorer, sets: QuerySets, mask: np.ndarray) -> dict[str, np.ndarray]:
@@ -87,7 +98,7 @@ def run_query(scorer: Scorer, sets: QuerySets, mask: np.ndarray) -> dict[str, np
 _PERM_CTX: dict = {}
 
 
-def _perm_worker_init(lincs_dir: str, block: int) -> None:
+def _perm_worker_init(lincs_dir: str, block: int, gold_only: bool = False) -> None:
     """Spawn initializer: cap BLAS threads, load mmap arrays + metadata once."""
     for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
         os.environ.setdefault(var, "1")
@@ -105,7 +116,8 @@ def _perm_worker_init(lincs_dir: str, block: int) -> None:
     _PERM_CTX["landmark"] = (
         _pd.read_parquet(d / "landmark_order.parquet").sort_values("col")["entrez_id"]
         .astype(str).tolist())
-    _PERM_CTX["mask"] = ranking_mask(_PERM_CTX["sig_info"], _PERM_CTX["split"])
+    _PERM_CTX["mask"] = ranking_mask(_PERM_CTX["sig_info"], _PERM_CTX["split"], gold_only)
+    _PERM_CTX["keep"] = gold_mask(_PERM_CTX["sig_info"]) if gold_only else None
 
 
 def _perm_worker(task: tuple) -> dict:
@@ -120,6 +132,8 @@ def _perm_worker(task: tuple) -> dict:
                         "consensus": res["consensus"]})
     split_map = _PERM_CTX["split"].set_index(["pert_id", "context_id"])["split"]
     sig["split"] = np.asarray(sig.set_index(["pert_id", "context_id"]).index.map(split_map))
+    if _PERM_CTX["keep"] is not None:
+        sig = sig[_PERM_CTX["keep"]]
     ctx = sig.groupby(["pert_id", "context_id", "split"], as_index=False)["consensus"].mean()
     comp = (ctx[ctx["split"] == "ranking"].groupby("pert_id")["consensus"]
             .median().reset_index().rename(columns={"consensus": "consensus_median"}))
@@ -129,7 +143,7 @@ def _perm_worker(task: tuple) -> dict:
 
 
 def run_permutations(lincs_dir: Path, perm_path: Path, real_top50: pd.DataFrame,
-                     block: int, workers: int) -> tuple[pd.DataFrame, pd.DataFrame, float]:
+                     block: int, workers: int, gold_only: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, float]:
     """Full pipeline per permutation; returns (null, summary, theta)."""
     perms = pd.read_parquet(perm_path)
     perm_ids = perms["perm_id"].unique().tolist()
@@ -140,7 +154,7 @@ def run_permutations(lincs_dir: Path, perm_path: Path, real_top50: pd.DataFrame,
     for var in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS",
                 "VECLIB_MAXIMUM_THREADS"):
         os.environ.setdefault(var, "1")
-    with mp.get_context("spawn").Pool(workers, _perm_worker_init, (str(lincs_dir), block)) as pool:
+    with mp.get_context("spawn").Pool(workers, _perm_worker_init, (str(lincs_dir), block, gold_only)) as pool:
         results = pool.map(_perm_worker, tasks)
     null_rows = []
     ctx_pooled: list[np.ndarray] = []
@@ -170,11 +184,13 @@ def main() -> None:
     ap.add_argument("--permutations", default=None)
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 8)
     ap.add_argument("--block", type=int, default=50_000)
+    ap.add_argument("--gold-only", action="store_true",
+                    help="use only LINCS gold signatures for scaling, aggregation and permutations")
     args = ap.parse_args()
 
     lincs = load_lincs(block=args.block)
     sig_info, split = lincs["sig_info"], lincs["split"]
-    mask = ranking_mask(sig_info, split)
+    mask = ranking_mask(sig_info, split, args.gold_only)
     query, mapping = load_signature(Path(args.signature))
 
     use_perm_rule = args.permutations is not None
@@ -196,6 +212,10 @@ def main() -> None:
         "wtcs": res["wtcs"], "ks": res["ks"], "cosine": res["cosine"],
         "z_wtcs": res["z_wtcs"], "z_ks": res["z_ks"], "z_cosine": res["z_cosine"],
         "consensus": res["consensus"]})
+    if args.gold_only:
+        keep = gold_mask(sig_info)
+        sig_scores = sig_scores[keep].reset_index(drop=True)
+        sig_info = sig_info[keep].reset_index(drop=True)
     context_scores, compound_ranking = aggregate_scores(sig_scores, split, sig_meta=sig_info)
 
     out = PROCESSED / "scores"
@@ -215,7 +235,8 @@ def main() -> None:
               "up_n_fdr": sets.up_n_fdr, "down_n_fdr": sets.down_n_fdr,
               "query_set_fallback": sets.fdr_fallback,
               "permutation_rule_for_real": use_perm_rule,
-              "n_ranking_sigs": int(mask.sum()), "block": args.block}
+              "n_ranking_sigs": int(mask.sum()), "block": args.block,
+              "gold_only": bool(args.gold_only)}
     Provenance(step="lincs_rank", dataset_accession=["GSE92742", "GSE70138"],
                parameters=params, random_seed=SPLIT_SEED).write(sig_path)
     Provenance(step="lincs_rank_contexts", dataset_accession=["GSE92742", "GSE70138"],
@@ -227,7 +248,7 @@ def main() -> None:
         assert args.permutations is not None
         null, summary, theta = run_permutations(
             PROCESSED / "lincs", Path(args.permutations), compound_ranking,
-            args.block, args.workers)
+            args.block, args.workers, args.gold_only)
         null_path = out / f"{args.out_name}__permutation_null.parquet"
         summ_path = out / f"{args.out_name}__permutation_summary.parquet"
         null.to_parquet(null_path, index=False)

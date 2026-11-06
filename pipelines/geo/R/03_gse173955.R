@@ -102,6 +102,14 @@ keep_expr <- rowSums(tpm_g >= 1) >= 8
 cat(sprintf("[%s] expression filter: %d/%d genes kept (TPM>=1 in >=8 samples)\n",
             COHORT, sum(keep_expr), length(keep_expr)))
 E_f <- E[keep_expr, , drop = FALSE]
+# Between-sample normalization. TPM is compositional: if a few very abundant transcripts
+# (rRNA, mitochondrial, unmapped rows we drop) take more of the 1e6 total in some samples,
+# every retained gene looks lower there. Without this step 98% of genes came out "down in AD"
+# (median log2FC -0.83). Quantile-normalize the filtered log2(TPM+1) matrix.
+med_before <- apply(E_f, 2, median)
+E_f <- limma::normalizeBetweenArrays(E_f, method = "quantile")
+cat(sprintf("[%s] quantile-normalized log2(TPM+1); per-sample medians before: %.2f..%.2f, after: %.2f..%.2f\n",
+            COHORT, min(med_before), max(med_before), min(apply(E_f, 2, median)), max(apply(E_f, 2, median))))
 entrez_f <- entrez_g[keep_expr]; sym_f <- sym_g[keep_expr]
 
 # --- 5. QC + outliers ---------------------------------------------------------------
@@ -146,7 +154,7 @@ params <- list(
   symbol_mapping = "SYMBOL multiVals='first'; ALIAS fallback only if alias maps to exactly one Entrez; two symbols -> one Entrez keeps higher mean",
   n_tpm_rows = nrow(tpm), n_symbols_dedup = length(symbols),
   n_unmapped_symbols = n_unmapped, n_symbol_collisions = n_collapsed,
-  gene_filter = "TPM >= 1 in at least 8 samples (smallest group size)",
+  gene_filter = "TPM >= 1 in at least 8 samples (smallest group size); then quantile normalization of log2(TPM+1) between samples",
   n_genes = nrow(main),
   unspecified_covariates = c("pmi", "rin", "batch"),
   fdr_method = "BH", ebayes_trend = TRUE, ebayes_robust = TRUE)
