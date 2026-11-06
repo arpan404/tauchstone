@@ -89,6 +89,7 @@ class Repository(Protocol):
     def list_candidates(self, limit: int) -> dict: ...
     def get_evidence(self, candidate_id: str) -> dict: ...
     def get_attack_world(self, candidate_id: str) -> AttackWorld: ...
+    def get_single_cell(self) -> dict: ...
     def get_benchmark(self) -> dict: ...
     def get_structure_path(self, pdb_id: str) -> Path: ...
 
@@ -213,6 +214,9 @@ class MockRepository:
                 theta=theta,
             ),
         )
+
+    def get_single_cell(self) -> dict:
+        return json.loads((REPO_ROOT / "contracts/fixtures/getSingleCellExploratory.json").read_text())
 
     def get_benchmark(self) -> dict:
         bench = self._load().get("benchmark")
@@ -675,6 +679,12 @@ class ParquetRepository:
         )
 
     # -- benchmark / structures ----------------------------------------------
+    def get_single_cell(self) -> dict:
+        path = self.base / "singlecell/panel.json"
+        if not path.is_file():
+            raise NotFoundError("singlecell/panel.json")
+        return json.loads(path.read_text())
+
     def get_benchmark(self) -> dict:
         path = self.base / "tauchstone" / "benchmark_summary.json"
         if not path.exists():

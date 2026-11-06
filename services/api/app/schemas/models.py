@@ -305,3 +305,39 @@ class Benchmark(BaseModel):
     preregistration_commit: str | None = None
     all_candidates: dict | None = None
     provenance: Provenance
+
+
+class SingleCellSignature(BaseModel):
+    signature_id: str
+    cohort: str
+    region: str | None = None
+    cell_type: str
+    n_donors_ad: int
+    n_donors_control: int
+    n_nuclei: int
+    n_genes_tested: int | None = None
+    n_fdr05: int | None = None
+    status: Literal['ok', 'insufficient_donors']
+
+
+class SingleCellScore(BaseModel):
+    signature_id: str
+    consensus: float | None
+    scores: MethodScores | None = None
+
+
+class SingleCellDrug(BaseModel):
+    candidate_id: str
+    name: str
+    pool_rank: int = Field(ge=1)
+    bulk_consensus: float
+    scores: list[SingleCellScore]
+
+
+class SingleCellExploratory(BaseModel):
+    label: Literal['Exploratory, not part of the preregistered benchmark']
+    note: str | None = None
+    cell_typing: str | None = None
+    signatures: list[SingleCellSignature]
+    drugs: list[SingleCellDrug]
+    provenance: Provenance
