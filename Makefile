@@ -102,5 +102,5 @@ release: ## Build and verify offline images, export archive and checksums
 	bash scripts/release_expo.sh
 
 .PHONY: singlecell
-singlecell: ## Validate exploratory metadata (analysis blocked pending verified donor map)
+singlecell: ## Build isolated exploratory single-cell panel
 	uv run python -m pipelines.singlecell
