@@ -6,6 +6,7 @@ type Policy = Schema<'PolicyResult'>;
 export function buildPolicyOption(policies: Policy[]): Record<string, unknown> {
   const labels = policies.map((p) => p.label);
   return {
+    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
     grid: { left: 150, right: 30, top: 20, bottom: 30 },
     xAxis: { type: 'value', name: 'median experiments to correct verdict (fewer is better)' },
     yAxis: { type: 'category', data: labels, inverse: true, axisLabel: { fontSize: 11 } },
@@ -31,7 +32,7 @@ export function buildPolicyOption(policies: Policy[]): Record<string, unknown> {
           const lo = api.coord([api.value(1), idx]);
           const hi = api.coord([api.value(2), idx]);
           const isHybrid = policies[idx]?.policy === 'tauchstone_hybrid';
-          const color = isHybrid ? '#0f766e' : '#a3a3a3';
+          const color = isHybrid ? '#5de0cd' : '#a3a3a3';
           return {
             type: 'group',
             children: [
@@ -56,6 +57,7 @@ export function buildCalibrationOption(
   bins: { mean_predicted: number; observed_rate: number }[],
 ): Record<string, unknown> {
   return {
+    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
     grid: { left: 44, right: 16, top: 24, bottom: 32 },
     xAxis: { type: 'value', min: 0, max: 1, name: 'mean predicted', nameLocation: 'middle', nameGap: 26 },
     yAxis: { type: 'value', min: 0, max: 1, name: 'observed rate' },
@@ -76,7 +78,7 @@ export function buildCalibrationOption(
         name: 'bins',
         data: bins.map((b) => [b.mean_predicted, b.observed_rate]),
         symbolSize: 10,
-        itemStyle: { color: '#0f766e' },
+        itemStyle: { color: '#5de0cd' },
       },
     ],
   };

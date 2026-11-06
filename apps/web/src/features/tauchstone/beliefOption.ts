@@ -3,6 +3,7 @@ import type { Schema } from '@/api/types';
 /** Pure ECharts line-chart option builder for P(claim) across reveal steps. */
 export function buildBeliefOption(points: { step: number; p: number }[]): Record<string, unknown> {
   return {
+    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
     grid: { left: 44, right: 16, top: 24, bottom: 30 },
     xAxis: {
       type: 'category',
@@ -22,8 +23,8 @@ export function buildBeliefOption(points: { step: number; p: number }[]): Record
         data: points.map((p) => p.p),
         smooth: true,
         symbolSize: 8,
-        lineStyle: { color: '#0f766e', width: 3 },
-        itemStyle: { color: '#0f766e' },
+        lineStyle: { color: '#5de0cd', width: 3 },
+        itemStyle: { color: '#5de0cd' },
         markLine: {
           symbol: 'none',
           lineStyle: { color: '#a16207', type: 'dashed' },
