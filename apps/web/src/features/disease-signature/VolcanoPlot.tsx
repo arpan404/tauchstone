@@ -10,6 +10,7 @@ export function VolcanoPlot({ genes }: { genes: Schema<'GeneStat'>[] }) {
   return (
     <div role="img" aria-label={`Volcano plot of ${genes.length} genes. Negative x means lower in AD.`}>
       <ReactECharts
+        className="signature-chart"
         option={option}
         style={{ width: '100%', height: 420 }}
         opts={{ renderer: 'canvas' }}

@@ -57,6 +57,17 @@ export function MolstarViewer({ url }: { url: string }) {
           layoutIsExpanded: false,
           viewportBackgroundColor: '#182125',
           layoutShowControls: false,
+          layoutShowLeftPanel: false,
+          layoutShowSequence: false,
+          layoutShowLog: false,
+          viewportShowReset: true,
+          viewportShowControls: false,
+          viewportShowScreenshotControls: false,
+          viewportShowToggleFullscreen: false,
+          viewportShowSettings: false,
+          viewportShowSelectionMode: false,
+          viewportShowAnimation: false,
+          viewportShowTrajectoryControls: false,
           viewportShowExpand: false,
           collapseLeftPanel: true,
         });
@@ -102,7 +113,7 @@ export function MolstarViewer({ url }: { url: string }) {
       role="img"
       aria-label="3D protein structure viewer"
       style={{ width: '100%', height: 320, position: 'relative', overflow: 'hidden' }}
-      className="rounded border border-neutral-200"
+      className="tauchstone-molstar rounded border border-neutral-200"
     />
   );
 }

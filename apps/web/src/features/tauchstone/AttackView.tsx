@@ -12,7 +12,8 @@ import { useUi } from '@/store/ui';
 import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { beliefPoints, buildBeliefOption } from './beliefOption';
-import { fmt2, hasIntervalWidth, observedText } from './format';
+import { fmt2, hasIntervalWidth, observedText, testsLeftText } from './format';
+import { RecommendationRationale } from './RecommendationRationale';
 
 type Session = Schema<'AttackSession'>;
 
@@ -22,12 +23,12 @@ function BudgetPips({ budget, remaining, hidden }: { budget: number; remaining: 
     <div
       className="flex items-center gap-1.5"
       role="img"
-      aria-label={`Budget ${remaining} of ${budget}; ${hidden} hidden contexts; ${testsLeft} tests left`}
+      aria-label={`Budget ${remaining} of ${budget}; ${hidden} hidden contexts; ${testsLeftText(testsLeft)}`}
     >
       {Array.from({ length: testsLeft }, (_, i) => (
         <span key={i} aria-hidden className="inline-block h-3 w-3 rounded-full bg-teal-700" />
       ))}
-      <span className="ml-1 text-sm tabular-nums text-neutral-600">{testsLeft} tests left</span>
+      <span className="ml-1 text-sm tabular-nums text-neutral-600">{testsLeftText(testsLeft)}</span>
     </div>
   );
 }
@@ -107,7 +108,7 @@ export function AttackView() {
         <div className="sticky top-0 z-10 bg-[#fafaf9]">
           <MockRibbon show={mockData} />
           {session && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 py-2">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 px-4 py-2">
               <p className="text-sm text-neutral-600">
                 P(claim){' '}
                 <span className="text-2xl font-semibold tabular-nums text-teal-900" aria-live="polite">
@@ -293,7 +294,7 @@ export function AttackView() {
                   })}
                 </div>
                 {session.recommended_context_id && (
-                  <p className="text-xs text-neutral-500">Rationale: {session.rationale}</p>
+                  <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
                 )}
                 <div className="flex items-center gap-3 pt-1">
                   <Button
