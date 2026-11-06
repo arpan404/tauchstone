@@ -34,17 +34,17 @@ The permutation gate was **not met**. In the gold clinical pool, 17/20 compounds
 
 ## Walk through the website
 
-Screenshots below are explicit placeholders for the restyled app running on real data on Arpan's Mac. They are not mock screenshots or evidence of local real-data verification. The orchestrator supplies these files after integration.
+Screenshots from the restyled app on real data (GSE132903, 1,816 ranked drugs), captured on the build Mac at 1600×1000.
 
-| Screen | Real-data screenshot to supply | What to inspect |
-|---|---|---|
-| Landing | `docs/figures/screenshot-landing.png` | The question and the boundary |
-| Story tour | `docs/figures/screenshot-tour.png` | Signature, ranking and evidence |
-| Attack | `docs/figures/screenshot-attack.png` | Sealed tests, one reveal, confidence trace |
-| Benchmark | `docs/figures/screenshot-benchmark.png` | Primary scope, accuracy and paired tests |
-| Expo | `docs/figures/screenshot-expo.png` | Optional full-screen gene scene |
+| Landing | Story tour |
+|---|---|
+| ![Landing](docs/figures/screenshot-landing.png) | ![Story tour on the signature step](docs/figures/screenshot-tour.png) |
+| **Attack** | **Benchmark** |
+| ![Attack after one reveal](docs/figures/screenshot-attack.png) | ![Benchmark, primary analysis](docs/figures/screenshot-benchmark.png) |
+| **Expo mode** | |
+| ![Expo mode gene sphere](docs/figures/screenshot-expo.png) | |
 
-The new [About panel](apps/web/src/features/about/) explains the pipeline and integrity record. It exports `<About />` for navigation integration; its standalone development preview is documented [here](apps/web/src/features/about/README.md).
+The [About panel](apps/web/src/features/about/) (nav item "How it works") explains the pipeline and integrity record.
 
 ## Run offline
 
