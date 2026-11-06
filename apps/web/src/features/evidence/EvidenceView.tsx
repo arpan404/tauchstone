@@ -73,6 +73,11 @@ export function EvidenceView() {
             {data.mechanism && <p className="text-sm text-neutral-600">{data.mechanism}</p>}
 
             <div className="grid gap-4 xl:grid-cols-2">
+              {data.targets.length === 0 && (
+                <p className="text-sm text-neutral-600">
+                  No mechanism-of-action targets recorded in Open Targets for this drug.
+                </p>
+              )}
               {data.targets.map((t) => (
                 <Card key={t.uniprot}>
                   <CardHeader className="pb-2">
