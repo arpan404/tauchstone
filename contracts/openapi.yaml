@@ -163,6 +163,27 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
 
+  /exploratory/single-cell:
+    get:
+      operationId: getSingleCellExploratory
+      summary: Exploratory single-cell pseudobulk panel. Never part of the preregistered benchmark.
+      description: |
+        Pseudobulk per donor and cell type from GSE272082 and GSE175814, limma-voom AD minus control
+        per cohort, cell type (and region where a cohort has several), then the top 20 benchmark-pool
+        drugs scored against each signature with the same three methods as the bulk ranking.
+        Cohorts are never merged. Nothing here feeds the ranking, truth table, engine or benchmark.
+      responses:
+        "200":
+          description: exploratory panel
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SingleCellExploratory" }
+        "404":
+          description: panel not built yet
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
 components:
   responses:
     NotFound:
@@ -529,4 +550,52 @@ components:
               p_holm: { type: number }
         preregistration_sha256: { type: string }
         preregistration_commit: { type: string }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    SingleCellSignature:
+      type: object
+      description: One pseudobulk AD-minus-control signature (cohort x region x cell type).
+      required: [signature_id, cohort, cell_type, n_donors_ad, n_donors_control, n_nuclei, status]
+      properties:
+        signature_id: { type: string, examples: ["GSE272082|PFC|astrocytes"] }
+        cohort: { type: string, examples: ["GSE272082"] }
+        region: { type: [string, "null"], description: brain region when a cohort has several; null otherwise }
+        cell_type: { type: string, examples: ["astrocytes"] }
+        n_donors_ad: { type: integer }
+        n_donors_control: { type: integer }
+        n_nuclei: { type: integer }
+        n_genes_tested: { type: [integer, "null"] }
+        n_fdr05: { type: [integer, "null"], description: genes at FDR < 0.05 (AD minus control) }
+        status:
+          type: string
+          enum: [ok, insufficient_donors]
+          description: insufficient_donors when either group has fewer than 3 donors; not scored
+
+    SingleCellScore:
+      type: object
+      required: [signature_id, consensus]
+      properties:
+        signature_id: { type: string }
+        consensus: { type: [number, "null"], description: same consensus as the bulk ranking; negative = reversal; null when not scored }
+        scores: { oneOf: [{ $ref: "#/components/schemas/MethodScores" }, { type: "null" }] }
+
+    SingleCellDrug:
+      type: object
+      required: [candidate_id, name, pool_rank, bulk_consensus, scores]
+      properties:
+        candidate_id: { type: string, description: LINCS pert_id }
+        name: { type: string }
+        pool_rank: { type: integer, minimum: 1 }
+        bulk_consensus: { type: number, description: consensus against the primary bulk signature, for comparison }
+        scores: { type: array, items: { $ref: "#/components/schemas/SingleCellScore" } }
+
+    SingleCellExploratory:
+      type: object
+      required: [label, signatures, drugs, provenance]
+      properties:
+        label: { type: string, const: "Exploratory, not part of the preregistered benchmark" }
+        note: { type: string, description: plain-language limits (donor counts, cell typing method) }
+        cell_typing: { type: string, description: how nuclei were assigned to cell types }
+        signatures: { type: array, items: { $ref: "#/components/schemas/SingleCellSignature" } }
+        drugs: { type: array, items: { $ref: "#/components/schemas/SingleCellDrug" } }
         provenance: { $ref: "#/components/schemas/Provenance" }
