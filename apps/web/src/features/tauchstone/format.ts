@@ -20,3 +20,8 @@ export function hasIntervalWidth(interval: readonly number[] | null | undefined,
   if (!interval || interval.length < 2) return false;
   return interval[1] - interval[0] >= minWidth;
 }
+
+/** A budget readout counts tests, including the singular final test. */
+export function testsLeftText(count: number): string {
+  return `${count} ${count === 1 ? 'test' : 'tests'} left`;
+}

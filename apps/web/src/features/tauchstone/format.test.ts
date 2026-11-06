@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmt2, hasIntervalWidth, observedText } from './format';
+import { fmt2, hasIntervalWidth, observedText, testsLeftText } from './format';
 
 describe('outcome formatting', () => {
   it('formats long decimals to 2 places', () => {
@@ -21,5 +21,13 @@ describe('outcome formatting', () => {
     expect(hasIntervalWidth([0.5, 0.73])).toBe(true);
     expect(hasIntervalWidth(undefined)).toBe(false);
     expect(hasIntervalWidth([0.5])).toBe(false);
+  });
+});
+
+describe('test budget readout', () => {
+  it('uses the singular only for one remaining test', () => {
+    expect(testsLeftText(0)).toBe('0 tests left');
+    expect(testsLeftText(1)).toBe('1 test left');
+    expect(testsLeftText(5)).toBe('5 tests left');
   });
 });
