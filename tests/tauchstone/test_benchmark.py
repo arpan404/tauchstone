@@ -92,7 +92,10 @@ def _check_block(block):
         assert set(p["fragile_recall_at_3"]) == {"estimate", "ci95"}
         assert set(p["decision_accuracy"]) == {"estimate", "ci95"}
         assert p["brier"] is None or 0.0 <= p["brier"] <= 1.0
-    assert len(block["calibration"]) == 10
+    import math
+
+    assert 1 <= len(block["calibration"]) <= 10  # empty bins are omitted
+    assert all(b["n"] > 0 and math.isfinite(b["mean_predicted"]) for b in block["calibration"])
     assert set(block["calibration"][0]) == {"bin_lo", "bin_hi", "mean_predicted", "observed_rate", "n"}
     holm = [t for t in block["tests"] if t["metric"] == "experiments_to_correct_verdict"]
     assert len(holm) == 10  # each co-primary vs each of the 5 baselines
