@@ -7,5 +7,5 @@ export const ui = (page: Page) => ({
   search: page.getByRole('textbox', { name: 'Search name or ID' }),
   evidence: page.getByRole('heading', { name: 'Candidate evidence', exact: true }),
   history: page.getByRole('list').filter({ has: page.getByText(/mode (attack|learn).*cost 1/) }).getByRole('listitem'),
-  budget: page.getByRole('img', { name: /^Budget \d+ of \d+;/ }),
+  budget: page.getByLabel(/^Budget \d+ of \d+;/),
 });

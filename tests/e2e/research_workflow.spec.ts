@@ -17,6 +17,12 @@ test('discovery comparison and one committed experiment retain session across ev
   });
   await page.goto('/');
   await boundary();
+  await expect(page.getByRole('button', { name: 'Use dark theme', exact: true })).toBeVisible();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
+  await page.getByRole('button', { name: 'Use dark theme', exact: true }).click();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await page.getByRole('button', { name: 'Use light theme', exact: true }).click();
+  await expect(page.locator('html')).not.toHaveClass(/dark/);
   await expect(s.selected).toContainText('No candidate selected');
   await expect(s.results.first()).toBeVisible();
   // Candidate choice uses discovery order only, before any held-out evidence.
@@ -37,7 +43,8 @@ test('discovery comparison and one committed experiment retain session across ev
   await boundary();
   await s.selected.getByRole('button', { name: 'Open experiments', exact: true }).click();
   await boundary();
-  await page.getByRole('combobox', { name: 'Session budget' }).selectOption('2');
+  await page.getByRole('combobox', { name: 'Session budget' }).click();
+  await page.getByRole('option', { name: '2 experiments', exact: true }).click();
   const started = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith('/attack'));
   await page.getByRole('button', { name: 'Create experiment session', exact: true }).click();
   const startResponse = await started;
@@ -71,7 +78,11 @@ test('discovery comparison and one committed experiment retain session across ev
   await s.selected.getByRole('button', { name: 'View evidence', exact: true }).click();
   await expect(s.evidence).toBeVisible();
   await boundary();
-  await s.selected.getByRole('button', { name: 'Open experiments', exact: true }).click();
+  await page.getByRole('button', { name: 'Search workspace', exact: true }).click();
+  const palette = page.getByRole('dialog', { name: 'Search workspace', exact: true });
+  await palette.getByRole('combobox').fill('Experiments');
+  await palette.getByRole('option', { name: 'Experiments', exact: true }).click();
+  await expect(palette).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Create experiment session', exact: true })).toHaveCount(0);
   await expect(s.history).toHaveCount(1);
   await expect(s.history.first()).toHaveText(history, { useInnerText: true });
