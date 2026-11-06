@@ -1,6 +1,6 @@
 # Demo walkthrough
 
-Install once with `cd tests/e2e && bun install --frozen-lockfile && bunx playwright install chromium`.
+Install once with `cd tests/e2e && bun install --frozen-lockfile`. The run uses the installed Google Chrome by default (Playwright's bundled Chromium does not launch on the newest macOS); set `TS_E2E_CHANNEL=chromium` after `bunx playwright install chromium` to use that instead.
 From the repo root, `make up && make record` records the real Docker stack.
 Override the URL with `TS_E2E_BASE_URL=http://localhost:5178 make record`.
 Use `TS_E2E_PAUSE_MS=500` for a quick check; the default pauses total about 140 seconds.
