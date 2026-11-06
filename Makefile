@@ -47,8 +47,8 @@ rank: ## LINCS reversal scores + consensus ranking (gold signatures) for the pri
 permutation-control: ## 200 label permutations of GSE132903, gold signatures (about 15 min)
 	uv run python -m pipelines.lincs.rank --gold-only --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__main.parquet --out-name GSE132903__gold_permctl --permutations $(TS_DATA_DIR)/processed/signatures/GSE132903__permutations.parquet --workers 12
 
-evidence: ## Evidence cards for the top 50
-	@echo "TODO workstream 4: pipelines/evidence" && exit 1
+evidence: ## Evidence cards for pool ranks 1-100 (targets, AD, brain, approval, exposure, structures)
+	uv run python -m pipelines.evidence.build_all --ranking GSE132903__main
 
 truth-table: ## Precompute hidden validation outcomes (server-side only)
 	uv run python -m pipelines.tauchstone.truth_table

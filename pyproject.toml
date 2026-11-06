@@ -21,6 +21,7 @@ dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
   "pydantic>=2.8",
+  "rdkit>=2026.9.1",
 ]
 
 [dependency-groups]
