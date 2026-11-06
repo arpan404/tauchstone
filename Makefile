@@ -39,7 +39,7 @@ signatures: ## Disease signatures for all cohorts (R: limma / DESeq2)
 	@echo "TODO workstream 2: pipelines/geo" && exit 1
 
 rank: ## LINCS reversal scores + consensus ranking
-	@echo "TODO workstream 3: pipelines/lincs" && exit 1
+	uv run python -m pipelines.lincs.rank --signature $(TS_DATA_DIR)/processed/signatures/GSE132903__main.parquet --out-name GSE132903
 
 evidence: ## Evidence cards for the top 50
 	@echo "TODO workstream 4: pipelines/evidence" && exit 1
