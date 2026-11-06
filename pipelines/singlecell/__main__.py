@@ -197,6 +197,8 @@ def main():
             "GSE272082: sporadic early-onset AD (sEOAD) versus control, separate regional models; "
             "inferred donor triplets. GPL24676 excluded for platform/batch confounding. Sex unbalanced "
             "(Control 2M/1F, sEOAD 2F/1M), not modelled. GSE175814 has at most 2 donors per group. "
+            "Most fitted signatures have few or no genes at FDR < 0.05; for those the query falls back "
+            "to the top-ranked genes regardless of significance, so their scores are weak evidence. "
             "Marker annotation requires human review; negative scores indicate reversal of expression "
             "only. "
         ),
