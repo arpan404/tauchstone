@@ -97,7 +97,7 @@ Compound score = median over ranking contexts, with IQR. A compound is ranked on
 
 **Permutation control.** Run the full pipeline per permuted query. For each of the top 50,
 p_perm = (1 + #perms with score ≤ real score) / 201. The control passes if every top-20 compound has
-p_perm < 0.05. **θ** (prereg) = 5th percentile of the pooled ranking-context consensus across all
+p_perm < 0.05. **θ** (prereg) = **25th** percentile (5th, 10th and 25th are all recorded) of the pooled ranking-context consensus across all
 permutations.
 
 **Candidate pool** (prereg). Only compounds with a clinical history can be Tauchstone candidates.
@@ -127,11 +127,25 @@ hidden pool S_d (prereg):
 
 | type | contexts | value | survive rule (prereg) |
 |---|---|---|---|
-| `held_out_cohort` | GSE173955 (GSE53697 excluded by the cohort QC gate below) | d's compound consensus with that cohort's signature as the query (same gene space, split and pipeline) | d is in the 5% most-reversing ranked compounds for that query |
-| `composition_adjusted` | GSE132903 adjusted | same, with the adjusted signature | same 5% rule |
+| `held_out_cohort` | GSE173955 (GSE53697 excluded by the cohort QC gate below) | d's compound consensus with that cohort's signature as the query (same gene space, split and pipeline) | d is in the **25%** most-reversing ranked compounds for that query |
+| `composition_adjusted` | GSE132903 adjusted | same, with the adjusted signature | same 25% rule |
 | `lincs_context` | d's held-out LINCS contexts, at most 8 (if more, sample 8 stratified by cell line, seed 20261105) | context consensus against the primary signature | consensus ≤ θ |
 | `brain_exposure` | 1, only if measured data exists | best measured CNS evidence | survive if measured human CNS PK or measured preclinical brain/plasma Kp ≥ 0.1, or PAMPA-BBB Pe ≥ 4×10⁻⁶ cm/s; fail if measured below those. **No measured data: the context is not in S_d** (it is untestable, not a failure) |
-| `cell_type` (stretch) | microglia/astrocyte/neuron pseudobulk | as for cohorts | same 5% rule |
+| `cell_type` (stretch) | microglia/astrocyte/neuron pseudobulk | as for cohorts | same 25% rule |
+
+**Survive strictness** (prereg; chosen on the development pool only, the person's decision). The first
+rule (top 5% / θ at the 5th percentile, q = 0.7) made the claim hold for 4% of development candidates,
+with 0% undecided before testing, so no strategy could matter. On the development pool:
+
+| per-test rule | q | claim holds | undecided before testing |
+|---|---|---|---|
+| top 5% | 0.7 | 4% | 0% |
+| top 10% | 0.5 | 32% | 82% |
+| top 25% | 0.7 | 40% | 100% |
+
+The chosen rule is top 25% (θ = 25th percentile of the null) with q = 0.7. With the median of 4 hidden
+tests, a drug with no effect satisfies the claim about 5% of the time (P(≥ 3 of 4) at 0.25 ≈ 0.051).
+The benchmark pool was not looked at.
 
 **Cohort QC gate** (prereg; decided on signature quality before any candidate outcome was computed):
 a held-out cohort enters S_d only if its gene-level statistics agree with the primary signature,
