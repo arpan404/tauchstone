@@ -1,0 +1,4316 @@
+{
+ "label": "Exploratory, not part of the preregistered benchmark",
+ "note": "SYNTHETIC FIXTURE. Donor counts and scores are placeholders for UI work only.",
+ "cell_typing": "Synthetic fixture: no cell typing performed.",
+ "signatures": [
+  {
+   "signature_id": "GSE272082|PFC|excitatory_neurons",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "excitatory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 2952,
+   "n_genes_tested": 10235,
+   "n_fdr05": 202,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|PFC|inhibitory_neurons",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "inhibitory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 5632,
+   "n_genes_tested": 9395,
+   "n_fdr05": 37,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|PFC|astrocytes",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "astrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 4689,
+   "n_genes_tested": 9771,
+   "n_fdr05": 187,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|PFC|microglia",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "microglia",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 5074,
+   "n_genes_tested": 9475,
+   "n_fdr05": 259,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|PFC|oligodendrocytes",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "oligodendrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 2058,
+   "n_genes_tested": 9307,
+   "n_fdr05": 44,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|PFC|opc",
+   "cohort": "GSE272082",
+   "region": "PFC",
+   "cell_type": "opc",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 3852,
+   "n_genes_tested": 12425,
+   "n_fdr05": 35,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|excitatory_neurons",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "excitatory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 2271,
+   "n_genes_tested": 9743,
+   "n_fdr05": 282,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|inhibitory_neurons",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "inhibitory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 3777,
+   "n_genes_tested": 9484,
+   "n_fdr05": 289,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|astrocytes",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "astrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 1314,
+   "n_genes_tested": 10828,
+   "n_fdr05": 322,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|microglia",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "microglia",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 5439,
+   "n_genes_tested": 13775,
+   "n_fdr05": 31,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|oligodendrocytes",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "oligodendrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 5027,
+   "n_genes_tested": 13796,
+   "n_fdr05": 203,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|EC|opc",
+   "cohort": "GSE272082",
+   "region": "EC",
+   "cell_type": "opc",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 706,
+   "n_genes_tested": 10811,
+   "n_fdr05": 23,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|excitatory_neurons",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "excitatory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 4860,
+   "n_genes_tested": 10090,
+   "n_fdr05": 148,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|inhibitory_neurons",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "inhibitory_neurons",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 3733,
+   "n_genes_tested": 10181,
+   "n_fdr05": 276,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|astrocytes",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "astrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 1264,
+   "n_genes_tested": 13676,
+   "n_fdr05": 157,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|microglia",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "microglia",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 4889,
+   "n_genes_tested": 10480,
+   "n_fdr05": 52,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|oligodendrocytes",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "oligodendrocytes",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 5064,
+   "n_genes_tested": 13679,
+   "n_fdr05": 327,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE272082|HIP|opc",
+   "cohort": "GSE272082",
+   "region": "HIP",
+   "cell_type": "opc",
+   "n_donors_ad": 5,
+   "n_donors_control": 4,
+   "n_nuclei": 1839,
+   "n_genes_tested": 12050,
+   "n_fdr05": 49,
+   "status": "ok"
+  },
+  {
+   "signature_id": "GSE175814|excitatory_neurons",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "excitatory_neurons",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 2443,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  },
+  {
+   "signature_id": "GSE175814|inhibitory_neurons",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "inhibitory_neurons",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 457,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  },
+  {
+   "signature_id": "GSE175814|astrocytes",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "astrocytes",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 2511,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  },
+  {
+   "signature_id": "GSE175814|microglia",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "microglia",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 444,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  },
+  {
+   "signature_id": "GSE175814|oligodendrocytes",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "oligodendrocytes",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 2735,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  },
+  {
+   "signature_id": "GSE175814|opc",
+   "cohort": "GSE175814",
+   "region": null,
+   "cell_type": "opc",
+   "n_donors_ad": 2,
+   "n_donors_control": 2,
+   "n_nuclei": 1043,
+   "n_genes_tested": null,
+   "n_fdr05": null,
+   "status": "insufficient_donors"
+  }
+ ],
+ "drugs": [
+  {
+   "candidate_id": "BRD-MOCK0001",
+   "name": "Mock compound 1",
+   "pool_rank": 1,
+   "bulk_consensus": -2.27,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.638,
+     "scores": {
+      "wtcs": -1.532,
+      "ks": -0.272,
+      "cosine": -0.109
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.534,
+     "scores": {
+      "wtcs": -1.403,
+      "ks": 0.54,
+      "cosine": -0.738
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.062,
+     "scores": {
+      "wtcs": -0.294,
+      "ks": 0.33,
+      "cosine": -0.223
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.186,
+     "scores": {
+      "wtcs": -0.706,
+      "ks": -0.663,
+      "cosine": 0.811
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.299,
+     "scores": {
+      "wtcs": -0.905,
+      "ks": 0.609,
+      "cosine": -0.602
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.597,
+     "scores": {
+      "wtcs": -0.547,
+      "ks": -0.899,
+      "cosine": -0.345
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.826,
+     "scores": {
+      "wtcs": -1.572,
+      "ks": 1.648,
+      "cosine": -2.554
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 0.679,
+     "scores": {
+      "wtcs": 0.908,
+      "ks": 0.829,
+      "cosine": 0.299
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.914,
+     "scores": {
+      "wtcs": 0.149,
+      "ks": -2.092,
+      "cosine": -0.798
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.621,
+     "scores": {
+      "wtcs": 0.484,
+      "ks": -2.085,
+      "cosine": -0.263
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.168,
+     "scores": {
+      "wtcs": 0.103,
+      "ks": -0.114,
+      "cosine": -0.493
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 0.922,
+     "scores": {
+      "wtcs": 1.233,
+      "ks": 1.188,
+      "cosine": 0.344
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.205,
+     "scores": {
+      "wtcs": -0.781,
+      "ks": 0.922,
+      "cosine": -0.755
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -1.455,
+     "scores": {
+      "wtcs": -1.286,
+      "ks": -0.735,
+      "cosine": -2.343
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.386,
+     "scores": {
+      "wtcs": -1.661,
+      "ks": 1.649,
+      "cosine": -1.145
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.163,
+     "scores": {
+      "wtcs": 0.783,
+      "ks": -1.001,
+      "cosine": -0.272
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.492,
+     "scores": {
+      "wtcs": -0.682,
+      "ks": 1.292,
+      "cosine": -2.087
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.052,
+     "scores": {
+      "wtcs": 1.035,
+      "ks": -0.903,
+      "cosine": -0.287
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0002",
+   "name": "Mock compound 2",
+   "pool_rank": 2,
+   "bulk_consensus": -2.24,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.133,
+     "scores": {
+      "wtcs": -0.958,
+      "ks": 0.167,
+      "cosine": 0.392
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.69,
+     "scores": {
+      "wtcs": 0.504,
+      "ks": -1.788,
+      "cosine": -0.786
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.016,
+     "scores": {
+      "wtcs": 1.21,
+      "ks": -0.429,
+      "cosine": -0.829
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.125,
+     "scores": {
+      "wtcs": 0.194,
+      "ks": 0.197,
+      "cosine": -0.015
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.269,
+     "scores": {
+      "wtcs": -0.385,
+      "ks": -0.431,
+      "cosine": 0.009
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.339,
+     "scores": {
+      "wtcs": -0.854,
+      "ks": -0.412,
+      "cosine": 0.25
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.917,
+     "scores": {
+      "wtcs": -1.64,
+      "ks": -0.596,
+      "cosine": -0.516
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.258,
+     "scores": {
+      "wtcs": 0.17,
+      "ks": 1.252,
+      "cosine": -2.195
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -1.71,
+     "scores": {
+      "wtcs": -1.223,
+      "ks": -1.657,
+      "cosine": -2.249
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 0.212,
+     "scores": {
+      "wtcs": 0.245,
+      "ks": 1.142,
+      "cosine": -0.75
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -1.036,
+     "scores": {
+      "wtcs": -1.239,
+      "ks": -0.667,
+      "cosine": -1.202
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.113,
+     "scores": {
+      "wtcs": 0.407,
+      "ks": -0.827,
+      "cosine": 0.081
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.371,
+     "scores": {
+      "wtcs": 0.773,
+      "ks": -0.404,
+      "cosine": 0.744
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": 0.591,
+     "scores": {
+      "wtcs": 0.563,
+      "ks": 0.735,
+      "cosine": 0.476
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -1.373,
+     "scores": {
+      "wtcs": -2.675,
+      "ks": -0.856,
+      "cosine": -0.588
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.014,
+     "scores": {
+      "wtcs": -0.55,
+      "ks": -0.046,
+      "cosine": 0.638
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.777,
+     "scores": {
+      "wtcs": -1.957,
+      "ks": -2.165,
+      "cosine": -1.208
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.018,
+     "scores": {
+      "wtcs": -0.979,
+      "ks": 0.566,
+      "cosine": 0.467
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0003",
+   "name": "Mock compound 3",
+   "pool_rank": 3,
+   "bulk_consensus": -2.21,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.046,
+     "scores": {
+      "wtcs": 0.833,
+      "ks": -0.459,
+      "cosine": -0.511
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.676,
+     "scores": {
+      "wtcs": 0.216,
+      "ks": -0.303,
+      "cosine": -1.942
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.963,
+     "scores": {
+      "wtcs": -1.821,
+      "ks": -0.094,
+      "cosine": -0.974
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.115,
+     "scores": {
+      "wtcs": -0.369,
+      "ks": 0.605,
+      "cosine": -0.581
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -1.244,
+     "scores": {
+      "wtcs": -1.115,
+      "ks": -2.361,
+      "cosine": -0.257
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.785,
+     "scores": {
+      "wtcs": -1.14,
+      "ks": -0.572,
+      "cosine": -0.642
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.143,
+     "scores": {
+      "wtcs": 0.382,
+      "ks": -1.298,
+      "cosine": 0.486
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 0.011,
+     "scores": {
+      "wtcs": -0.811,
+      "ks": -0.088,
+      "cosine": 0.931
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -1.227,
+     "scores": {
+      "wtcs": -1.722,
+      "ks": -0.324,
+      "cosine": -1.635
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.892,
+     "scores": {
+      "wtcs": -1.451,
+      "ks": -0.266,
+      "cosine": -0.958
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.132,
+     "scores": {
+      "wtcs": -0.233,
+      "ks": 0.71,
+      "cosine": -0.08
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -1.026,
+     "scores": {
+      "wtcs": -0.931,
+      "ks": -1.919,
+      "cosine": -0.227
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.034,
+     "scores": {
+      "wtcs": 1.463,
+      "ks": -0.415,
+      "cosine": -0.946
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.692,
+     "scores": {
+      "wtcs": -0.186,
+      "ks": -1.025,
+      "cosine": -0.864
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -1.135,
+     "scores": {
+      "wtcs": 0.277,
+      "ks": -1.795,
+      "cosine": -1.886
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.643,
+     "scores": {
+      "wtcs": 1.897,
+      "ks": 0.106,
+      "cosine": -0.075
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.503,
+     "scores": {
+      "wtcs": -1.192,
+      "ks": -0.13,
+      "cosine": -3.187
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.224,
+     "scores": {
+      "wtcs": 0.016,
+      "ks": -0.348,
+      "cosine": -0.339
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0004",
+   "name": "Mock compound 4",
+   "pool_rank": 4,
+   "bulk_consensus": -2.18,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.601,
+     "scores": {
+      "wtcs": 0.473,
+      "ks": -0.796,
+      "cosine": -1.48
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.328,
+     "scores": {
+      "wtcs": -1.785,
+      "ks": 0.423,
+      "cosine": 0.379
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.296,
+     "scores": {
+      "wtcs": -0.46,
+      "ks": -0.947,
+      "cosine": 0.518
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.729,
+     "scores": {
+      "wtcs": -0.985,
+      "ks": -0.58,
+      "cosine": -0.621
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.509,
+     "scores": {
+      "wtcs": 1.209,
+      "ks": -0.831,
+      "cosine": -1.905
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.094,
+     "scores": {
+      "wtcs": 0.078,
+      "ks": 0.206,
+      "cosine": -0.001
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.539,
+     "scores": {
+      "wtcs": -0.064,
+      "ks": -0.31,
+      "cosine": -1.242
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -1.138,
+     "scores": {
+      "wtcs": -0.904,
+      "ks": -1.067,
+      "cosine": -1.442
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.647,
+     "scores": {
+      "wtcs": -1.235,
+      "ks": -0.943,
+      "cosine": 0.238
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.461,
+     "scores": {
+      "wtcs": -0.523,
+      "ks": -0.498,
+      "cosine": -0.362
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.204,
+     "scores": {
+      "wtcs": 0.191,
+      "ks": -1.833,
+      "cosine": 1.029
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 1.412,
+     "scores": {
+      "wtcs": 0.701,
+      "ks": 1.582,
+      "cosine": 1.953
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.796,
+     "scores": {
+      "wtcs": 0.392,
+      "ks": 1.614,
+      "cosine": 0.381
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.83,
+     "scores": {
+      "wtcs": -0.179,
+      "ks": -1.999,
+      "cosine": -0.312
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.061,
+     "scores": {
+      "wtcs": -0.876,
+      "ks": 0.814,
+      "cosine": -0.121
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -1.157,
+     "scores": {
+      "wtcs": -0.606,
+      "ks": -0.435,
+      "cosine": -2.431
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.763,
+     "scores": {
+      "wtcs": -1.26,
+      "ks": -1.866,
+      "cosine": -2.163
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.361,
+     "scores": {
+      "wtcs": -0.497,
+      "ks": 0.082,
+      "cosine": -0.667
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0005",
+   "name": "Mock compound 5",
+   "pool_rank": 5,
+   "bulk_consensus": -2.15,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.658,
+     "scores": {
+      "wtcs": 0.391,
+      "ks": 0.675,
+      "cosine": 0.907
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -1.525,
+     "scores": {
+      "wtcs": -1.541,
+      "ks": -1.643,
+      "cosine": -1.391
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.166,
+     "scores": {
+      "wtcs": 0.025,
+      "ks": 0.147,
+      "cosine": -0.671
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.243,
+     "scores": {
+      "wtcs": -0.645,
+      "ks": 1.102,
+      "cosine": 0.273
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.634,
+     "scores": {
+      "wtcs": -1.426,
+      "ks": -0.52,
+      "cosine": 0.043
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.702,
+     "scores": {
+      "wtcs": -2.344,
+      "ks": 0.311,
+      "cosine": -0.072
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.19,
+     "scores": {
+      "wtcs": 0.138,
+      "ks": -0.181,
+      "cosine": -0.527
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.256,
+     "scores": {
+      "wtcs": -0.23,
+      "ks": -0.015,
+      "cosine": -0.524
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.087,
+     "scores": {
+      "wtcs": -1.532,
+      "ks": 2.094,
+      "cosine": -0.824
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.114,
+     "scores": {
+      "wtcs": -0.713,
+      "ks": -0.502,
+      "cosine": 0.874
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.525,
+     "scores": {
+      "wtcs": 0.12,
+      "ks": -1.414,
+      "cosine": -0.282
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 0.112,
+     "scores": {
+      "wtcs": 0.917,
+      "ks": 1.331,
+      "cosine": -1.911
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.101,
+     "scores": {
+      "wtcs": 1.569,
+      "ks": -1.285,
+      "cosine": 0.02
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.075,
+     "scores": {
+      "wtcs": 0.741,
+      "ks": -1.164,
+      "cosine": 0.199
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.253,
+     "scores": {
+      "wtcs": -0.901,
+      "ks": 1.065,
+      "cosine": -0.923
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.094,
+     "scores": {
+      "wtcs": 0.001,
+      "ks": -0.466,
+      "cosine": 0.183
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.143,
+     "scores": {
+      "wtcs": 0.099,
+      "ks": -2.635,
+      "cosine": -0.893
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.372,
+     "scores": {
+      "wtcs": -1.049,
+      "ks": -0.311,
+      "cosine": 0.243
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0006",
+   "name": "Mock compound 6",
+   "pool_rank": 6,
+   "bulk_consensus": -2.12,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.154,
+     "scores": {
+      "wtcs": -1.923,
+      "ks": 0.034,
+      "cosine": 1.426
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.766,
+     "scores": {
+      "wtcs": 0.859,
+      "ks": 0.473,
+      "cosine": 0.967
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.639,
+     "scores": {
+      "wtcs": -0.043,
+      "ks": 1.244,
+      "cosine": 0.716
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.44,
+     "scores": {
+      "wtcs": -0.338,
+      "ks": -1.127,
+      "cosine": 0.146
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.053,
+     "scores": {
+      "wtcs": 0.499,
+      "ks": 0.223,
+      "cosine": -0.882
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.395,
+     "scores": {
+      "wtcs": 0.643,
+      "ks": -0.586,
+      "cosine": -1.243
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.449,
+     "scores": {
+      "wtcs": -1.132,
+      "ks": -0.391,
+      "cosine": 0.175
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.248,
+     "scores": {
+      "wtcs": -0.419,
+      "ks": 0.328,
+      "cosine": -0.653
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.398,
+     "scores": {
+      "wtcs": -0.001,
+      "ks": -0.594,
+      "cosine": -0.598
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 1.16,
+     "scores": {
+      "wtcs": 1.854,
+      "ks": 0.4,
+      "cosine": 1.226
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.973,
+     "scores": {
+      "wtcs": 0.526,
+      "ks": -2.062,
+      "cosine": -1.384
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -1.133,
+     "scores": {
+      "wtcs": -2.459,
+      "ks": -1.33,
+      "cosine": 0.391
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.849,
+     "scores": {
+      "wtcs": -1.463,
+      "ks": -0.408,
+      "cosine": -0.677
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.198,
+     "scores": {
+      "wtcs": 0.416,
+      "ks": -0.105,
+      "cosine": -0.906
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.11,
+     "scores": {
+      "wtcs": 0.326,
+      "ks": -0.784,
+      "cosine": 0.128
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.14,
+     "scores": {
+      "wtcs": -0.255,
+      "ks": -0.391,
+      "cosine": 1.066
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": 0.039,
+     "scores": {
+      "wtcs": -0.165,
+      "ks": 0.472,
+      "cosine": -0.19
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.069,
+     "scores": {
+      "wtcs": -0.195,
+      "ks": 0.739,
+      "cosine": -0.337
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0007",
+   "name": "Mock compound 7",
+   "pool_rank": 7,
+   "bulk_consensus": -2.09,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.37,
+     "scores": {
+      "wtcs": 0.902,
+      "ks": -1.007,
+      "cosine": 1.215
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.321,
+     "scores": {
+      "wtcs": 0.122,
+      "ks": 2.142,
+      "cosine": -1.3
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.322,
+     "scores": {
+      "wtcs": -0.347,
+      "ks": 0.33,
+      "cosine": 0.982
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.76,
+     "scores": {
+      "wtcs": -0.881,
+      "ks": -0.966,
+      "cosine": -0.432
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.68,
+     "scores": {
+      "wtcs": -1.707,
+      "ks": 0.2,
+      "cosine": -0.532
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.385,
+     "scores": {
+      "wtcs": 1.489,
+      "ks": -0.026,
+      "cosine": -0.309
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.535,
+     "scores": {
+      "wtcs": 0.879,
+      "ks": -0.163,
+      "cosine": 0.89
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 0.018,
+     "scores": {
+      "wtcs": -0.465,
+      "ks": -0.27,
+      "cosine": 0.788
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -1.2,
+     "scores": {
+      "wtcs": -1.089,
+      "ks": -1.515,
+      "cosine": -0.996
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.541,
+     "scores": {
+      "wtcs": -1.346,
+      "ks": 1.73,
+      "cosine": -2.007
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.137,
+     "scores": {
+      "wtcs": -0.547,
+      "ks": 0.351,
+      "cosine": -0.215
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.047,
+     "scores": {
+      "wtcs": 0.36,
+      "ks": 0.891,
+      "cosine": -1.392
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 1.747,
+     "scores": {
+      "wtcs": 1.627,
+      "ks": 2.021,
+      "cosine": 1.592
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": 0.135,
+     "scores": {
+      "wtcs": -0.516,
+      "ks": 1.096,
+      "cosine": -0.175
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": 0.179,
+     "scores": {
+      "wtcs": 0.473,
+      "ks": -1.027,
+      "cosine": 1.091
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.152,
+     "scores": {
+      "wtcs": 0.205,
+      "ks": -1.17,
+      "cosine": 0.508
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": 0.026,
+     "scores": {
+      "wtcs": 1.029,
+      "ks": -0.545,
+      "cosine": -0.407
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.048,
+     "scores": {
+      "wtcs": -0.585,
+      "ks": 0.013,
+      "cosine": 0.427
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0008",
+   "name": "Mock compound 8",
+   "pool_rank": 8,
+   "bulk_consensus": -2.06,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.435,
+     "scores": {
+      "wtcs": 0.651,
+      "ks": -0.278,
+      "cosine": -1.678
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.589,
+     "scores": {
+      "wtcs": 2.247,
+      "ks": -0.418,
+      "cosine": -0.063
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.161,
+     "scores": {
+      "wtcs": 0.218,
+      "ks": -0.772,
+      "cosine": 0.07
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.344,
+     "scores": {
+      "wtcs": 0.525,
+      "ks": 0.399,
+      "cosine": 0.107
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.625,
+     "scores": {
+      "wtcs": -0.721,
+      "ks": -0.927,
+      "cosine": -0.228
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.537,
+     "scores": {
+      "wtcs": -0.731,
+      "ks": -0.072,
+      "cosine": -0.809
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.903,
+     "scores": {
+      "wtcs": -1.156,
+      "ks": -0.819,
+      "cosine": -0.733
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 1.294,
+     "scores": {
+      "wtcs": 1.041,
+      "ks": 1.869,
+      "cosine": 0.973
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 0.119,
+     "scores": {
+      "wtcs": 0.051,
+      "ks": -0.763,
+      "cosine": 1.068
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -1.453,
+     "scores": {
+      "wtcs": -1.392,
+      "ks": -1.697,
+      "cosine": -1.269
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.853,
+     "scores": {
+      "wtcs": -0.514,
+      "ks": -1.448,
+      "cosine": -0.596
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 1.025,
+     "scores": {
+      "wtcs": 1.057,
+      "ks": 0.846,
+      "cosine": 1.173
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -1.245,
+     "scores": {
+      "wtcs": -0.562,
+      "ks": -1.471,
+      "cosine": -1.703
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.834,
+     "scores": {
+      "wtcs": 0.368,
+      "ks": -2.493,
+      "cosine": -0.376
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.701,
+     "scores": {
+      "wtcs": -0.277,
+      "ks": -1.596,
+      "cosine": -0.231
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -1.136,
+     "scores": {
+      "wtcs": -0.466,
+      "ks": -0.995,
+      "cosine": -1.948
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.398,
+     "scores": {
+      "wtcs": -0.904,
+      "ks": -2.726,
+      "cosine": -0.563
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.172,
+     "scores": {
+      "wtcs": -0.63,
+      "ks": 1.075,
+      "cosine": 0.07
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0009",
+   "name": "Mock compound 9",
+   "pool_rank": 9,
+   "bulk_consensus": -2.03,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.171,
+     "scores": {
+      "wtcs": 0.641,
+      "ks": -0.545,
+      "cosine": -0.608
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.188,
+     "scores": {
+      "wtcs": -0.203,
+      "ks": 0.923,
+      "cosine": -0.155
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.153,
+     "scores": {
+      "wtcs": -0.273,
+      "ks": 0.482,
+      "cosine": -0.667
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.09,
+     "scores": {
+      "wtcs": -0.198,
+      "ks": 1.647,
+      "cosine": -1.179
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": 0.254,
+     "scores": {
+      "wtcs": 0.724,
+      "ks": 0.367,
+      "cosine": -0.33
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -1.044,
+     "scores": {
+      "wtcs": -1.433,
+      "ks": 0.403,
+      "cosine": -2.102
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.369,
+     "scores": {
+      "wtcs": -0.14,
+      "ks": 1.373,
+      "cosine": -0.125
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.286,
+     "scores": {
+      "wtcs": 1.138,
+      "ks": -2.173,
+      "cosine": 0.177
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 0.664,
+     "scores": {
+      "wtcs": 1.646,
+      "ks": 0.719,
+      "cosine": -0.372
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.513,
+     "scores": {
+      "wtcs": 0.001,
+      "ks": -0.747,
+      "cosine": -0.793
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -1.015,
+     "scores": {
+      "wtcs": -1.027,
+      "ks": -0.826,
+      "cosine": -1.191
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.969,
+     "scores": {
+      "wtcs": -1.552,
+      "ks": -0.687,
+      "cosine": -0.669
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.489,
+     "scores": {
+      "wtcs": -1.446,
+      "ks": -0.173,
+      "cosine": 0.151
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": 0.13,
+     "scores": {
+      "wtcs": -0.379,
+      "ks": -0.066,
+      "cosine": 0.836
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -1.19,
+     "scores": {
+      "wtcs": -0.51,
+      "ks": -1.093,
+      "cosine": -1.968
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.224,
+     "scores": {
+      "wtcs": 0.063,
+      "ks": 0.961,
+      "cosine": -0.353
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.494,
+     "scores": {
+      "wtcs": -0.46,
+      "ks": 0.092,
+      "cosine": -1.115
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.281,
+     "scores": {
+      "wtcs": -0.16,
+      "ks": 0.754,
+      "cosine": 0.249
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0010",
+   "name": "Mock compound 10",
+   "pool_rank": 10,
+   "bulk_consensus": -2.0,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.166,
+     "scores": {
+      "wtcs": 2.895,
+      "ks": -0.408,
+      "cosine": -1.989
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.248,
+     "scores": {
+      "wtcs": 1.154,
+      "ks": 0.057,
+      "cosine": -0.466
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.44,
+     "scores": {
+      "wtcs": 1.099,
+      "ks": 0.592,
+      "cosine": -0.37
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.647,
+     "scores": {
+      "wtcs": 0.641,
+      "ks": -1.426,
+      "cosine": -1.155
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.429,
+     "scores": {
+      "wtcs": -0.39,
+      "ks": 0.181,
+      "cosine": -1.077
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.003,
+     "scores": {
+      "wtcs": 0.58,
+      "ks": 0.413,
+      "cosine": -1.003
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.686,
+     "scores": {
+      "wtcs": 1.024,
+      "ks": 1.759,
+      "cosine": -0.725
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -1.001,
+     "scores": {
+      "wtcs": -1.227,
+      "ks": -0.448,
+      "cosine": -1.327
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.446,
+     "scores": {
+      "wtcs": -0.661,
+      "ks": 0.056,
+      "cosine": -0.733
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 0.066,
+     "scores": {
+      "wtcs": 0.473,
+      "ks": -0.831,
+      "cosine": 0.557
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.369,
+     "scores": {
+      "wtcs": 0.314,
+      "ks": -0.543,
+      "cosine": 1.337
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.14,
+     "scores": {
+      "wtcs": -0.179,
+      "ks": -0.307,
+      "cosine": 0.066
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.283,
+     "scores": {
+      "wtcs": -1.858,
+      "ks": 0.986,
+      "cosine": 1.721
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.58,
+     "scores": {
+      "wtcs": 0.752,
+      "ks": -0.23,
+      "cosine": -2.261
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.463,
+     "scores": {
+      "wtcs": -0.362,
+      "ks": 0.02,
+      "cosine": -1.046
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.538,
+     "scores": {
+      "wtcs": -1.508,
+      "ks": 1.279,
+      "cosine": 1.842
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.369,
+     "scores": {
+      "wtcs": -1.102,
+      "ks": 0.04,
+      "cosine": -0.045
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.916,
+     "scores": {
+      "wtcs": -2.035,
+      "ks": -0.518,
+      "cosine": -0.194
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0011",
+   "name": "Mock compound 11",
+   "pool_rank": 11,
+   "bulk_consensus": -1.97,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.31,
+     "scores": {
+      "wtcs": -0.226,
+      "ks": -1.308,
+      "cosine": 0.603
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.428,
+     "scores": {
+      "wtcs": -1.195,
+      "ks": -0.182,
+      "cosine": 0.092
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.263,
+     "scores": {
+      "wtcs": 0.64,
+      "ks": -0.718,
+      "cosine": -0.71
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.439,
+     "scores": {
+      "wtcs": -0.661,
+      "ks": 0.487,
+      "cosine": -1.143
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": 0.002,
+     "scores": {
+      "wtcs": 0.775,
+      "ks": -0.964,
+      "cosine": 0.194
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.204,
+     "scores": {
+      "wtcs": 0.61,
+      "ks": -0.452,
+      "cosine": 0.453
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -1.023,
+     "scores": {
+      "wtcs": -0.403,
+      "ks": -1.751,
+      "cosine": -0.914
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.604,
+     "scores": {
+      "wtcs": 0.11,
+      "ks": -1.778,
+      "cosine": -0.143
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 0.726,
+     "scores": {
+      "wtcs": 0.748,
+      "ks": 0.681,
+      "cosine": 0.749
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.352,
+     "scores": {
+      "wtcs": 0.236,
+      "ks": 0.179,
+      "cosine": -1.47
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.479,
+     "scores": {
+      "wtcs": -1.161,
+      "ks": -0.038,
+      "cosine": -0.239
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.963,
+     "scores": {
+      "wtcs": -1.354,
+      "ks": -1.015,
+      "cosine": -0.521
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.137,
+     "scores": {
+      "wtcs": 0.281,
+      "ks": 0.834,
+      "cosine": -0.704
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.137,
+     "scores": {
+      "wtcs": 0.569,
+      "ks": -0.055,
+      "cosine": -0.926
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": 0.044,
+     "scores": {
+      "wtcs": 1.706,
+      "ks": -0.046,
+      "cosine": -1.527
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.392,
+     "scores": {
+      "wtcs": 0.811,
+      "ks": -0.103,
+      "cosine": 0.469
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.967,
+     "scores": {
+      "wtcs": -0.284,
+      "ks": -1.474,
+      "cosine": -1.144
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.977,
+     "scores": {
+      "wtcs": -0.725,
+      "ks": -0.775,
+      "cosine": -1.432
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0012",
+   "name": "Mock compound 12",
+   "pool_rank": 12,
+   "bulk_consensus": -1.94,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.171,
+     "scores": {
+      "wtcs": 0.187,
+      "ks": -2.181,
+      "cosine": 1.481
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.05,
+     "scores": {
+      "wtcs": 0.871,
+      "ks": -1.378,
+      "cosine": 0.656
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.099,
+     "scores": {
+      "wtcs": -1.087,
+      "ks": 0.059,
+      "cosine": 0.732
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.608,
+     "scores": {
+      "wtcs": -2.713,
+      "ks": 0.434,
+      "cosine": 0.455
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.469,
+     "scores": {
+      "wtcs": -0.145,
+      "ks": -2.099,
+      "cosine": 0.837
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.654,
+     "scores": {
+      "wtcs": -0.53,
+      "ks": 1.768,
+      "cosine": 0.724
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.467,
+     "scores": {
+      "wtcs": 0.802,
+      "ks": -0.834,
+      "cosine": -1.37
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.411,
+     "scores": {
+      "wtcs": -0.083,
+      "ks": -0.153,
+      "cosine": -0.996
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 1.424,
+     "scores": {
+      "wtcs": 1.243,
+      "ks": 1.882,
+      "cosine": 1.148
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.717,
+     "scores": {
+      "wtcs": 0.881,
+      "ks": -0.887,
+      "cosine": -2.145
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.272,
+     "scores": {
+      "wtcs": 0.033,
+      "ks": -0.559,
+      "cosine": -0.291
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 0.295,
+     "scores": {
+      "wtcs": -0.352,
+      "ks": 0.614,
+      "cosine": 0.622
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.792,
+     "scores": {
+      "wtcs": 1.241,
+      "ks": 0.071,
+      "cosine": 1.064
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.824,
+     "scores": {
+      "wtcs": -0.628,
+      "ks": -1.356,
+      "cosine": -0.489
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.687,
+     "scores": {
+      "wtcs": -0.26,
+      "ks": -0.756,
+      "cosine": -1.046
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.794,
+     "scores": {
+      "wtcs": 1.979,
+      "ks": -0.022,
+      "cosine": 0.426
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.398,
+     "scores": {
+      "wtcs": -0.288,
+      "ks": -0.346,
+      "cosine": -3.56
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.327,
+     "scores": {
+      "wtcs": -1.082,
+      "ks": -0.456,
+      "cosine": 0.558
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0013",
+   "name": "Mock compound 13",
+   "pool_rank": 13,
+   "bulk_consensus": -1.91,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.792,
+     "scores": {
+      "wtcs": 0.097,
+      "ks": -0.931,
+      "cosine": -1.541
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.031,
+     "scores": {
+      "wtcs": -0.507,
+      "ks": 0.713,
+      "cosine": -0.112
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.219,
+     "scores": {
+      "wtcs": -0.499,
+      "ks": -0.572,
+      "cosine": 0.415
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.159,
+     "scores": {
+      "wtcs": 1.652,
+      "ks": -0.548,
+      "cosine": -0.628
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.171,
+     "scores": {
+      "wtcs": -0.154,
+      "ks": 0.741,
+      "cosine": -1.099
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.695,
+     "scores": {
+      "wtcs": 0.548,
+      "ks": -0.831,
+      "cosine": -1.801
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.014,
+     "scores": {
+      "wtcs": -0.952,
+      "ks": 0.465,
+      "cosine": 0.53
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.321,
+     "scores": {
+      "wtcs": -0.265,
+      "ks": -0.09,
+      "cosine": -0.609
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.495,
+     "scores": {
+      "wtcs": -0.969,
+      "ks": -0.282,
+      "cosine": -0.235
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.716,
+     "scores": {
+      "wtcs": -0.953,
+      "ks": -1.066,
+      "cosine": -0.129
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.606,
+     "scores": {
+      "wtcs": 0.069,
+      "ks": -0.608,
+      "cosine": -1.279
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.548,
+     "scores": {
+      "wtcs": -1.262,
+      "ks": 0.617,
+      "cosine": -0.998
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.888,
+     "scores": {
+      "wtcs": -0.012,
+      "ks": -0.482,
+      "cosine": -2.169
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.629,
+     "scores": {
+      "wtcs": -1.567,
+      "ks": -0.094,
+      "cosine": -0.227
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.833,
+     "scores": {
+      "wtcs": -1.153,
+      "ks": -0.888,
+      "cosine": -0.459
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.842,
+     "scores": {
+      "wtcs": -0.918,
+      "ks": -1.8,
+      "cosine": 0.191
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.037,
+     "scores": {
+      "wtcs": -0.492,
+      "ks": 0.151,
+      "cosine": 0.229
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.424,
+     "scores": {
+      "wtcs": -0.012,
+      "ks": 0.229,
+      "cosine": 1.054
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0014",
+   "name": "Mock compound 14",
+   "pool_rank": 14,
+   "bulk_consensus": -1.88,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.931,
+     "scores": {
+      "wtcs": -1.409,
+      "ks": -0.474,
+      "cosine": -0.909
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.109,
+     "scores": {
+      "wtcs": 1.188,
+      "ks": 1.239,
+      "cosine": -2.755
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.272,
+     "scores": {
+      "wtcs": -0.749,
+      "ks": -0.13,
+      "cosine": 0.062
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.51,
+     "scores": {
+      "wtcs": -0.106,
+      "ks": -2.124,
+      "cosine": 0.7
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -1.448,
+     "scores": {
+      "wtcs": -1.864,
+      "ks": -0.932,
+      "cosine": -1.548
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.434,
+     "scores": {
+      "wtcs": 0.87,
+      "ks": -0.951,
+      "cosine": 1.384
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.556,
+     "scores": {
+      "wtcs": 1.031,
+      "ks": 0.519,
+      "cosine": 0.118
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.088,
+     "scores": {
+      "wtcs": 0.877,
+      "ks": -1.134,
+      "cosine": -0.008
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.877,
+     "scores": {
+      "wtcs": -0.39,
+      "ks": -1.431,
+      "cosine": -0.811
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.965,
+     "scores": {
+      "wtcs": -0.856,
+      "ks": -1.018,
+      "cosine": -1.022
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.263,
+     "scores": {
+      "wtcs": -1.093,
+      "ks": 0.487,
+      "cosine": -0.182
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.259,
+     "scores": {
+      "wtcs": -0.638,
+      "ks": -0.178,
+      "cosine": 0.039
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -1.165,
+     "scores": {
+      "wtcs": -1.048,
+      "ks": -0.885,
+      "cosine": -1.562
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": 1.092,
+     "scores": {
+      "wtcs": 1.834,
+      "ks": 1.295,
+      "cosine": 0.148
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -1.44,
+     "scores": {
+      "wtcs": -1.142,
+      "ks": -2.41,
+      "cosine": -0.769
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.629,
+     "scores": {
+      "wtcs": 1.229,
+      "ks": -1.793,
+      "cosine": -1.323
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.152,
+     "scores": {
+      "wtcs": 0.047,
+      "ks": -0.421,
+      "cosine": -0.081
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.886,
+     "scores": {
+      "wtcs": -0.723,
+      "ks": -0.54,
+      "cosine": -1.394
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0015",
+   "name": "Mock compound 15",
+   "pool_rank": 15,
+   "bulk_consensus": -1.85,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.26,
+     "scores": {
+      "wtcs": -0.009,
+      "ks": -2.042,
+      "cosine": 1.272
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.065,
+     "scores": {
+      "wtcs": -1.249,
+      "ks": 0.487,
+      "cosine": 0.568
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.343,
+     "scores": {
+      "wtcs": 2.009,
+      "ks": -0.174,
+      "cosine": -0.805
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.525,
+     "scores": {
+      "wtcs": 1.15,
+      "ks": 0.127,
+      "cosine": 0.297
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.251,
+     "scores": {
+      "wtcs": 0.415,
+      "ks": -1.151,
+      "cosine": -0.016
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -1.095,
+     "scores": {
+      "wtcs": -1.616,
+      "ks": -1.294,
+      "cosine": -0.374
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.055,
+     "scores": {
+      "wtcs": 0.249,
+      "ks": 0.564,
+      "cosine": -0.977
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.853,
+     "scores": {
+      "wtcs": -1.226,
+      "ks": -0.869,
+      "cosine": -0.464
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 0.049,
+     "scores": {
+      "wtcs": -0.722,
+      "ks": -0.09,
+      "cosine": 0.958
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 0.331,
+     "scores": {
+      "wtcs": 0.313,
+      "ks": -0.029,
+      "cosine": 0.71
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.608,
+     "scores": {
+      "wtcs": 2.369,
+      "ks": -0.494,
+      "cosine": -0.052
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.653,
+     "scores": {
+      "wtcs": 0.173,
+      "ks": -2.343,
+      "cosine": 0.212
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": 0.236,
+     "scores": {
+      "wtcs": -0.182,
+      "ks": 0.938,
+      "cosine": -0.048
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -1.078,
+     "scores": {
+      "wtcs": -1.969,
+      "ks": -0.145,
+      "cosine": -1.12
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.096,
+     "scores": {
+      "wtcs": -0.445,
+      "ks": 0.476,
+      "cosine": -0.32
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.16,
+     "scores": {
+      "wtcs": 0.476,
+      "ks": -0.895,
+      "cosine": -0.062
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": 0.175,
+     "scores": {
+      "wtcs": -0.226,
+      "ks": 0.51,
+      "cosine": 0.24
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.084,
+     "scores": {
+      "wtcs": -0.654,
+      "ks": 0.399,
+      "cosine": 0.002
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0016",
+   "name": "Mock compound 16",
+   "pool_rank": 16,
+   "bulk_consensus": -1.82,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.027,
+     "scores": {
+      "wtcs": -0.269,
+      "ks": 0.922,
+      "cosine": -0.571
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.493,
+     "scores": {
+      "wtcs": -0.672,
+      "ks": -0.568,
+      "cosine": -0.238
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.452,
+     "scores": {
+      "wtcs": 1.77,
+      "ks": -0.242,
+      "cosine": -0.171
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.068,
+     "scores": {
+      "wtcs": 0.783,
+      "ks": -1.737,
+      "cosine": 1.157
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.687,
+     "scores": {
+      "wtcs": -0.266,
+      "ks": 0.02,
+      "cosine": -1.814
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.5,
+     "scores": {
+      "wtcs": -1.407,
+      "ks": -0.164,
+      "cosine": 0.071
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.984,
+     "scores": {
+      "wtcs": -0.924,
+      "ks": -0.35,
+      "cosine": -1.678
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.699,
+     "scores": {
+      "wtcs": -1.342,
+      "ks": -0.358,
+      "cosine": -0.397
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -1.093,
+     "scores": {
+      "wtcs": -1.322,
+      "ks": -1.496,
+      "cosine": -0.462
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.194,
+     "scores": {
+      "wtcs": -0.076,
+      "ks": -0.461,
+      "cosine": -0.046
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.289,
+     "scores": {
+      "wtcs": -0.021,
+      "ks": -0.3,
+      "cosine": -0.547
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -1.356,
+     "scores": {
+      "wtcs": -2.501,
+      "ks": 0.431,
+      "cosine": -1.998
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.494,
+     "scores": {
+      "wtcs": -1.111,
+      "ks": 0.222,
+      "cosine": -0.592
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": 0.066,
+     "scores": {
+      "wtcs": -0.578,
+      "ks": 0.847,
+      "cosine": -0.07
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.464,
+     "scores": {
+      "wtcs": -1.319,
+      "ks": -0.194,
+      "cosine": 0.12
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.2,
+     "scores": {
+      "wtcs": -1.716,
+      "ks": 0.397,
+      "cosine": 0.72
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.899,
+     "scores": {
+      "wtcs": -0.876,
+      "ks": -1.126,
+      "cosine": -0.695
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.212,
+     "scores": {
+      "wtcs": 2.655,
+      "ks": -0.814,
+      "cosine": -1.205
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0017",
+   "name": "Mock compound 17",
+   "pool_rank": 17,
+   "bulk_consensus": -1.79,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.655,
+     "scores": {
+      "wtcs": 1.269,
+      "ks": 0.225,
+      "cosine": 0.47
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.1,
+     "scores": {
+      "wtcs": -0.99,
+      "ks": 1.395,
+      "cosine": -0.105
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.862,
+     "scores": {
+      "wtcs": 0.163,
+      "ks": -1.661,
+      "cosine": -1.088
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.121,
+     "scores": {
+      "wtcs": 0.346,
+      "ks": 0.697,
+      "cosine": -0.68
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": 0.296,
+     "scores": {
+      "wtcs": -0.028,
+      "ks": 0.109,
+      "cosine": 0.807
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -0.012,
+     "scores": {
+      "wtcs": 0.407,
+      "ks": -1.437,
+      "cosine": 0.994
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": 0.231,
+     "scores": {
+      "wtcs": -0.077,
+      "ks": -0.063,
+      "cosine": 0.833
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 0.088,
+     "scores": {
+      "wtcs": 1.114,
+      "ks": -1.339,
+      "cosine": 0.488
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": 0.094,
+     "scores": {
+      "wtcs": 1.167,
+      "ks": -1.022,
+      "cosine": 0.137
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 0.253,
+     "scores": {
+      "wtcs": 0.515,
+      "ks": 0.023,
+      "cosine": 0.222
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.147,
+     "scores": {
+      "wtcs": 0.598,
+      "ks": 0.103,
+      "cosine": -0.26
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -1.061,
+     "scores": {
+      "wtcs": -2.072,
+      "ks": -0.014,
+      "cosine": -1.098
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.086,
+     "scores": {
+      "wtcs": -0.145,
+      "ks": -0.554,
+      "cosine": 0.442
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -1.117,
+     "scores": {
+      "wtcs": -0.753,
+      "ks": -1.409,
+      "cosine": -1.19
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": 0.157,
+     "scores": {
+      "wtcs": 1.052,
+      "ks": 0.515,
+      "cosine": -1.097
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -1.874,
+     "scores": {
+      "wtcs": -2.249,
+      "ks": -1.553,
+      "cosine": -1.821
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.826,
+     "scores": {
+      "wtcs": -1.301,
+      "ks": -1.252,
+      "cosine": 0.076
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.072,
+     "scores": {
+      "wtcs": 0.768,
+      "ks": -0.568,
+      "cosine": -0.417
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0018",
+   "name": "Mock compound 18",
+   "pool_rank": 18,
+   "bulk_consensus": -1.76,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.314,
+     "scores": {
+      "wtcs": 0.24,
+      "ks": -0.52,
+      "cosine": -0.661
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": 0.337,
+     "scores": {
+      "wtcs": 0.14,
+      "ks": 1.508,
+      "cosine": -0.637
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.865,
+     "scores": {
+      "wtcs": 0.432,
+      "ks": 1.642,
+      "cosine": 0.52
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -1.118,
+     "scores": {
+      "wtcs": -1.548,
+      "ks": -0.737,
+      "cosine": -1.07
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.011,
+     "scores": {
+      "wtcs": -1.149,
+      "ks": 0.404,
+      "cosine": 0.711
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": -1.17,
+     "scores": {
+      "wtcs": -1.71,
+      "ks": -0.809,
+      "cosine": -0.991
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.233,
+     "scores": {
+      "wtcs": -0.295,
+      "ks": 0.693,
+      "cosine": -1.096
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": 0.029,
+     "scores": {
+      "wtcs": 0.576,
+      "ks": -0.264,
+      "cosine": -0.224
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.398,
+     "scores": {
+      "wtcs": 0.815,
+      "ks": -0.397,
+      "cosine": -1.612
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.458,
+     "scores": {
+      "wtcs": 0.155,
+      "ks": 0.499,
+      "cosine": -2.027
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": -0.201,
+     "scores": {
+      "wtcs": 0.075,
+      "ks": -1.239,
+      "cosine": 0.56
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.12,
+     "scores": {
+      "wtcs": 0.086,
+      "ks": -1.494,
+      "cosine": 1.048
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.631,
+     "scores": {
+      "wtcs": -1.763,
+      "ks": -0.34,
+      "cosine": 0.211
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.136,
+     "scores": {
+      "wtcs": -0.167,
+      "ks": 0.466,
+      "cosine": -0.708
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.45,
+     "scores": {
+      "wtcs": -0.376,
+      "ks": -0.701,
+      "cosine": -0.273
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -1.82,
+     "scores": {
+      "wtcs": -2.422,
+      "ks": -1.305,
+      "cosine": -1.734
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -0.544,
+     "scores": {
+      "wtcs": 0.066,
+      "ks": -0.24,
+      "cosine": -1.458
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.387,
+     "scores": {
+      "wtcs": -1.309,
+      "ks": 0.11,
+      "cosine": 0.038
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0019",
+   "name": "Mock compound 19",
+   "pool_rank": 19,
+   "bulk_consensus": -1.73,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": -0.052,
+     "scores": {
+      "wtcs": 0.32,
+      "ks": -0.842,
+      "cosine": 0.366
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -1.549,
+     "scores": {
+      "wtcs": -1.951,
+      "ks": -0.924,
+      "cosine": -1.771
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": 0.239,
+     "scores": {
+      "wtcs": 0.041,
+      "ks": 1.561,
+      "cosine": -0.886
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": -0.257,
+     "scores": {
+      "wtcs": -0.788,
+      "ks": -0.917,
+      "cosine": 0.933
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.225,
+     "scores": {
+      "wtcs": 0.613,
+      "ks": -0.92,
+      "cosine": -0.368
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.173,
+     "scores": {
+      "wtcs": 2.281,
+      "ks": -1.628,
+      "cosine": -0.133
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.801,
+     "scores": {
+      "wtcs": -0.85,
+      "ks": -0.79,
+      "cosine": -0.763
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.26,
+     "scores": {
+      "wtcs": 0.179,
+      "ks": -1.469,
+      "cosine": 0.511
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.483,
+     "scores": {
+      "wtcs": -0.457,
+      "ks": 0.577,
+      "cosine": -1.568
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": 0.629,
+     "scores": {
+      "wtcs": 0.939,
+      "ks": -0.454,
+      "cosine": 1.403
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.885,
+     "scores": {
+      "wtcs": 1.586,
+      "ks": 0.294,
+      "cosine": 0.774
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": -0.95,
+     "scores": {
+      "wtcs": -0.532,
+      "ks": -1.814,
+      "cosine": -0.505
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.893,
+     "scores": {
+      "wtcs": 0.305,
+      "ks": -0.763,
+      "cosine": -2.221
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -0.791,
+     "scores": {
+      "wtcs": -0.738,
+      "ks": -0.373,
+      "cosine": -1.261
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.121,
+     "scores": {
+      "wtcs": -0.982,
+      "ks": 0.375,
+      "cosine": 0.244
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": 0.266,
+     "scores": {
+      "wtcs": 0.412,
+      "ks": 0.331,
+      "cosine": 0.054
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": -1.6,
+     "scores": {
+      "wtcs": -2.185,
+      "ks": -1.969,
+      "cosine": -0.646
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": 0.571,
+     "scores": {
+      "wtcs": 0.854,
+      "ks": -1.258,
+      "cosine": 2.117
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  },
+  {
+   "candidate_id": "BRD-MOCK0020",
+   "name": "Mock compound 20",
+   "pool_rank": 20,
+   "bulk_consensus": -1.7,
+   "scores": [
+    {
+     "signature_id": "GSE272082|PFC|excitatory_neurons",
+     "consensus": 0.098,
+     "scores": {
+      "wtcs": 1.275,
+      "ks": -1.971,
+      "cosine": 0.989
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|inhibitory_neurons",
+     "consensus": -0.87,
+     "scores": {
+      "wtcs": -1.29,
+      "ks": -0.313,
+      "cosine": -1.008
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|astrocytes",
+     "consensus": -0.243,
+     "scores": {
+      "wtcs": -0.657,
+      "ks": 1.056,
+      "cosine": -1.127
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|microglia",
+     "consensus": 0.339,
+     "scores": {
+      "wtcs": 0.17,
+      "ks": 0.806,
+      "cosine": 0.042
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|oligodendrocytes",
+     "consensus": -0.037,
+     "scores": {
+      "wtcs": -0.532,
+      "ks": -0.498,
+      "cosine": 0.919
+     }
+    },
+    {
+     "signature_id": "GSE272082|PFC|opc",
+     "consensus": 0.093,
+     "scores": {
+      "wtcs": 0.134,
+      "ks": -0.703,
+      "cosine": 0.848
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|excitatory_neurons",
+     "consensus": -0.766,
+     "scores": {
+      "wtcs": -1.309,
+      "ks": -0.52,
+      "cosine": -0.469
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|inhibitory_neurons",
+     "consensus": -0.082,
+     "scores": {
+      "wtcs": 0.208,
+      "ks": -1.553,
+      "cosine": 1.099
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|astrocytes",
+     "consensus": -0.056,
+     "scores": {
+      "wtcs": -0.208,
+      "ks": -0.158,
+      "cosine": 0.199
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|microglia",
+     "consensus": -0.874,
+     "scores": {
+      "wtcs": -1.787,
+      "ks": -0.646,
+      "cosine": -0.19
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|oligodendrocytes",
+     "consensus": 0.317,
+     "scores": {
+      "wtcs": 0.609,
+      "ks": 0.868,
+      "cosine": -0.526
+     }
+    },
+    {
+     "signature_id": "GSE272082|EC|opc",
+     "consensus": 0.392,
+     "scores": {
+      "wtcs": 1.513,
+      "ks": 0.033,
+      "cosine": -0.37
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|excitatory_neurons",
+     "consensus": -0.995,
+     "scores": {
+      "wtcs": 0.61,
+      "ks": -2.207,
+      "cosine": -1.388
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|inhibitory_neurons",
+     "consensus": -1.109,
+     "scores": {
+      "wtcs": -1.037,
+      "ks": -1.268,
+      "cosine": -1.021
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|astrocytes",
+     "consensus": -0.372,
+     "scores": {
+      "wtcs": -0.9,
+      "ks": -0.273,
+      "cosine": 0.056
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|microglia",
+     "consensus": -0.055,
+     "scores": {
+      "wtcs": -0.299,
+      "ks": 0.333,
+      "cosine": -0.199
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|oligodendrocytes",
+     "consensus": 1.078,
+     "scores": {
+      "wtcs": 0.89,
+      "ks": 1.555,
+      "cosine": 0.789
+     }
+    },
+    {
+     "signature_id": "GSE272082|HIP|opc",
+     "consensus": -0.325,
+     "scores": {
+      "wtcs": 0.544,
+      "ks": -0.666,
+      "cosine": -0.852
+     }
+    },
+    {
+     "signature_id": "GSE175814|excitatory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|inhibitory_neurons",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|astrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|microglia",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|oligodendrocytes",
+     "consensus": null,
+     "scores": null
+    },
+    {
+     "signature_id": "GSE175814|opc",
+     "consensus": null,
+     "scores": null
+    }
+   ]
+  }
+ ],
+ "provenance": {
+  "step": "singlecell_exploratory",
+  "dataset_accession": [
+   "GSE272082",
+   "GSE175814"
+  ],
+  "inputs": {},
+  "sample_filter": "none",
+  "gene_mapping_version": "unspecified",
+  "model": "synthetic",
+  "parameters": {
+   "synthetic": true
+  },
+  "random_seed": 7,
+  "validation_context": null,
+  "processing_version": "0.1.0",
+  "git_commit": "fixture",
+  "timestamp": "2026-11-06T00:00:00+00:00"
+ }
+}
