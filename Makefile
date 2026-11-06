@@ -93,3 +93,10 @@ test-r: ## R tests
 lint: ## ruff + oxlint
 	uv run ruff check .
 	cd apps/web && bun run lint
+
+.PHONY: record release
+record: ## Record the tour (TS_E2E_BASE_URL defaults to localhost:8080)
+	bash scripts/record_demo.sh
+
+release: ## Build and verify offline images, export archive and checksums
+	bash scripts/release_expo.sh
