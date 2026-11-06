@@ -107,26 +107,6 @@
   }
 }
 
-/* Instrument shell. These selectors also style the shared navigation without
-   changing App.tsx, which is owned by the screen integration workstream. */
-body {
-  background-image: linear-gradient(#91b3bd08 1px, transparent 1px),
-    linear-gradient(90deg, #91b3bd08 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-#root > div { background: transparent; color: var(--foreground); }
-nav[aria-label="Demo steps"] {
-  background: #131c20;
-  border-color: var(--border);
-  width: 220px;
-  padding: 20px 12px;
-}
-nav[aria-label="Demo steps"] button { min-height: 64px; margin-bottom: 4px; }
-nav[aria-label="Demo steps"] button[aria-current="step"] {
-  background: var(--accent); color: var(--primary);
-  box-shadow: inset 3px 0 var(--primary);
-}
-nav[aria-label="Demo steps"] button:not([aria-current]):hover { background: var(--muted); }
 main h2 { font-size: clamp(1.5rem, 2vw, 2rem); letter-spacing: -.035em; }
 main > div > .overflow-auto { padding: 24px; }
 [data-slot="card"] { box-shadow: none; border-color: var(--border); }
@@ -150,8 +130,8 @@ table td { padding-top: .65rem; padding-bottom: .65rem; }
 .sample-well:disabled { opacity: 1; }
 .sample-well[data-outcome="survive"]::before { background: var(--success); border-color: var(--success); }
 .sample-well[data-outcome="fail"]::before { background: var(--failure); border-color: var(--failure); }
-.claim-readout { font-family: var(--font-readout); font-size: clamp(4rem, 6vw, 6.5rem); line-height: 1; color: var(--primary); letter-spacing: -.06em; }
-.run-validation { width: 100%; min-height: 58px; font-size: 1.15rem; }
+.claim-readout { font-family: var(--font-readout); font-size: clamp(2.5rem, 4vw, 4rem); line-height: 1; color: var(--primary); letter-spacing: -.06em; }
+.run-validation { width: 100%; min-height: 36px; font-size: .875rem; }
 .accuracy-grid { display: flex; flex-wrap: wrap; gap: 1px; background: var(--border); border: 1px solid var(--border); }
 .accuracy-policy { flex: 1 1 220px; background: var(--card); padding: 20px; }
 .accuracy-policy[data-primary="true"] { background: var(--accent); }
@@ -241,21 +221,46 @@ tr[role="button"]:hover { background-color: var(--accent); }
   opacity: 1;
 }
 
-/* Leave room for the tour caption on short expo displays. The other panels
-   retain their own scroll areas, so the tour and boundary remain visible. */
-@media (min-width: 1100px) and (max-height: 850px) {
-  .s3-story + main .signature-chart { height: 260px !important; }
-  .s3-story + main [aria-label="Sign check on known AD genes"] td {
-    padding-top: .35rem;
-    padding-bottom: .35rem;
-  }
-}
-@media (min-width: 1100px) and (max-height: 850px) {
-  .s3-story + main [aria-label="Sign check on known AD genes"] {
-    font-size: .75rem;
-    line-height: 1.4;
-  }
-  .s3-story + main [aria-label="Sign check on known AD genes"] td:nth-child(2) {
-    white-space: nowrap;
-  }
+/* Persistent candidate context connects discovery with held-out validation. */
+html, body, #root { height: 100%; }
+body { margin: 0; }
+.lab-shell { display: flex; height: 100dvh; overflow: hidden; background: var(--background); }
+.lab-sidebar { width: 208px; flex: none; display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--card); overflow-y: auto; }
+.lab-brand { display: grid; gap: 4px; padding: 24px 18px; border-bottom: 1px solid var(--border); }
+.lab-wordmark { font-size: 21px; font-weight: 650; letter-spacing: -.04em; }
+.lab-nav { display: grid; gap: 3px; padding: 12px 8px; }
+.lab-nav button { text-align: left; padding: 9px 12px; border-radius: var(--radius); border-left: 2px solid transparent; font-size: 13px; cursor: pointer; }
+.lab-nav small { display: block; font-size: 11px; color: var(--muted-foreground); margin-top: 2px; }
+.lab-nav button:hover { background: var(--secondary); }
+.lab-nav button[aria-current] { background: var(--accent); color: var(--accent-foreground); border-left-color: var(--primary); }
+.lab-sidebar-note { margin-top: auto; padding: 18px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 11px; line-height: 1.6; }
+.lab-sidebar-note p { margin-top: 8px; }
+.lab-workspace { display: flex; flex: 1; min-width: 0; flex-direction: column; min-height: 0; }
+.lab-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--border); }
+.lab-header h1 { font-size: 20px; font-weight: 600; letter-spacing: -.025em; }
+.lab-eyebrow { display: block; font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted-foreground); }
+.lab-mock { color: var(--warning); background: var(--warning-surface); border: 1px solid var(--warning); padding: 4px 8px; font: 10px var(--font-readout); }
+.lab-context { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 24px; border-bottom: 1px solid var(--border); background: var(--card); }
+.lab-context-name { min-width: 0; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.lab-context-name strong { font-size: 13px; overflow-wrap: anywhere; }
+.lab-context-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.lab-context-actions button { padding: 6px 10px; border: 1px solid var(--input); border-radius: var(--radius); font-size: 12px; cursor: pointer; }
+.lab-context-actions button:hover { background: var(--accent); color: var(--accent-foreground); }
+.lab-main { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+.lab-main > div { min-height: 100%; }
+.lab-main > div.h-full { height: 100%; }
+.lab-skip { position: fixed; top: -100px; left: 12px; z-index: 100; background: var(--card); padding: 10px; }
+.lab-skip:focus { top: 8px; }
+@media (max-width: 760px) {
+  .lab-shell { flex-direction: column; }
+  .lab-sidebar { width: 100%; overflow: visible; border-right: 0; }
+  .lab-brand { padding: 10px 16px; display: flex; align-items: baseline; gap: 12px; }
+  .lab-wordmark { font-size: 18px; }
+  .lab-nav { display: flex; overflow-x: auto; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .lab-nav button { flex: none; padding: 7px 10px; }
+  .lab-nav small, .lab-sidebar-note { display: none; }
+  .lab-header { padding: 10px 16px; flex-wrap: wrap; }
+  .lab-context { padding: 10px 16px; flex-wrap: wrap; }
+  .lab-context-name { gap: 6px 10px; }
+  .lab-main > div.h-full { height: auto; min-height: 100%; }
 }
