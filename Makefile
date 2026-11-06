@@ -45,10 +45,12 @@ evidence: ## Evidence cards for the top 50
 	@echo "TODO workstream 4: pipelines/evidence" && exit 1
 
 truth-table: ## Precompute hidden validation outcomes (server-side only)
-	@echo "TODO workstream 5: pipelines/tauchstone" && exit 1
+	uv run python -m pipelines.tauchstone.truth_table
 
 benchmark: ## Replay benchmark (refuses to run without a committed preregistration hash)
-	@echo "TODO workstream 5: pipelines/tauchstone" && exit 1
+	uv run python -m pipelines.tauchstone.replay $(BENCHMARK_FLAGS)
+# Synthetic dry run (no guard, synthetic outputs only):
+# 	make benchmark BENCHMARK_FLAGS=--dry-run-synthetic
 
 demo: ## Freeze data/demo bundle and build Docker images
 	@echo "TODO workstream 6/8: copy processed outputs into data/demo" && exit 1
