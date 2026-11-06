@@ -10,10 +10,10 @@ export interface VolcanoPoint {
   group: 'up' | 'down' | 'ns' | 'query_up' | 'query_down';
 }
 
-export const TEAL = '#5de0cd';
-export const TEAL_LIGHT = '#5eead4';
-export const AMBER = '#d6b995';
-export const AMBER_LIGHT = '#c9b99d';
+export const TEAL = '#3667d9';
+export const TEAL_LIGHT = '#7395e6';
+export const AMBER = '#b56b29';
+export const AMBER_LIGHT = '#d5a475';
 export const GREY = '#a3a3a3';
 
 export function classOf(g: GeneStat): VolcanoPoint['group'] {
@@ -74,19 +74,19 @@ export function buildVolcanoOption(
   });
 
   return {
-    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
+    textStyle: { color: '#687182', fontFamily: 'Geist Variable, sans-serif' },
     animationDuration: animate ? 700 : 0,
     grid: { left: 52, right: 28, top: 16, bottom: 88 },
-    legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11, color: '#a0b3ba' } },
+    legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11, color: '#687182' } },
     xAxis: {
       name: 'log2FC (AD minus control)',
       nameLocation: 'middle',
       nameGap: 30,
-      nameTextStyle: { fontSize: 11 },
+      splitLine: { lineStyle: { color: '#e5e8ed' } }, nameTextStyle: { fontSize: 11 },
     },
     yAxis: {
       name: '−log10 p-value',
-      nameTextStyle: { fontSize: 11 },
+      splitLine: { lineStyle: { color: '#e5e8ed' } }, nameTextStyle: { fontSize: 11 },
     },
     tooltip: {
       trigger: 'item',
