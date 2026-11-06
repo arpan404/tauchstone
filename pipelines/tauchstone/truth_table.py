@@ -82,6 +82,39 @@ def load_theta(processed: Path = PROCESSED) -> float:
     )
 
 
+def _heldout_cohort_ids() -> list[str]:
+    """Held-out cohort ids from the preregistration (GSE53697 already delisted there)."""
+    import yaml
+
+    prereg = yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text())
+    return [v["id"] for v in prereg.get("validation_contexts", []) if v.get("type") == "held_out_cohort"]
+
+
+def cohort_qc(processed: Path, cohort_id: str, min_genes: int = 100) -> tuple[bool, int]:
+    """Cohort QC gate: the cohort's own signature needs >= ``min_genes`` genes at FDR < 0.05.
+
+    Returns (passes, n_fdr05). Raises ``FileNotFoundError`` naming a missing signature.
+    """
+    sig = require(processed / "signatures" / f"{cohort_id}__main.parquet")
+    df = pd.read_parquet(sig, columns=["fdr"])
+    n = int((df["fdr"] < 0.05).sum())
+    return n >= min_genes, n
+
+
+def gated_cohorts(
+    processed: Path, cohort_ids: list[str], min_genes: int = 100
+) -> tuple[list[str], dict[str, dict]]:
+    """Split held-out cohorts into included vs QC-excluded, with a loggable gate record."""
+    kept: list[str] = []
+    gate: dict[str, dict] = {}
+    for cid in cohort_ids:
+        ok, n = cohort_qc(processed, cid, min_genes)
+        gate[cid] = {"n_fdr05": n, "included": ok}
+        if ok:
+            kept.append(cid)
+    return kept, gate
+
+
 def top5_percent_ids(compound_ranking: pd.DataFrame) -> set[str]:
     """Pert_ids in the 5% most-reversing ranked compounds (rank 1 = most negative)."""
     if compound_ranking.empty:
@@ -187,25 +220,30 @@ def _lincs_rows(
 
 
 def _exposure_rows(candidate_ids: list[str], processed: Path) -> list[dict]:
-    """Brain-exposure rows: survive only on measured evidence (no data = fail)."""
+    """Brain-exposure rows: survive only on measured evidence above thresholds.
+
+    A candidate with no measured exposure rows gets NO context (untestable,
+    not a failure); fail only when measured values are below the thresholds.
+    """
     exposure_path = require(processed / "evidence" / "exposure.parquet")
     exposure = pd.read_parquet(exposure_path)
     measured = exposure[exposure["is_measured"].astype(bool)]
     rows = []
     for cid in candidate_ids:
         rows_ev = measured[measured["pert_id"].astype(str) == cid]
+        if len(rows_ev) == 0:
+            continue  # untestable: the context is not in S_d
         survive = False
-        detail = "no measured CNS data: fail"
         for r in rows_ev.itertuples():
             m, v = str(r.measure), float(r.value)
             if m == "kp" and v >= 0.1:
-                survive, detail = True, f"measured brain/plasma Kp {v:g} >= 0.1"
+                survive = True
                 break
             if m == "pampa_pe" and v >= 4e-6:
-                survive, detail = True, f"measured PAMPA-BBB Pe {v:g} >= 4e-6 cm/s"
+                survive = True
                 break
             if m == "csf":
-                survive, detail = True, "measured human CNS PK (CSF)"
+                survive = True
                 break
         rows.append(
             {
@@ -218,7 +256,7 @@ def _exposure_rows(candidate_ids: list[str], processed: Path) -> list[dict]:
                 "outcome": "survive" if survive else "fail",
                 "rule": (
                     "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; "
-                    "else fail"
+                    "fail if measured below those"
                 ),
                 "tissue": None,
                 "region": None,
@@ -228,7 +266,6 @@ def _exposure_rows(candidate_ids: list[str], processed: Path) -> list[dict]:
                 "pert_itime": None,
             }
         )
-        _ = detail  # recorded in exposure.parquet sources, not the truth table.
     return rows
 
 
@@ -238,9 +275,10 @@ def build_truth_table(
     n_top: int = 50,
     n_dev: int = 50,
     seed: int = SYNTHETIC_SEED,
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, dict]:
     """Build the full truth table from upstream processed tables.
 
+    Returns (table, provenance parameters incl. the cohort-QC gate log).
     Raises ``FileNotFoundError`` naming the first missing upstream input.
     """
     ranking_path = require(processed / "scores" / f"{ranking_name}__compound_ranking.parquet")
@@ -252,9 +290,17 @@ def build_truth_table(
     ctx_scores = pd.read_parquet(
         require(processed / "scores" / f"{ranking_name}__context_scores.parquet")
     )
+    import yaml
+
+    min_genes = int(
+        yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text()).get("cohort_qc_gate", {}).get(
+            "min_fdr05_genes", 100
+        )
+    )
+    cohorts, gate = gated_cohorts(processed, _heldout_cohort_ids(), min_genes=min_genes)
     rows: list[dict] = []
-    rows += _cohort_rows(candidate_ids, "GSE173955", "held_out_cohort", "GSE173955 (held-out cohort)", processed)
-    rows += _cohort_rows(candidate_ids, "GSE53697", "held_out_cohort", "GSE53697 (held-out cohort)", processed)
+    for qc in cohorts:
+        rows += _cohort_rows(candidate_ids, qc, "held_out_cohort", f"{qc} (held-out cohort)", processed)
     rows += _cohort_rows(
         candidate_ids,
         ADJUSTED_QUERY,
@@ -265,17 +311,26 @@ def build_truth_table(
     rows += _lincs_rows(candidate_ids, split, ctx_scores, theta, seed=seed)
     rows += _exposure_rows(candidate_ids, processed)
     df = pd.DataFrame(rows, columns=TRUTH_TABLE_COLUMNS)
-    return df
+    params = {
+        "theta_source": "permutation_summary",
+        "max_lincs_contexts": 8,
+        "cohort_qc_gate": {"min_fdr05_genes": min_genes, **gate},
+    }
+    return df, params
 
 
-def write_truth_table(df: pd.DataFrame, out: Path, seed: int = SYNTHETIC_SEED) -> Path:
+def write_truth_table(
+    df: pd.DataFrame, out: Path, seed: int = SYNTHETIC_SEED, extra_params: dict | None = None
+) -> Path:
     """Write truth_table.parquet plus its provenance sidecar."""
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out, index=False)
+    params = {"theta_source": "permutation_summary", "max_lincs_contexts": 8}
+    params.update(extra_params or {})
     Provenance(
         step="truth_table",
         dataset_accession=["GSE132903", "GSE173955", "GSE53697", "LINCS-L1000", "ChEMBL"],
-        parameters={"theta_source": "permutation_summary", "max_lincs_contexts": 8},
+        parameters=params,
         random_seed=seed,
         validation_context="hidden_pool",
     ).write(out)
@@ -284,6 +339,16 @@ def write_truth_table(df: pd.DataFrame, out: Path, seed: int = SYNTHETIC_SEED) -
 
 # ---------------------------------------------------------------------------
 # Synthetic world (tests + dry-run benchmark; clearly labelled, never real)
+#
+# Design (see README): latent per-candidate robustness rho plus a per-candidate
+# per-cell-line latent effect, so contexts sharing a cell line have correlated
+# outcomes beyond rho. Hidden LINCS contexts sit in two 3-context blocks (same
+# cell, varying dose/time) plus a singleton; same-cell similarity (>= 0.7)
+# makes each block the decisive structure a smart policy probes first, while
+# cross-type pairs (e.g. cohort vs adjusted) stay at 0.1 per the spec.
+# Base rates and the rho distribution are calibrated so the full-information
+# claim holds for 40-60% of candidates and >= 50% are contested (step-0
+# verdict INSUFFICIENT_EVIDENCE).
 # ---------------------------------------------------------------------------
 
 
@@ -300,6 +365,34 @@ class SyntheticCandidate:
     rules: dict[str, str] = field(default_factory=dict)
 
 
+# Calibrated so claim-holds rate is 40-60% and the contested share is >= 50%
+# (checked by tests/tauchstone/test_truth_table.py on a fixed seed).
+_RHO_A = 2.0
+_RHO_B = 1.6
+_BASE_RATE = {
+    "held_out_cohort": 0.68,
+    "composition_adjusted": 0.68,
+    "lincs_context": 0.66,
+    "brain_exposure": 0.50,
+}
+_RHO_WEIGHT = 0.50
+_BASE_WEIGHT = 0.30
+_CELL_WEIGHT = 0.20
+_EXPOSURE_PRESENT_P = 0.6
+
+
+def _clip01(p: float) -> float:
+    return max(0.05, min(0.95, p))
+
+
+def _lincs_prob(rho: float, base: float, cell_effect: float) -> float:
+    return _clip01(_RHO_WEIGHT * rho + _BASE_WEIGHT * base + _CELL_WEIGHT * cell_effect)
+
+
+def _cohort_prob(rho: float, base: float) -> float:
+    return _clip01(_RHO_WEIGHT * rho + (1.0 - _RHO_WEIGHT) * base)
+
+
 _SYN_CELLS = ["MCF7", "A549", "VCAP"]
 _SYN_DOSES = ["10 uM", "1 uM"]
 _SYN_TIMES = ["24 h", "6 h"]
@@ -308,31 +401,26 @@ _SYN_TIMES = ["24 h", "6 h"]
 def make_synthetic_world(
     n_candidates: int = 100, seed: int = SYNTHETIC_SEED
 ) -> list[SyntheticCandidate]:
-    """Synthetic candidates with correlated hidden outcomes.
+    """Synthetic candidates with correlated, exploitable hidden outcomes.
 
-    Each candidate has a latent robustness ``rho ~ Beta(2, 2)``; each context
-    type has a base survive rate; a context's survive probability mixes the
-    two, so contexts of the same candidate are correlated (a robust candidate
-    tends to survive everywhere). Ranking observations are consensus-like
-    scores whose sign tracks robustness; LINCS hidden contexts share cell
-    lines with ranking contexts so similarity weighting matters.
+    Each candidate has latent robustness ``rho ~ Beta(_RHO_A, _RHO_B)`` and a
+    per-cell-line latent effect ``Uniform(0, 1)``; a LINCS context's survive
+    probability mixes rho, its type base rate, and the cell effect, so
+    same-cell contexts are correlated beyond rho. Ranking observations carry
+    the same cell effects, so similarity weighting can exploit the blocks.
     """
     rng = np.random.default_rng(seed)
-    base_rate = {
-        "held_out_cohort": 0.45,
-        "composition_adjusted": 0.55,
-        "lincs_context": 0.50,
-        "brain_exposure": 0.25,
-        "cell_type": 0.40,
-    }
     theta = -0.5
     world: list[SyntheticCandidate] = []
     for i in range(n_candidates):
         cid = f"BRD-SYN{i:04d}"
-        rho = float(rng.beta(2, 2))
+        rho = float(rng.beta(_RHO_A, _RHO_B))
+        cell_latent = {c: float(rng.random()) for c in _SYN_CELLS}
+        block_cells = list(rng.choice(_SYN_CELLS, size=2, replace=False))
+        lone_cell = next(c for c in _SYN_CELLS if c not in block_cells)
+
         ranking: list[Observation] = []
-        for k in range(rng.integers(4, 9)):
-            cell = _SYN_CELLS[int(rng.integers(len(_SYN_CELLS)))]
+        for k, cell in enumerate(block_cells + block_cells + [lone_cell]):
             dose = _SYN_DOSES[int(rng.integers(len(_SYN_DOSES)))]
             time = _SYN_TIMES[int(rng.integers(len(_SYN_TIMES)))]
             ctx = Context(
@@ -344,60 +432,86 @@ def make_synthetic_world(
                 pert_idose=dose,
                 pert_itime=time,
             )
-            cons = float(rng.normal(-1.2 * rho + 0.2, 0.5))
+            cons = float(rng.normal(-1.4 * rho - 0.4 * (cell_latent[cell] - 0.5), 0.5))
             ranking.append(Observation(context=ctx, survive=cons <= theta, source="ranking"))
+
         hidden: list[Context] = []
         truth: dict[str, bool] = {}
         values: dict[str, float] = {}
         thresholds: dict[str, float] = {}
         rules: dict[str, str] = {}
-        cohort_cfgs = [
+        # Decisive pair: identical platform+region -> similarity 1.0.
+        pair_cfgs = [
             ("GSE173955", "held_out_cohort", "GSE173955 (held-out cohort)", "RNA-seq", "hippocampus"),
-            ("GSE53697", "held_out_cohort", "GSE53697 (held-out cohort)", "RNA-seq", "cortex"),
             (
                 "GSE132903__composition_adjusted",
                 "composition_adjusted",
                 "GSE132903 composition-adjusted",
-                "microarray",
-                "cortex",
+                "RNA-seq",
+                "hippocampus",
             ),
         ]
-        for qid, ctype, label, plat, region in cohort_cfgs:
-            ctx = Context(
-                context_id=qid, type=ctype, label=label, platform=plat, region=region
-            )
+        for qid, ctype, label, plat, region in pair_cfgs:
+            ctx = Context(context_id=qid, type=ctype, label=label, platform=plat, region=region)
             hidden.append(ctx)
-            p = 0.5 * rho + 0.5 * base_rate[ctype]
-            truth[qid] = bool(rng.random() < p)
+            truth[qid] = bool(rng.random() < _cohort_prob(rho, _BASE_RATE["held_out_cohort"]))
             values[qid] = float(rng.normal(-1.0 if truth[qid] else 0.3, 0.4))
             rules[qid] = "compound in the 5% most-reversing ranked compounds for this query"
-        for k in range(int(rng.integers(4, 9))):
-            cell = _SYN_CELLS[int(rng.integers(len(_SYN_CELLS)))]
-            dose = _SYN_DOSES[int(rng.integers(len(_SYN_DOSES)))]
-            time = _SYN_TIMES[int(rng.integers(len(_SYN_TIMES)))]
-            qid = f"{cell}|{dose}|{time}::held{k}"
-            ctx = Context(
-                context_id=qid,
-                type="lincs_context",
-                label=f"{cell} {dose} {time} (held-out)",
-                platform="L1000",
-                cell_id=cell,
-                pert_idose=dose,
-                pert_itime=time,
-            )
-            hidden.append(ctx)
-            p = 0.5 * rho + 0.5 * base_rate["lincs_context"]
-            truth[qid] = bool(rng.random() < p)
-            values[qid] = float(rng.normal(-1.2 * rho + 0.2, 0.5))
-            thresholds[qid] = theta
-            rules[qid] = "held-out LINCS context consensus <= theta"
-        be = Context(context_id="brain_exposure", type="brain_exposure", label="measured brain exposure")
-        hidden.append(be)
-        p = 0.5 * rho + 0.5 * base_rate["brain_exposure"]
-        truth["brain_exposure"] = bool(rng.random() < p)
-        rules["brain_exposure"] = (
-            "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; else fail"
+        k = 0
+        for cell in block_cells:
+            for _ in range(3):
+                dose = _SYN_DOSES[int(rng.integers(len(_SYN_DOSES)))]
+                time = _SYN_TIMES[int(rng.integers(len(_SYN_TIMES)))]
+                qid = f"{cell}|{dose}|{time}::held{k}"
+                k += 1
+                ctx = Context(
+                    context_id=qid,
+                    type="lincs_context",
+                    label=f"{cell} {dose} {time} (held-out)",
+                    platform="L1000",
+                    cell_id=cell,
+                    pert_idose=dose,
+                    pert_itime=time,
+                )
+                hidden.append(ctx)
+                truth[qid] = bool(
+                    rng.random() < _lincs_prob(rho, _BASE_RATE["lincs_context"], cell_latent[cell])
+                )
+                values[qid] = float(rng.normal(-1.2 * rho + 0.2, 0.5))
+                thresholds[qid] = theta
+                rules[qid] = "held-out LINCS context consensus <= theta"
+        lone_dose = _SYN_DOSES[int(rng.integers(len(_SYN_DOSES)))]
+        lone_time = _SYN_TIMES[int(rng.integers(len(_SYN_TIMES)))]
+        lone_qid = f"{lone_cell}|{lone_dose}|{lone_time}::held{k}"
+        lone_ctx = Context(
+            context_id=lone_qid,
+            type="lincs_context",
+            label=f"{lone_cell} {lone_dose} {lone_time} (held-out)",
+            platform="L1000",
+            cell_id=lone_cell,
+            pert_idose=lone_dose,
+            pert_itime=lone_time,
         )
+        hidden.append(lone_ctx)
+        truth[lone_qid] = bool(
+            rng.random() < _lincs_prob(rho, _BASE_RATE["lincs_context"], cell_latent[lone_cell])
+        )
+        values[lone_qid] = float(rng.normal(-1.2 * rho + 0.2, 0.5))
+        thresholds[lone_qid] = theta
+        rules[lone_qid] = "held-out LINCS context consensus <= theta"
+        if rng.random() < _EXPOSURE_PRESENT_P:
+            be = Context(
+                context_id="brain_exposure", type="brain_exposure", label="measured brain exposure"
+            )
+            hidden.append(be)
+            p_be = _clip01(
+                _RHO_WEIGHT * rho + (1.0 - _RHO_WEIGHT) * _BASE_RATE["brain_exposure"]
+            )
+            truth["brain_exposure"] = bool(rng.random() < p_be)
+            rules["brain_exposure"] = (
+                "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; "
+                "fail if measured below those"
+            )
         world.append(
             SyntheticCandidate(
                 candidate_id=cid,
@@ -514,8 +628,8 @@ def main(argv: list[str] | None = None) -> Path:
     ap.add_argument("--seed", type=int, default=SYNTHETIC_SEED)
     args = ap.parse_args(argv)
     out = Path(args.out) if args.out else Path(args.processed) / "tauchstone" / "truth_table.parquet"
-    df = build_truth_table(Path(args.processed), n_top=args.n_top, n_dev=args.n_dev, seed=args.seed)
-    write_truth_table(df, out, seed=args.seed)
+    df, params = build_truth_table(Path(args.processed), n_top=args.n_top, n_dev=args.n_dev, seed=args.seed)
+    write_truth_table(df, out, seed=args.seed, extra_params=params)
     print(f"wrote {out} ({len(df)} rows, {df['candidate_id'].nunique()} candidates)")
     return out
 

@@ -34,7 +34,14 @@ from pipelines.tauchstone.engine import (
     p_survive,
     verdict,
 )
-from pipelines.tauchstone.evaluation import BOOTSTRAP_REPS, BOOTSTRAP_SEED, summarize
+from pipelines.tauchstone.evaluation import (
+    BOOTSTRAP_REPS,
+    BOOTSTRAP_SEED,
+    contested_candidates,
+    full_information_verdict,
+    per_run_frame,
+    summarize,
+)
 from pipelines.tauchstone.truth_table import (
     SYNTHETIC_SEED,
     SyntheticCandidate,
@@ -56,9 +63,44 @@ RUN_COLUMNS = [
 ]
 
 BENCHMARK_POLICIES = list(POLICIES)
+ORACLE_POLICY = "oracle"  # harness check only: synthetic dry-runs, never a real summary
 SEED_BASE = 20261105
 N_SEEDS = 20
 BUDGET = 5
+
+
+def policy_index(policy: str) -> int:
+    """Stable rng stream index per policy (oracle gets its own stream)."""
+    if policy == ORACLE_POLICY:
+        return len(BENCHMARK_POLICIES)
+    return BENCHMARK_POLICIES.index(policy)
+
+
+def oracle_choice(
+    cand: SyntheticCandidate,
+    hidden: Sequence[Context],
+    observations: list[Observation],
+    n_total: int,
+    cfg: EngineConfig,
+) -> tuple[str, float]:
+    """Harness-only policy: reveal the hidden context whose TRUE outcome moves
+    P(C) furthest toward the full-information verdict. Ties: lower context_id.
+
+    Synthetic only; never enters engine.POLICIES or a real summary.
+    """
+    full = full_information_verdict(cand.truth, cfg.q)
+    base = p_claim(hidden, observations, n_total, cfg)
+    best_cid: str | None = None
+    best_move = float("-inf")
+    for x in sorted(hidden, key=lambda h: h.context_id):
+        hypo = Observation(context=x, survive=cand.truth[x.context_id], source="revealed")
+        rest = [h for h in hidden if h.context_id != x.context_id]
+        pc = p_claim(rest, [*observations, hypo], n_total, cfg)
+        move = (pc - base) if full == "SUPPORTED" else (base - pc)
+        if move > best_move:  # strict: first (lowest id) wins ties
+            best_cid, best_move = x.context_id, move
+    assert best_cid is not None
+    return best_cid, best_move
 
 
 def replay_candidate(
@@ -69,15 +111,34 @@ def replay_candidate(
     cfg: EngineConfig,
 ) -> list[dict]:
     """Replay one (candidate, seed, policy): reveal ``budget`` tests greedily."""
-    rng = np.random.default_rng([seed, BENCHMARK_POLICIES.index(policy)])
+    if policy != ORACLE_POLICY and policy not in BENCHMARK_POLICIES:
+        raise ValueError(f"unknown policy {policy!r}")
+    rng = np.random.default_rng([seed, policy_index(policy)])
     obs: list[Observation] = list(cand.ranking)
     hidden: list[Context] = list(cand.hidden)
     n_total = len(hidden)
-    rows: list[dict] = []
+    p0 = p_claim(hidden, obs, n_total, cfg)
+    rows: list[dict] = [
+        {
+            "policy": policy,
+            "candidate_id": cand.candidate_id,
+            "seed": seed,
+            "step": 0,
+            "context_id": None,
+            "p_survive_before": float("nan"),
+            "outcome": None,
+            "p_claim_before": p0,
+            "p_claim_after": p0,
+            "verdict": verdict(p0, cfg),
+        }
+    ]
     for step in range(1, budget + 1):
         if not hidden:
             break
-        cid, _, _ = choose(policy, hidden, obs, n_total, cfg, rng)
+        if policy == ORACLE_POLICY:
+            cid, _ = oracle_choice(cand, hidden, obs, n_total, cfg)
+        else:
+            cid, _, _ = choose(policy, hidden, obs, n_total, cfg, rng)
         ctx = next(h for h in hidden if h.context_id == cid)
         p_before = p_claim(hidden, obs, n_total, cfg)
         ps_before = p_survive(ctx, obs, cfg)
@@ -223,29 +284,71 @@ def build_summary(
     synthetic: bool = False,
     reps: int = BOOTSTRAP_REPS,
 ) -> dict:
-    """Assemble the Benchmark-schema summary dict."""
-    policies, calibration, tests = summarize(runs, truth_by_candidate, cfg, budget, reps=reps)
+    """Assemble the Benchmark-schema summary dict.
+
+    Top level = the contested (primary) analysis; ``all_candidates`` carries
+    the same structure over every candidate plus ``contested_share``.
+    """
+    result = summarize(runs, truth_by_candidate, cfg, budget, reps=reps)
+    contested, all_block, share = result["contested"], result["all"], result["contested_share"]
     prov = asdict(
         Provenance(
             step="benchmark_summary",
             dataset_accession="tauchstone/truth_table.parquet",
-            parameters={"synthetic": synthetic, "bootstrap_reps": reps},
+            parameters={
+                "synthetic": synthetic,
+                "bootstrap_reps": reps,
+                "primary_analysis": "contested_candidates",
+            },
             random_seed=BOOTSTRAP_SEED,
             validation_context="replay_benchmark",
         )
     )
     return {
-        "n_candidates": int(runs["candidate_id"].nunique()) if len(runs) else 0,
-        "n_seeds": int(runs["seed"].nunique()) if len(runs) else 0,
+        "n_candidates": contested["n_candidates"],
+        "n_seeds": contested["n_seeds"],
         "budget": budget,
-        "policies": policies,
-        "calibration": calibration,
-        "tests": tests,
+        "policies": contested["policies"],
+        "calibration": contested["calibration"],
+        "tests": contested["tests"],
         "preregistration_sha256": prereg_sha256,
         "preregistration_commit": prereg_commit,
         "provenance": prov,
+        "contested_share": share,
+        "all_candidates": {**all_block, "contested_share": share},
         "synthetic": synthetic,
     }
+
+
+def harness_check(
+    runs: pd.DataFrame,
+    truth_by_candidate: dict[str, dict[str, bool]],
+    cfg: EngineConfig,
+    budget: int,
+) -> dict:
+    """Synthetic-only harness comparison over contested candidates.
+
+    Compares the oracle against the hybrid and random policies on contested
+    decision accuracy at the final step and contested mean
+    experiments-to-correct. Never part of a real summary.
+    """
+    per = per_run_frame(runs, truth_by_candidate, cfg.q, budget)
+    cont = contested_candidates(runs)
+    sub = per[per["candidate_id"].isin(cont)]
+    out: dict[str, dict] = {}
+    for pol in (ORACLE_POLICY, "tauchstone_hybrid", "random"):
+        s = sub[sub["policy"] == pol]
+        if s.empty:
+            continue
+        full_mapped = s["full"].map({"SUPPORTED": "SUPPORTED_SO_FAR", "FRAGILE": "FRAGILE_CONTEXT_DEPENDENT"})
+        acc = float((s["verdict_at_budget"] == full_mapped).mean())
+        out[pol] = {
+            "n_contested": int(s["candidate_id"].nunique()),
+            "contested_decision_accuracy": acc,
+            "contested_mean_t_correct": float(s["t_correct"].mean()),
+            "contested_median_t_correct": float(s["t_correct"].median()),
+        }
+    return out
 
 
 def dry_run_synthetic(
@@ -266,9 +369,15 @@ def dry_run_synthetic(
     best_lam, lam_table = select_lambda(dev_world, budget=budget)
     cfg = replace(EngineConfig(), lam=best_lam)
     seeds = [SEED_BASE + i for i in range(n_seeds)]
-    runs = run_replay(bench_world, seeds=seeds, budget=budget, cfg=cfg)
+    runs = run_replay(
+        bench_world, policies=[*BENCHMARK_POLICIES, ORACLE_POLICY], seeds=seeds, budget=budget, cfg=cfg
+    )
     truth = {c.candidate_id: c.truth for c in bench_world}
-    summary = build_summary(runs, truth, cfg, budget, "synthetic", "synthetic", synthetic=True, reps=reps)
+    harness = harness_check(runs, truth, cfg, budget)
+    summary = build_summary(
+        runs, truth, cfg, budget, "synthetic", "synthetic", synthetic=True, reps=reps
+    )
+    summary["harness"] = harness
     summary["lambda_selection"] = {"grid_table": lam_table, "best_lambda": best_lam}
     summary["provenance"]["parameters"]["lambda"] = best_lam
     write_outputs(runs, summary, out, seed=seed)

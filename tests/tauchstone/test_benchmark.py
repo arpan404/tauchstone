@@ -1,15 +1,17 @@
 """Benchmark tests: per-run metrics on a hand-checkable world + replay smoke."""
 
 import pandas as pd
+import pytest
 
 from pipelines.tauchstone.engine import POLICIES, EngineConfig
 from pipelines.tauchstone.evaluation import (
+    contested_candidates,
     full_information_verdict,
     per_run_frame,
     select_lambda,
     summarize,
 )
-from pipelines.tauchstone.replay import RUN_COLUMNS, run_replay
+from pipelines.tauchstone.replay import RUN_COLUMNS, build_summary, run_replay
 from pipelines.tauchstone.truth_table import make_synthetic_world
 
 
@@ -21,11 +23,18 @@ def _hand_runs():
               "SUPPORTED_SO_FAR", "SUPPORTED_SO_FAR"]
     seq_b0 = ["FRAGILE_CONTEXT_DEPENDENT"] * 5
     seq_a1 = ["INSUFFICIENT_EVIDENCE"] * 5  # censored: never matches within budget
-    for cid, seed, seq, outs in [
-        ("A", 0, seq_a0, ["survive"] * 5),
-        ("B", 0, seq_b0, ["fail"] * 5),
-        ("A", 1, seq_a1, ["survive"] * 5),
+    for cid, seed, seq, outs, step0 in [
+        ("A", 0, seq_a0, ["survive"] * 5, "INSUFFICIENT_EVIDENCE"),
+        ("B", 0, seq_b0, ["fail"] * 5, "INSUFFICIENT_EVIDENCE"),
+        ("A", 1, seq_a1, ["survive"] * 5, "INSUFFICIENT_EVIDENCE"),
+        # C: all survive, decisive at step 0 -> t_correct 0.
+        ("C", 0, ["SUPPORTED_SO_FAR"] * 5, ["survive"] * 5, "SUPPORTED_SO_FAR"),
     ]:
+        rows.append(
+            {"policy": "max_failure", "candidate_id": cid, "seed": seed, "step": 0,
+             "context_id": None, "p_survive_before": float("nan"), "outcome": None,
+             "p_claim_before": 0.5, "p_claim_after": 0.5, "verdict": step0}
+        )
         for step, (v, o) in enumerate(zip(seq, outs, strict=True), start=1):
             rows.append(
                 {"policy": "max_failure", "candidate_id": cid, "seed": seed, "step": step,
@@ -44,16 +53,20 @@ def test_per_run_frame_hand_checkable():
     truth = {
         "A": {"c1": True, "c2": True, "c3": True, "c4": True},
         "B": {"c1": True, "c2": False, "c3": False, "c4": False},
+        "C": {"c1": True, "c2": True, "c3": True, "c4": True},
     }
     per = per_run_frame(_hand_runs(), truth, 0.7, budget=5)
     a0 = per[(per.candidate_id == "A") & (per.seed == 0)].iloc[0]
     assert a0["full"] == "SUPPORTED" and a0["t_correct"] == 2 and a0["correct_at_5"]
     assert a0["verdict_at_3"] == "SUPPORTED_SO_FAR" and a0["verdict_at_5"] == "SUPPORTED_SO_FAR"
+    assert a0["correct_at_budget"]
     b0 = per[(per.candidate_id == "B")].iloc[0]
     assert b0["full"] == "FRAGILE" and b0["t_correct"] == 1
     a1 = per[(per.candidate_id == "A") & (per.seed == 1)].iloc[0]
     assert a1["t_correct"] == 6  # budget + 1, censored
     assert not a1["correct_at_5"]
+    c0 = per[(per.candidate_id == "C")].iloc[0]
+    assert c0["full"] == "SUPPORTED" and c0["t_correct"] == 0  # decisive at step 0
 
 
 def test_replay_smoke_and_determinism():
@@ -65,26 +78,78 @@ def test_replay_smoke_and_determinism():
     assert list(r1.columns) == RUN_COLUMNS
     assert set(r1["policy"].unique()) == set(POLICIES)
     assert (r1["step"] <= 2).all()
+    assert (r1["step"] == 0).any()  # step-0 belief rows recorded
+    assert set(r1[r1["step"] == 0]["verdict"].unique()) <= {
+        "SUPPORTED_SO_FAR", "FRAGILE_CONTEXT_DEPENDENT", "INSUFFICIENT_EVIDENCE"}
+    with pytest.raises(ValueError):
+        run_replay(world, policies=["oracle-nope"], seeds=[20261105], budget=1, cfg=cfg)
 
 
-def test_summarize_smoke_schema_keys():
-    world = make_synthetic_world(n_candidates=6, seed=9)
-    cfg = EngineConfig()
-    runs = run_replay(world, seeds=[20261105, 20261106], budget=3, cfg=cfg)
-    truth = {c.candidate_id: c.truth for c in world}
-    policies, calibration, tests = summarize(runs, truth, cfg, budget=3, reps=50)
-    assert {p["policy"] for p in policies} == set(POLICIES)
-    for p in policies:
+def _check_block(block):
+    assert {p["policy"] for p in block["policies"]} == set(POLICIES)
+    for p in block["policies"]:
         assert set(p["experiments_to_correct_verdict"]) == {"median", "iqr", "ci95"}
         assert set(p["fragile_recall_at_3"]) == {"estimate", "ci95"}
         assert set(p["decision_accuracy"]) == {"estimate", "ci95"}
         assert p["brier"] is None or 0.0 <= p["brier"] <= 1.0
-    assert len(calibration) == 10
-    assert set(calibration[0]) == {"bin_lo", "bin_hi", "mean_predicted", "observed_rate", "n"}
-    assert len(tests) == 5  # hybrid vs each other policy
-    for t in tests:
+    assert len(block["calibration"]) == 10
+    assert set(block["calibration"][0]) == {"bin_lo", "bin_hi", "mean_predicted", "observed_rate", "n"}
+    for t in block["tests"]:
         assert t["policy_a"] == "tauchstone_hybrid"
         assert 0.0 <= t["p_holm"] <= 1.0
+
+
+def test_summarize_two_blocks_and_contested_share():
+    world = make_synthetic_world(n_candidates=12, seed=9)
+    cfg = EngineConfig()
+    runs = run_replay(world, seeds=[20261105, 20261106], budget=3, cfg=cfg)
+    truth = {c.candidate_id: c.truth for c in world}
+    result = summarize(runs, truth, cfg, budget=3, reps=50)
+    assert set(result) == {"contested", "all", "contested_share"}
+    _check_block(result["contested"])
+    _check_block(result["all"])
+    assert 0.0 <= result["contested_share"] <= 1.0
+    assert result["contested"]["n_candidates"] <= result["all"]["n_candidates"] == 12
+    # Wilcoxon+Holm run on the contested set.
+    assert len(result["contested"]["tests"]) == 5
+
+
+def test_oracle_never_in_summary_policies():
+    world = make_synthetic_world(n_candidates=6, seed=9)
+    cfg = EngineConfig()
+    runs = run_replay(world, policies=[*POLICIES, "oracle"], seeds=[20261105], budget=2, cfg=cfg)
+    truth = {c.candidate_id: c.truth for c in world}
+    result = summarize(runs, truth, cfg, budget=2, reps=20)
+    for block in (result["contested"], result["all"]):
+        assert "oracle" not in {p["policy"] for p in block["policies"]}
+    summary = build_summary(runs, truth, cfg, 2, "sha", "commit", synthetic=True, reps=20)
+    assert "oracle" not in {p["policy"] for p in summary["policies"]}
+    assert "oracle" not in {p["policy"] for p in summary["all_candidates"]["policies"]}
+    assert 0.0 <= summary["contested_share"] <= 1.0
+    assert summary["all_candidates"]["contested_share"] == summary["contested_share"]
+
+
+def test_harness_oracle_beats_random_hybrid_not_worse():
+    """Fixed-seed harness gate: exploitable structure lets smart policies win.
+
+    oracle beats random on contested decision accuracy at budget 3, and the
+    hybrid's contested mean experiments-to-correct is no worse than random's
+    (tie allowed). A hybrid loss here means the acquisition is wrong, not the
+    world (checked: hybrid 2.62 < random 2.90 in the prototype).
+    """
+    world = make_synthetic_world(n_candidates=30, seed=20261105)
+    cfg = EngineConfig()
+    seeds = [20261105 + i for i in range(5)]
+    runs = run_replay(world, policies=["random", "tauchstone_hybrid", "oracle"], seeds=seeds, budget=3, cfg=cfg)
+    truth = {c.candidate_id: c.truth for c in world}
+    cont = contested_candidates(runs)
+    assert len(cont) / len(world) >= 0.5
+    per = per_run_frame(runs, truth, cfg.q, budget=3)
+    sub = per[per["candidate_id"].isin(cont)]
+    acc = sub.groupby("policy")["correct_at_budget"].mean()
+    assert acc["oracle"] > acc["random"]
+    mean_t = sub.groupby("policy")["t_correct"].mean()
+    assert mean_t["tauchstone_hybrid"] <= mean_t["random"]
 
 
 def test_select_lambda_returns_grid_value():
