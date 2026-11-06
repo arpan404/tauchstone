@@ -55,6 +55,7 @@ export function MolstarViewer({ url }: { url: string }) {
         if (disposed || !window.molstar?.Viewer || !host) return;
         const viewer = await window.molstar.Viewer.create(host, {
           layoutIsExpanded: false,
+          viewportBackgroundColor: '#182125',
           layoutShowControls: false,
           viewportShowExpand: false,
           collapseLeftPanel: true,
