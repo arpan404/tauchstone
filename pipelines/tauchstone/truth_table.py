@@ -42,7 +42,11 @@ TRUTH_TABLE_COLUMNS = [
     "pert_itime",
 ]
 
-#: Held-out cohort queries backing the top-5% survive rule.
+#: Survive cutoff for signature-type contexts: the candidate must be in this top fraction of ranked
+#: compounds (prereg; top 25% chosen on the development pool, see contracts/algorithms.md section 3).
+TOP_FRACTION = 0.25
+
+#: Held-out cohort queries backing the top-fraction survive rule.
 COHORT_QUERIES = ["GSE173955", "GSE53697"]
 ADJUSTED_QUERY = "GSE132903__composition_adjusted"
 PRIMARY_QUERY = "GSE132903__main"
@@ -98,15 +102,15 @@ def _heldout_cohort_ids() -> list[str]:
 
 RULES = {
     "held_out_cohort": (
-        "Survives if the drug is among the 5% most-reversing compounds for this cohort's signature."
+        "Survives if the drug is among the 25% most-reversing compounds for this cohort's signature."
     ),
     "composition_adjusted": (
-        "Survives if the drug is among the 5% most-reversing compounds for the "
+        "Survives if the drug is among the 25% most-reversing compounds for the "
         "composition-adjusted signature."
     ),
     "lincs_context": (
-        "Survives if this held-out LINCS context's consensus is at or below theta "
-        "(the reversal holds outside the ranking contexts)."
+        "Survives if this held-out LINCS context's consensus is at or below theta, the 25th "
+        "percentile of the shuffled-label null (the reversal holds outside the ranking contexts)."
     ),
     "brain_exposure": (
         "Survives on measured CNS evidence: human CNS PK, or brain/plasma Kp >= 0.1, "
@@ -159,14 +163,14 @@ def cohort_gate(
 def top5_rule(
     compound_ranking: pd.DataFrame, candidate_ids: Sequence[str], min_contexts: int = 3
 ) -> dict[str, dict]:
-    """Top-5% survive rule per candidate: {cid: {ranked, rank, cutoff, survive, detail}}.
+    """Top-fraction survive rule per candidate: {cid: {ranked, rank, cutoff, survive, detail}}.
 
     A candidate is ranked only with >= ``min_contexts`` ranking contexts in
     this query; unranked candidates fail with detail 'not rankable'. The cutoff
-    is ceil(0.05 * n_ranked) on the query's own rank-1-most-negative ordering.
+    is ceil(TOP_FRACTION * n_ranked) on the query's own rank-1-most-negative ordering.
     """
     n_ranked = len(compound_ranking)
-    cutoff = max(1, int(np.ceil(0.05 * n_ranked)))
+    cutoff = max(1, int(np.ceil(TOP_FRACTION * n_ranked)))
     by_id = {str(r.pert_id): r for r in compound_ranking.itertuples()}
     out: dict[str, dict] = {}
     for cid in candidate_ids:
@@ -195,7 +199,7 @@ def _query_rows(
     platform: str | None = None,
     region: str | None = None,
 ) -> list[dict]:
-    """One row per candidate for a top-5% compound query (cohort or adjusted)."""
+    """One row per candidate for a top-fraction compound query (cohort or adjusted)."""
     rows = []
     for cid in candidate_ids:
         r = results[str(cid)]
@@ -546,7 +550,7 @@ def make_synthetic_world(
             hidden.append(ctx)
             truth[qid] = bool(rng.random() < _cohort_prob(rho, _BASE_RATE["held_out_cohort"]))
             values[qid] = float(rng.normal(-1.0 if truth[qid] else 0.3, 0.4))
-            rules[qid] = "compound in the 5% most-reversing ranked compounds for this query"
+            rules[qid] = "compound in the 25% most-reversing ranked compounds for this query"
         k = 0
         for cell in block_cells:
             for _ in range(3):

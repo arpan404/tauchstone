@@ -143,7 +143,8 @@ def _perm_worker(task: tuple) -> dict:
 
 
 def run_permutations(lincs_dir: Path, perm_path: Path, real_top50: pd.DataFrame,
-                     block: int, workers: int, gold_only: bool = False) -> tuple[pd.DataFrame, pd.DataFrame, float]:
+                     block: int, workers: int, gold_only: bool = False,
+                     theta_pct: float = 25.0) -> tuple[pd.DataFrame, pd.DataFrame, float, dict[str, float]]:
     """Full pipeline per permutation; returns (null, summary, theta)."""
     perms = pd.read_parquet(perm_path)
     perm_ids = perms["perm_id"].unique().tolist()
@@ -165,7 +166,9 @@ def run_permutations(lincs_dir: Path, perm_path: Path, real_top50: pd.DataFrame,
         ctx_pooled.append(r["ctx_ranking_consensus"])
     null = pd.concat(null_rows, ignore_index=True)[["perm_id", "pert_id", "consensus_median"]]
     n_perms = len(perm_ids)
-    theta = float(np.quantile(np.concatenate(ctx_pooled), 0.05))
+    pooled = np.concatenate(ctx_pooled)
+    theta_quantiles = {f"p{int(q * 100):02d}": float(np.quantile(pooled, q)) for q in (0.05, 0.10, 0.25)}
+    theta = float(np.quantile(pooled, theta_pct / 100))
     top50 = real_top50.head(50)
     summ = []
     for _, row in top50.iterrows():
@@ -174,7 +177,7 @@ def run_permutations(lincs_dir: Path, perm_path: Path, real_top50: pd.DataFrame,
         summ.append({"pert_id": row["pert_id"], "real_score": float(row["consensus_median"]),
                      "p_perm": p_perm})
     summary = pd.DataFrame(summ)
-    return null, summary, theta
+    return null, summary, theta, theta_quantiles
 
 
 def main() -> None:
@@ -184,6 +187,8 @@ def main() -> None:
     ap.add_argument("--permutations", default=None)
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 8)
     ap.add_argument("--block", type=int, default=50_000)
+    ap.add_argument("--theta-pct", type=float, default=25.0,
+                    help="survive threshold theta = this percentile of the pooled null (prereg: 25)")
     ap.add_argument("--gold-only", action="store_true",
                     help="use only LINCS gold signatures for scaling, aggregation and permutations")
     args = ap.parse_args()
@@ -246,9 +251,9 @@ def main() -> None:
 
     if use_perm_rule:
         assert args.permutations is not None
-        null, summary, theta = run_permutations(
+        null, summary, theta, theta_quantiles = run_permutations(
             PROCESSED / "lincs", Path(args.permutations), compound_ranking,
-            args.block, args.workers, args.gold_only)
+            args.block, args.workers, args.gold_only, args.theta_pct)
         null_path = out / f"{args.out_name}__permutation_null.parquet"
         summ_path = out / f"{args.out_name}__permutation_summary.parquet"
         null.to_parquet(null_path, index=False)
@@ -257,7 +262,8 @@ def main() -> None:
         frac = float((top20["p_perm"] < 0.05).mean()) if len(top20) else float("nan")
         passes = bool((top20["p_perm"] < 0.05).all()) if len(top20) else False
         perm_params = {**params, "n_perms": int(null["perm_id"].nunique()),
-                       "theta": theta, "perm_control_passes_top20": passes,
+                       "theta": theta, "theta_pct": args.theta_pct, "theta_quantiles": theta_quantiles,
+                       "perm_control_passes_top20": passes,
                        "fraction_top20_p_perm_lt_0.05": frac}
         Provenance(step="lincs_permutation_control", dataset_accession=["GSE92742", "GSE70138"],
                    parameters=perm_params, random_seed=SPLIT_SEED).write(null_path)

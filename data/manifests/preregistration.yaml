@@ -23,16 +23,16 @@ ranking:
 
 claim:
   q: 0.7
-  theta: from_permutation_null_p05    # 5th pct of pooled ranking-context consensus, GSE132903 perms only
+  theta: from_permutation_null_p25    # 25th pct of pooled ranking-context consensus, GSE132903 gold perms (chosen on development pool)
   permutations: 200
   permutation_seed: 20261105
 
 cohort_qc_gate: {spearman_vs_primary_min: 0.2}   # replaced min_fdr05_genes: 100 after the GSE173955 TPM fix; see algorithms.md
 
 validation_contexts:                  # the hidden pool
-  - {type: held_out_cohort, id: GSE173955, survive_rule: top_5pct_compounds}
+  - {type: held_out_cohort, id: GSE173955, survive_rule: top_25pct_compounds}
   # GSE53697 excluded by cohort_qc_gate (Spearman -0.002); reported in reproduction.md only
-  - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: top_5pct_compounds}
+  - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: top_25pct_compounds}
   - {type: lincs_context, id: per_drug_held_out_split, max_per_candidate: 8, survive_rule: consensus_le_theta}
   - {type: brain_exposure, id: chembl_literature, survive_rule: "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; fail if measured below; no measured data -> context not in the pool"}
 

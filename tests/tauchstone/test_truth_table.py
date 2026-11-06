@@ -87,9 +87,11 @@ def test_top5_rule_ranked_cutoff_and_unrankable():
         }
     )
     res = tt.top5_rule(df, ["P0", "P1", "P19", "PX", "P5"])
-    assert res["P0"]["survive"] is True  # rank 1 <= ceil(5% of 20)=1
-    assert res["P1"]["survive"] is False
-    assert res["PX"] == {"ranked": False, "rank": None, "cutoff": 1, "n_ranked": 20,
+    assert tt.TOP_FRACTION == 0.25
+    assert res["P0"]["survive"] is True  # rank 1 <= ceil(25% of 20) = 5
+    assert res["P1"]["survive"] is True  # rank 2
+    assert res["P5"]["survive"] is False  # rank 6 > 5
+    assert res["PX"] == {"ranked": False, "rank": None, "cutoff": 5, "n_ranked": 20,
                          "survive": False, "detail": "not rankable"}
     df2 = df.copy()
     df2.loc[df2["pert_id"] == "P0", "n_ranking_contexts"] = 2
@@ -230,12 +232,12 @@ def _write_fixture_processed(tmp_path, theta=-1.5, summary_theta=-1.5, exposure=
          "pert_iname": ["x"] * 20, "consensus_q25": 0.0, "consensus_q75": 0.0,
          "consensus_iqr": 0.0, "z_wtcs_median": 0.0, "z_ks_median": 0.0, "z_cosine_median": 0.0}
     )
-    coh1.loc[0, ["pert_id"]] = "C1"  # rank 1 -> top 5% of 20 -> survive
-    coh1.loc[4, ["pert_id"]] = "C2"  # rank 5 -> fail (C3 absent -> not rankable)
+    coh1.loc[0, ["pert_id"]] = "C1"  # rank 1 -> top 25% of 20 -> survive
+    coh1.loc[5, ["pert_id"]] = "C2"  # rank 6 > ceil(25% of 20) = 5 -> fail (C3 absent -> not rankable)
     coh1.to_parquet(p / "scores" / "COH1__main__compound_ranking.parquet")
     adj = coh1.copy()
     adj.loc[0, ["pert_id"]] = "C2"  # C2 rank 1 -> survive in adjusted
-    adj.loc[4, ["pert_id"]] = "C1"  # C1 rank 5 -> fail in adjusted
+    adj.loc[5, ["pert_id"]] = "C1"  # C1 rank 6 -> fail in adjusted
     adj.to_parquet(p / "scores" / "GSE132903__composition_adjusted__compound_ranking.parquet")
     if exposure:
         (p / "evidence").mkdir(parents=True, exist_ok=True)
@@ -264,7 +266,7 @@ def test_build_truth_table_real_files(tmp_path, monkeypatch):
     assert params["cohort_qc_gate"]["COH1"]["included"] is True
     assert params["cohort_qc_gate"]["COH2"]["included"] is False
     assert (df["context_id"] != "COH2").all()
-    # Top-5%: C1 survives COH1 (rank 1/20), C2 fails (rank 5), C3 unrankable fails with note.
+    # Top-25%: C1 survives COH1 (rank 1/20), C2 fails (rank 6), C3 unrankable fails with note.
     coh = df[df["context_type"] == "held_out_cohort"]
     by_cid = {r["candidate_id"]: (r["outcome"], r["rule"]) for _, r in coh.iterrows()}
     assert by_cid["C1"][0] == "survive" and by_cid["C2"][0] == "fail"
