@@ -3,9 +3,11 @@ export type Data = Schema<'SingleCellExploratory'>;
 export const notScored = 'not scored: fewer than 3 donors per group';
 export const fmt = (n: number | null | undefined) => n == null ? 'unspecified' : n.toFixed(3);
 export function ordered(data: Data) {
+  const scored = new Set(data.signatures.filter(s => s.status === 'ok').map(s => s.cohort));
   return {
     drugs: [...data.drugs].sort((a, b) => a.pool_rank - b.pool_rank),
-    signatures: [...data.signatures].sort((a, b) => a.cohort.localeCompare(b.cohort) || (a.region ?? '').localeCompare(b.region ?? '') || a.cell_type.localeCompare(b.cell_type)),
+    // Cohorts with scored signatures first, so fully unscored cohorts sit at the end.
+    signatures: [...data.signatures].sort((a, b) => Number(!scored.has(a.cohort)) - Number(!scored.has(b.cohort)) || a.cohort.localeCompare(b.cohort) || (a.region ?? '').localeCompare(b.region ?? '') || a.cell_type.localeCompare(b.cell_type)),
   };
 }
 export function scoreText(drug: Data['drugs'][number], signature: Data['signatures'][number]) {
