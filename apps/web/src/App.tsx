@@ -7,6 +7,7 @@ import { Landing } from '@/features/landing';
 import { RepurposingView } from '@/features/repurposing/RepurposingView';
 import { StoryMode } from '@/features/story';
 import { About } from '@/features/about';
+import { SingleCellPanel } from '@/features/single-cell';
 import { AttackView } from '@/features/tauchstone/AttackView';
 import { useStory } from '@/store/story';
 import { STEPS, useUi } from '@/store/ui';
@@ -23,6 +24,12 @@ const VIEWS: Record<StepId, () => React.JSX.Element> = {
 
 type Screen = 'landing' | 'app';
 
+type ExtraId = 'cells' | 'about';
+const EXTRAS: Record<ExtraId, { view: () => React.JSX.Element; label: string; hint: string }> = {
+  cells: { view: SingleCellPanel, label: 'Cell types', hint: 'Exploratory only' },
+  about: { view: About, label: 'How it works', hint: 'And how we kept it honest' },
+};
+
 function isTyping(target: EventTarget | null) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
@@ -33,11 +40,11 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [touring, setTouring] = useState(false);
   const [expo, setExpo] = useState(false);
-  // About remembers the step it opened on, so any step change (nav, keys or the tour) leaves it.
-  const [aboutAt, setAboutAt] = useState<StepId | null>(null);
-  const about = aboutAt === step;
-  const setAbout = (open: boolean) => setAboutAt(open ? step : null);
-  const View = about ? About : VIEWS[step];
+  // An extra page remembers the step it opened on, so any step change (nav, keys or the tour) leaves it.
+  const [extraAt, setExtraAt] = useState<{ page: ExtraId; step: StepId } | null>(null);
+  const extra = extraAt?.step === step ? extraAt.page : null;
+  const openExtra = (page: ExtraId | null) => setExtraAt(page ? { page, step } : null);
+  const View = extra ? EXTRAS[extra].view : VIEWS[step];
 
   function startTour() {
     useStory.getState().go(0);
@@ -53,7 +60,7 @@ export default function App() {
       const idx = ['1', '2', '3', '4', '5'].indexOf(e.key);
       if (idx >= 0) {
         setScreen('app');
-        setAboutAt(null);
+        setExtraAt(null);
         setStep(STEPS[idx].id);
       } else if (e.key === 'e' || e.key === 'E') {
         setExpo(true);
@@ -89,7 +96,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
-      <nav aria-label="Demo steps" className="flex w-52 shrink-0 flex-col gap-1 border-r border-border bg-card p-3">
+      <nav aria-label="Demo steps" className="flex w-52 shrink-0 flex-col gap-1 overflow-y-auto border-r border-border bg-card p-3">
         <div className="space-y-1 px-2 pt-1 pb-3">
           <button
             onClick={() => setScreen('landing')}
@@ -112,50 +119,55 @@ export default function App() {
           <button
             key={s.id}
             onClick={() => {
-              setAbout(false);
+              openExtra(null);
               setStep(s.id);
             }}
-            aria-current={!about && step === s.id ? 'step' : undefined}
-            className={`rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-              !about && step === s.id ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
+            aria-current={!extra && step === s.id ? 'step' : undefined}
+            className={`rounded-md px-3 py-1.5 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+              !extra && step === s.id ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
             }`}
           >
             <span className="block font-mono">{s.label}</span>
-            <span className={`block text-xs ${!about && step === s.id ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+            <span className={`block text-xs ${!extra && step === s.id ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
               {s.hint}
             </span>
           </button>
         ))}
-        <button
-          onClick={() => setAbout(true)}
-          aria-current={about ? 'page' : undefined}
-          className={`rounded-md px-3 py-2 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-            about ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
-          }`}
-        >
-          <span className="block font-mono">How it works</span>
-          <span className={`block text-xs ${about ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
-            And how we kept it honest
-          </span>
-        </button>
-        <div className="mt-4 flex flex-col gap-2">
+        {(Object.keys(EXTRAS) as ExtraId[]).map((id) => (
+          <button
+            key={id}
+            onClick={() => openExtra(id)}
+            aria-current={extra === id ? 'page' : undefined}
+            className={`rounded-md px-3 py-1.5 text-left text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+              extra === id ? 'bg-accent font-medium text-accent-foreground' : 'text-foreground hover:bg-secondary'
+            }`}
+          >
+            <span className="block font-mono">{EXTRAS[id].label}</span>
+            <span className={`block text-xs ${extra === id ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+              {EXTRAS[id].hint}
+            </span>
+          </button>
+        ))}
+        <div className="mt-3 grid grid-cols-2 gap-2">
           {!touring && (
-            <button onClick={startTour} className={navButton}>
-              Start the 3-minute tour
+            <button onClick={startTour} className={navButton} aria-label="Start the 3-minute tour">
+              Start tour
             </button>
           )}
-          <button onClick={() => setExpo(true)} className={navButton} aria-keyshortcuts="E">
-            Expo mode <span className="font-mono text-xs text-muted-foreground">(E)</span>
+          <button
+            onClick={() => setExpo(true)}
+            className={`${navButton} ${touring ? 'col-span-2' : ''}`}
+            aria-keyshortcuts="E"
+            title="Keys: 1–5 switch steps, E expo mode"
+          >
+            Expo <span className="font-mono text-xs text-muted-foreground">(E)</span>
           </button>
-        </div>
-        <div className="mt-auto px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
-          Keyboard: 1–5 switch steps, E expo mode
         </div>
       </nav>
 
       <div className="relative flex min-w-0 flex-1 flex-col">
         {touring && <StoryMode onExit={() => setTouring(false)} />}
-        <main className="min-h-0 flex-1" aria-label={about ? 'How it works' : `Step: ${step}`}>
+        <main className="min-h-0 flex-1" aria-label={extra ? EXTRAS[extra].label : `Step: ${step}`}>
           <View />
         </main>
       </div>
