@@ -297,12 +297,14 @@ def select_lambda(
     seeds: Sequence[int] = (20261105, 20261106, 20261107, 20261108, 20261109),
     budget: int = 5,
     base_cfg: EngineConfig | None = None,
+    policy: str = "tauchstone_hybrid",
 ) -> tuple[float, list[dict]]:
     """Pick hybrid lambda on development candidates: decision accuracy, then median t_correct.
 
-    Runs the hybrid policy with each grid lambda over the dev world and the
-    given seeds. Returns (best_lambda, table rows); ties broken toward the
-    smaller grid value (first max wins).
+    Runs ``policy`` (a '*_hybrid' policy whose acquisition adds lam*(1-p_x))
+    with each grid lambda over the dev world and the given seeds. Returns
+    (best_lambda, table rows); ties broken toward the smaller grid value
+    (first max wins).
     """
     from pipelines.tauchstone.replay import run_replay  # local import: replay drives sessions
 
@@ -310,7 +312,7 @@ def select_lambda(
     table: list[dict] = []
     for lam in grid:
         cfg = replace(base, lam=float(lam))
-        runs = run_replay(dev_world, policies=["tauchstone_hybrid"], seeds=list(seeds), budget=budget, cfg=cfg)
+        runs = run_replay(dev_world, policies=[policy], seeds=list(seeds), budget=budget, cfg=cfg)
         truth = {c.candidate_id: c.truth for c in dev_world}
         per = per_run_frame(runs, truth, cfg.q, budget)
         acc = float(per["correct_at_5"].mean()) if len(per) else float("nan")
