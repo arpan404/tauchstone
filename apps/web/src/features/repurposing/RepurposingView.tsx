@@ -7,6 +7,7 @@ import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUi } from '@/store/ui';
 import ReactECharts from 'echarts-for-react';
 import { useMemo, useState } from 'react';
@@ -143,12 +144,28 @@ export function RepurposingView() {
             </p>
           )}
           {perm && (
-            <p aria-label="Permutation control" className="text-sm tabular-nums">
-              Permutation control:{' '}
-              <span className={perm.passed ? 'font-medium text-teal-800' : 'font-medium text-red-700'}>
-                {perm.passed ? 'passed' : 'failed'} (theta = {perm.theta?.toFixed(2)})
-              </span>
-            </p>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  aria-label={`Permutation control: ${perm.passed ? 'passed' : 'top-20 not all significant (gate: all 20 at p < 0.05)'}`}
+                  className="rounded-sm text-sm font-medium focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:outline-none"
+                >
+                  <span className="tabular-nums">
+                    Permutation control:{' '}
+                    <span className={perm.passed ? 'text-teal-800' : 'text-amber-800'}>
+                      {perm.passed
+                        ? 'passed'
+                        : 'top-20 not all significant (gate: all 20 at p < 0.05)'}
+                    </span>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  The disease labels are shuffled and the ranking is recomputed (
+                  {perm.n_permutations ?? 200} permutations). The gate passes only if all top-20
+                  compounds beat the shuffled null at p &lt; 0.05.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
         </div>
 

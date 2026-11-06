@@ -8,6 +8,7 @@ export interface BenchmarkAnalysis {
   n_candidates: number;
   n_seeds: number;
   budget: number;
+  contested_share?: number;
   policies: Schema<'PolicyResult'>[];
   calibration: Schema<'Benchmark'>['calibration'];
   tests: Schema<'Benchmark'>['tests'];

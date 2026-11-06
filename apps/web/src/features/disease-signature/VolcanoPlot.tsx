@@ -9,7 +9,11 @@ export function VolcanoPlot({ genes }: { genes: Schema<'GeneStat'>[] }) {
   const option = useMemo(() => buildVolcanoOption(genes, animate), [genes, animate]);
   return (
     <div role="img" aria-label={`Volcano plot of ${genes.length} genes. Negative x means lower in AD.`}>
-      <ReactECharts option={option} style={{ height: 420 }} opts={{ renderer: 'canvas' }} />
+      <ReactECharts
+        option={option}
+        style={{ width: '100%', height: 420 }}
+        opts={{ renderer: 'canvas' }}
+      />
     </div>
   );
 }
