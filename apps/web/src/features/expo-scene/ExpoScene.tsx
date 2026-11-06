@@ -59,7 +59,7 @@ export default function ExpoScene({ onClose }: { onClose: () => void }) {
       <div className="expo-center"><h2>{compatibleSession?.candidate_name ?? candidate?.name ?? 'Select a candidate'}</h2><p>P(claim) <strong>{compatibleSession ? compatibleSession.belief.p_claim_holds.toFixed(2) : '—'}</strong></p></div>
       <ol className="expo-nodes">{compatibleSession?.contexts.map((context, index, contexts) => {
         const angle = index / contexts.length * Math.PI * 2 - Math.PI / 2;
-        return <li key={context.context_id} className={`expo-node ${context.status === 'revealed' ? context.outcome : ''}`} style={{ left: `${50 + Math.cos(angle) * 33}%`, top: `${50 + Math.sin(angle) * 34}%` }}><span>{context.label}</span><small>{context.status === 'revealed' ? context.outcome === 'survive' ? '✓ Survived' : '✕ Failed' : context.context_id === compatibleSession.recommended_context_id ? '◎ Recommended · sealed' : '○ Sealed'}</small></li>;
+        return <li key={context.context_id} className={`expo-node ${context.status === 'revealed' ? context.outcome : ''}`} style={{ left: `${50 + Math.cos(angle) * 33}%`, top: `${50 + Math.sin(angle) * 41}%` }}><span>{context.label}</span><small>{context.status === 'revealed' ? context.outcome === 'survive' ? '✓ Survived' : '✕ Failed' : context.context_id === compatibleSession.recommended_context_id ? '◎ Recommended · sealed' : '○ Sealed'}</small></li>;
       })}</ol>
       {signature.isError && <p role="alert" className="expo-fallback">Could not load the signature. Close and retry.</p>}
       {signature.isPending && <p className="expo-fallback">Loading signature…</p>}
