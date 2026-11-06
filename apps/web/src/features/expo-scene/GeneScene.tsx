@@ -36,10 +36,6 @@ export function GeneScene({ genes, session, beam }: Props) {
     });
     const points = new THREE.Points(geometry, material);
     scene.add(points);
-    const ringGeometry = new THREE.BufferGeometry();
-    const ringMaterial = new THREE.LineBasicMaterial({ color: '#56ddd0' });
-    const ring = new THREE.Line(ringGeometry, ringMaterial);
-    scene.add(ring);
     const beamGeometry = new THREE.BufferGeometry();
     const beamMaterial = new THREE.LineBasicMaterial({ color: '#f2c66d' });
     const ray = new THREE.Line(beamGeometry, beamMaterial);
@@ -54,9 +50,7 @@ export function GeneScene({ genes, session, beam }: Props) {
       camera.updateProjectionMatrix();
     });
     resize.observe(container);
-    const clock = { frame: 0, last: performance.now(), sample: performance.now(), count: 0, probability: 0, beamStart: 0, previousBeam: null as string | null };
-    const ringArray = new Float32Array(129 * 3);
-    ringGeometry.setAttribute('position', new THREE.BufferAttribute(ringArray, 3));
+    const clock = { frame: 0, last: performance.now(), sample: performance.now(), count: 0, beamStart: 0, previousBeam: null as string | null };
     const beamArray = new Float32Array(6);
     beamGeometry.setAttribute('position', new THREE.BufferAttribute(beamArray, 3));
 
@@ -64,13 +58,6 @@ export function GeneScene({ genes, session, beam }: Props) {
       const dt = Math.min((now - clock.last) / 1000, .1); clock.last = now;
       const current = state.current;
       if (!reduced.matches) points.rotation.y += dt * .055;
-      const target = current.session?.belief.p_claim_holds ?? 0;
-      clock.probability = reduced.matches ? target : THREE.MathUtils.damp(clock.probability, target, 5, dt);
-      for (let i = 0; i <= 128; i++) {
-        const angle = Math.PI / 2 + i / 128 * Math.PI * 2 * clock.probability;
-        ringArray.set([Math.cos(angle) * .85, Math.sin(angle) * .85, 3], i * 3);
-      }
-      ringGeometry.attributes.position.needsUpdate = true;
       if (current.beam !== clock.previousBeam) { clock.beamStart = now; clock.previousBeam = current.beam; }
       ray.visible = !!current.beam;
       const index = current.session?.contexts.findIndex(c => c.context_id === current.beam) ?? -1;
@@ -89,8 +76,8 @@ export function GeneScene({ genes, session, beam }: Props) {
     return () => {
       cancelAnimationFrame(clock.frame); resize.disconnect();
       renderer.domElement.removeEventListener('webglcontextlost', lost);
-      [geometry, ringGeometry, beamGeometry].forEach(g => g.dispose());
-      [material, ringMaterial, beamMaterial].forEach(m => m.dispose());
+      [geometry, beamGeometry].forEach(g => g.dispose());
+      [material, beamMaterial].forEach(m => m.dispose());
       renderer.dispose(); renderer.forceContextLoss(); renderer.domElement.remove();
     };
   }, [genes]);
