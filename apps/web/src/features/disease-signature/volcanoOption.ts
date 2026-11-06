@@ -10,10 +10,10 @@ export interface VolcanoPoint {
   group: 'up' | 'down' | 'ns' | 'query_up' | 'query_down';
 }
 
-export const TEAL = '#0f766e';
+export const TEAL = '#5de0cd';
 export const TEAL_LIGHT = '#5eead4';
-export const AMBER = '#b45309';
-export const AMBER_LIGHT = '#fcd34a';
+export const AMBER = '#d6b995';
+export const AMBER_LIGHT = '#c9b99d';
 export const GREY = '#a3a3a3';
 
 export function classOf(g: GeneStat): VolcanoPoint['group'] {
@@ -74,9 +74,10 @@ export function buildVolcanoOption(
   });
 
   return {
+    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
     animationDuration: animate ? 700 : 0,
     grid: { left: 52, right: 28, top: 16, bottom: 88 },
-    legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11 } },
+    legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11, color: '#a0b3ba' } },
     xAxis: {
       name: 'log2FC (AD minus control)',
       nameLocation: 'middle',

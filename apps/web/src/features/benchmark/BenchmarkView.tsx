@@ -4,7 +4,7 @@ import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import ReactECharts from 'echarts-for-react';
+import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useMemo, useState } from 'react';
 import { buildCalibrationOption, buildPolicyOption } from './benchmarkOptions';
 
@@ -132,6 +132,32 @@ export function BenchmarkView() {
 
         {analysis && (
           <>
+            <section aria-label="Decision accuracy after five tests" className="space-y-3">
+              <h3 className="text-xl font-medium">Decision accuracy after {analysis.budget} tests</h3>
+              <div className="accuracy-grid">
+                {analysis.policies.map((p) => (
+                  <div key={p.policy} className="accuracy-policy" data-primary={p.policy === 'tauchstone_hybrid'}>
+                    <p className="text-sm">{p.label}</p>
+                    <p className="accuracy-number">{(p.decision_accuracy.estimate * 100).toFixed(0)}%</p>
+                    <meter min={0} max={1} value={p.decision_accuracy.estimate} aria-label={p.label + ' decision accuracy'} />
+                    <p className="font-mono text-xs text-muted-foreground">
+                      95% CI [{p.decision_accuracy.ci95.map((v) => (v * 100).toFixed(1) + '%').join(', ')}]
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3" aria-label="Holm-corrected comparisons">
+                {analysis.tests.map((t, i) => (
+                  <div key={i} className="rounded border border-border bg-card px-4 py-3 text-sm">
+                    <p>{POLICY_LABELS[t.policy_a] ?? t.policy_a} vs {POLICY_LABELS[t.policy_b] ?? t.policy_b}</p>
+                    <p className="font-mono text-primary">Holm p = {t.p_holm.toPrecision(3)}</p>
+                    <p className="text-xs text-muted-foreground">{t.metric.replaceAll('_', ' ')}</p>
+                  </div>
+                ))}
+                {analysis.tests.length === 0 && <p className="text-sm text-muted-foreground">No paired comparisons supplied for this scope.</p>}
+              </div>
+            </section>
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -140,7 +166,7 @@ export function BenchmarkView() {
               </CardHeader>
               <CardContent>
                 {policyOption && (
-                  <div role="img" aria-label="Policy comparison chart. Tauchstone hybrid needs the fewest experiments.">
+                  <div role="img" aria-label="Median experiments to correct verdict by policy, with 95% confidence intervals.">
                     <ReactECharts option={policyOption} style={{ height: 300 }} />
                   </div>
                 )}

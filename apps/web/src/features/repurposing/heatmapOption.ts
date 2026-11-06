@@ -18,6 +18,7 @@ export function buildHeatmapOption(
   const maxAbs = Math.max(0.5, ...values.map((v) => Math.abs(v)));
 
   return {
+    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
     grid: { left: 120, right: 60, top: 30, bottom: 40 },
     xAxis: { type: 'category', data: cellLines, axisLabel: { fontSize: 10, rotate: 30 } },
     yAxis: {
@@ -33,7 +34,7 @@ export function buildHeatmapOption(
       orient: 'vertical',
       right: 0,
       top: 'middle',
-      inRange: { color: ['#0f766e', '#f0fdfa', '#ffffff', '#fef3c7', '#b45309'] },
+      inRange: { color: ['#5de0cd', '#28514d', '#182125', '#514b3e', '#d6b995'] },
       text: ['reversal (−)', '(+)'],
     },
     tooltip: {

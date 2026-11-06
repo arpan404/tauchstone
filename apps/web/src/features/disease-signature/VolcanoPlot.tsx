@@ -1,4 +1,4 @@
-import ReactECharts from 'echarts-for-react';
+import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useMemo, useState } from 'react';
 import { buildVolcanoOption } from './volcanoOption';
 import type { Schema } from '@/api/types';
