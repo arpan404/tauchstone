@@ -1,0 +1,89 @@
+note: Proposed WS5 values from development-pool calibration only. The lead copies
+  these into preregistration.yaml and freezes; do not edit that file from here.
+type_priors:
+  composition_adjusted: 0.18
+  held_out_cohort: 0.4
+  lincs_context: 0.2133
+lambda: 0.0
+lambda_L: 0.0
+theta: -1.4795424587392394
+ranking: GSE132903__main
+permctl: GSE132903__gold_permctl
+q: 0.7
+kappa: 2.0
+development:
+  n_candidates: 50
+  n_seeds: 20
+  budget: 5
+  claim_holds_rate: 0.04
+  contested_share: 0.0
+  accuracy_table:
+    decision_lookahead_hybrid:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.9
+      all_dev_acc_b5: 0.46
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    expected_decision_change:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.9
+      all_dev_acc_b5: 0.46
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    greedy_strongest:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.86
+      all_dev_acc_b5: 0.44
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    max_failure:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.88
+      all_dev_acc_b5: 0.46
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    max_uncertainty:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.86
+      all_dev_acc_b5: 0.44
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    random:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.884
+      all_dev_acc_b5: 0.456
+      all_dev_mean_t_correct: 0.154
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+    tauchstone_hybrid:
+      n_contested_runs: 0
+      contested_acc_b3: null
+      contested_acc_b5: null
+      all_dev_acc_b3: 0.9
+      all_dev_acc_b5: 0.46
+      all_dev_mean_t_correct: 0.16
+      all_dev_median_t_correct: 0.0
+      all_dev_n_runs: 1000
+provenance:
+  git_commit: 0f4c619c10c81212c19c83ee7f451814b95da0a3
+  timestamp: '2026-11-06T04:23:53+00:00'
+  truth_table: processed/tauchstone/truth_table.parquet
+  benchmark_pool: counts only, outcomes unseen
+

@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -60,97 +61,158 @@ def require(path: Path) -> Path:
     return path
 
 
-def load_theta(processed: Path = PROCESSED) -> float:
-    """Theta: 5th percentile of the pooled ranking-context null, from provenance.
+def _default_permctl() -> str:
+    """Permutation-control run name from the preregistration (gold since 0f4c619)."""
+    import yaml
 
-    The value lives in the provenance sidecar of the primary permutation
-    summary (the permutation pipeline records it there); falls back to the
-    summary table itself if the sidecar lacks it.
-    """
-    summary = require(processed / "scores" / f"{PRIMARY_QUERY}__permutation_summary.parquet")
-    sidecar = summary.with_name(summary.name + ".provenance.json")
-    if sidecar.exists():
-        params = json.loads(sidecar.read_text()).get("parameters", {})
-        for key in ("theta", "theta_p05", "null_p05"):
-            if key in params:
-                return float(params[key])
-    df = pd.read_parquet(summary)
-    if "theta" in df.columns:
-        return float(df["theta"].iloc[0])
-    raise KeyError(
-        f"theta not found: neither {sidecar} parameters nor a 'theta' column in {summary}"
+    prereg = yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text())
+    return str(
+        prereg.get("ranking", {}).get("permutation_control_run", "GSE132903__gold_permctl")
     )
 
 
+def load_theta(processed: Path = PROCESSED, permctl: str | None = None) -> float:
+    """Theta from the permutation-control null sidecar (also checks the summary sidecar).
+
+    Raises ``FileNotFoundError`` for a missing input and ``ValueError`` when the
+    two sidecars disagree.
+    """
+    permctl = permctl or _default_permctl()
+    null_sidecar = require(processed / "scores" / f"{permctl}__permutation_null.parquet.provenance.json")
+    theta = json.loads(null_sidecar.read_text())["parameters"]["theta"]
+    summary_sidecar = processed / "scores" / f"{permctl}__permutation_summary.parquet.provenance.json"
+    if summary_sidecar.exists():
+        stheta = json.loads(summary_sidecar.read_text())["parameters"].get("theta")
+        if stheta is not None and abs(float(stheta) - float(theta)) > 1e-9:
+            raise ValueError(f"theta mismatch: null sidecar {theta} vs summary sidecar {stheta}")
+    return float(theta)
+
+
 def _heldout_cohort_ids() -> list[str]:
-    """Held-out cohort ids from the preregistration (GSE53697 already delisted there)."""
+    """Held-out cohort ids listed in the preregistration."""
     import yaml
 
     prereg = yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text())
     return [v["id"] for v in prereg.get("validation_contexts", []) if v.get("type") == "held_out_cohort"]
 
 
-def cohort_qc(processed: Path, cohort_id: str, min_genes: int = 100) -> tuple[bool, int]:
-    """Cohort QC gate: the cohort's own signature needs >= ``min_genes`` genes at FDR < 0.05.
+RULES = {
+    "held_out_cohort": (
+        "Survives if the drug is among the 5% most-reversing compounds for this cohort's signature."
+    ),
+    "composition_adjusted": (
+        "Survives if the drug is among the 5% most-reversing compounds for the "
+        "composition-adjusted signature."
+    ),
+    "lincs_context": (
+        "Survives if this held-out LINCS context's consensus is at or below theta "
+        "(the reversal holds outside the ranking contexts)."
+    ),
+    "brain_exposure": (
+        "Survives on measured CNS evidence: human CNS PK, or brain/plasma Kp >= 0.1, "
+        "or PAMPA-BBB Pe >= 4e-6 cm/s."
+    ),
+}
 
-    Returns (passes, n_fdr05). Raises ``FileNotFoundError`` naming a missing signature.
+#: Held-out cohorts evaluated by the QC gate (GSE53697 is expected to fail it).
+HELD_OUT_COHORTS = ["GSE173955", "GSE53697"]
+
+#: Display metadata for cohort-type rows.
+COHORT_META = {
+    "GSE173955": ("RNA-seq", "hippocampus"),
+    "GSE53697": ("RNA-seq", "unspecified"),
+    ADJUSTED_QUERY: ("Illumina array", "middle temporal gyrus"),
+}
+
+
+def cohort_gate(
+    processed: Path,
+    ranking: str = PRIMARY_QUERY,
+    cohorts: Sequence[str] = HELD_OUT_COHORTS,
+    min_rho: float = 0.2,
+) -> dict[str, dict]:
+    """Correlation QC gate: Spearman rho of each held-out signature vs the primary.
+
+    Computed over shared entrez_id ``stat`` values. Returns
+    {cohort: {rho, n_shared, threshold, included}}. Raises ``FileNotFoundError``
+    naming a missing signature.
     """
-    sig = require(processed / "signatures" / f"{cohort_id}__main.parquet")
-    df = pd.read_parquet(sig, columns=["fdr"])
-    n = int((df["fdr"] < 0.05).sum())
-    return n >= min_genes, n
+    from scipy.stats import spearmanr
 
-
-def gated_cohorts(
-    processed: Path, cohort_ids: list[str], min_genes: int = 100
-) -> tuple[list[str], dict[str, dict]]:
-    """Split held-out cohorts into included vs QC-excluded, with a loggable gate record."""
-    kept: list[str] = []
+    primary = pd.read_parquet(require(processed / "signatures" / f"{ranking}.parquet"))
+    pstat = primary.set_index("entrez_id")["stat"]
     gate: dict[str, dict] = {}
-    for cid in cohort_ids:
-        ok, n = cohort_qc(processed, cid, min_genes)
-        gate[cid] = {"n_fdr05": n, "included": ok}
-        if ok:
-            kept.append(cid)
-    return kept, gate
+    for cid in cohorts:
+        sig = pd.read_parquet(require(processed / "signatures" / f"{cid}__main.parquet"))
+        sstat = sig.set_index("entrez_id")["stat"]
+        shared = pstat.index.intersection(sstat.index)
+        rho = float(spearmanr(pstat.loc[shared], sstat.loc[shared]).statistic)
+        gate[cid] = {
+            "rho": rho,
+            "n_shared": int(len(shared)),
+            "threshold": min_rho,
+            "included": bool(rho >= min_rho),
+        }
+    return gate
 
 
-def top5_percent_ids(compound_ranking: pd.DataFrame) -> set[str]:
-    """Pert_ids in the 5% most-reversing ranked compounds (rank 1 = most negative)."""
-    if compound_ranking.empty:
-        return set()
-    ranked = compound_ranking.sort_values("consensus_median")
-    n = max(1, int(np.ceil(0.05 * len(ranked))))
-    return set(ranked["pert_id"].iloc[:n].astype(str))
+def top5_rule(
+    compound_ranking: pd.DataFrame, candidate_ids: Sequence[str], min_contexts: int = 3
+) -> dict[str, dict]:
+    """Top-5% survive rule per candidate: {cid: {ranked, rank, cutoff, survive, detail}}.
+
+    A candidate is ranked only with >= ``min_contexts`` ranking contexts in
+    this query; unranked candidates fail with detail 'not rankable'. The cutoff
+    is ceil(0.05 * n_ranked) on the query's own rank-1-most-negative ordering.
+    """
+    n_ranked = len(compound_ranking)
+    cutoff = max(1, int(np.ceil(0.05 * n_ranked)))
+    by_id = {str(r.pert_id): r for r in compound_ranking.itertuples()}
+    out: dict[str, dict] = {}
+    for cid in candidate_ids:
+        row = by_id.get(str(cid))
+        ranked = row is not None and int(row.n_ranking_contexts) >= min_contexts
+        rank = int(row.rank) if ranked else None
+        survive = bool(ranked and rank <= cutoff)
+        out[str(cid)] = {
+            "ranked": bool(ranked),
+            "rank": rank,
+            "cutoff": cutoff,
+            "n_ranked": n_ranked,
+            "survive": survive,
+            "detail": "" if ranked else "not rankable",
+        }
+    return out
 
 
-def _cohort_rows(
-    candidate_ids: list[str],
+def _query_rows(
+    candidate_ids: Sequence[str],
     query: str,
     context_type: str,
     label: str,
-    processed: Path,
-    region: str | None = None,
+    results: dict[str, dict],
+    value_by_id: Mapping[str, float | None],
     platform: str | None = None,
+    region: str | None = None,
 ) -> list[dict]:
-    ranking_path = require(processed / "scores" / f"{query}__compound_ranking.parquet")
-    ranking = pd.read_parquet(ranking_path)
-    survivors = top5_percent_ids(ranking)
-    by_id = {str(r.pert_id): r for r in ranking.itertuples()}
+    """One row per candidate for a top-5% compound query (cohort or adjusted)."""
     rows = []
     for cid in candidate_ids:
-        row = by_id.get(cid)
+        r = results[str(cid)]
+        rule = RULES[context_type]
+        if not r["ranked"]:
+            rule += " Candidate not rankable (fewer than 3 ranking contexts): fail."
         rows.append(
             {
                 "candidate_id": cid,
                 "context_id": query,
                 "context_type": context_type,
                 "label": label,
-                "value": None if row is None else float(row.consensus_median),
+                "value": value_by_id.get(str(cid)),
                 "threshold": None,  # rank-based rule: no scalar threshold
-                "outcome": "survive" if cid in survivors else "fail",
-                "rule": "compound in the 5% most-reversing ranked compounds for this query",
-                "tissue": "middle temporal gyrus" if context_type != "composition_adjusted" else None,
+                "outcome": "survive" if r["survive"] else "fail",
+                "rule": rule,
+                "tissue": None,
                 "region": region,
                 "platform": platform,
                 "cell_id": None,
@@ -161,33 +223,32 @@ def _cohort_rows(
     return rows
 
 
+def _parse_lincs_context(context_id: str) -> tuple[str | None, str | None, str | None]:
+    """Split a 'cell|dose|time' context_id; missing parts become None."""
+    parts = str(context_id).split("|")
+    parts += [None] * (3 - len(parts))
+    cell, dose, time = (p if p else None for p in parts[:3])
+    return cell, dose, time
+
+
 def _lincs_rows(
-    candidate_ids: list[str],
-    context_split: pd.DataFrame,
-    context_scores: pd.DataFrame,
+    held_by_candidate: Mapping[str, pd.DataFrame],
     theta: float,
     seed: int = SYNTHETIC_SEED,
 ) -> list[dict]:
-    """Held-out LINCS contexts per candidate, consensus <= theta survives.
+    """Held-out LINCS rows: consensus <= theta survives, value = consensus.
 
-    Capped at 8 per candidate, stratified by cell line (round-robin over cell
-    lines with a seeded shuffle), per the spec.
+    At most 8 contexts per candidate, stratified by cell line (round-robin
+    over cell lines with a seeded shuffle). Metadata parsed from context_id.
     """
     rng = np.random.default_rng(seed)
-    held = context_split[context_split["split"] == "held_out"]
-    scores = context_scores.set_index(["pert_id", "context_id"])["consensus"].to_dict()
-    meta = (
-        context_scores[["context_id", "cell_id", "pert_idose", "pert_itime"]]
-        .drop_duplicates("context_id")
-        .set_index("context_id")
-        .to_dict("index")
-    )
     rows = []
-    for cid in candidate_ids:
-        ctxs = sorted(held.loc[held["pert_id"] == cid, "context_id"].astype(str).unique())
+    for cid, held in held_by_candidate.items():
+        ctxs = sorted(held["context_id"].astype(str).unique())
         by_cell: dict[str, list[str]] = {}
         for c in ctxs:
-            by_cell.setdefault(str(meta.get(c, {}).get("cell_id")), []).append(c)
+            cell, _, _ = _parse_lincs_context(c)
+            by_cell.setdefault(cell or "unspecified", []).append(c)
         for cell_ctxs in by_cell.values():
             rng.shuffle(cell_ctxs)
         picked: list[str] = []
@@ -195,25 +256,26 @@ def _lincs_rows(
             for cell in sorted(by_cell):
                 if by_cell[cell] and len(picked) < MAX_LINCS_CONTEXTS:
                     picked.append(by_cell[cell].pop(0))
+        cons = held.set_index("context_id")["consensus"].to_dict()
         for c in sorted(picked):
-            v = scores.get((cid, c))
-            m = meta.get(c, {})
+            v = cons.get(c)
+            cell, dose, time = _parse_lincs_context(c)
             rows.append(
                 {
                     "candidate_id": cid,
                     "context_id": c,
                     "context_type": "lincs_context",
-                    "label": str(c).replace("|", " · "),
+                    "label": str(c).replace("|", " · ") + " (held-out)",
                     "value": None if v is None else float(v),
                     "threshold": float(theta),
                     "outcome": "survive" if (v is not None and float(v) <= theta) else "fail",
-                    "rule": "held-out LINCS context consensus <= theta",
+                    "rule": RULES["lincs_context"],
                     "tissue": None,
                     "region": None,
                     "platform": "L1000",
-                    "cell_id": None if m.get("cell_id") is None else str(m["cell_id"]),
-                    "pert_idose": None if m.get("pert_idose") is None else str(m["pert_idose"]),
-                    "pert_itime": None if m.get("pert_itime") is None else str(m["pert_itime"]),
+                    "cell_id": cell,
+                    "pert_idose": dose,
+                    "pert_itime": time,
                 }
             )
     return rows
@@ -254,10 +316,7 @@ def _exposure_rows(candidate_ids: list[str], processed: Path) -> list[dict]:
                 "value": None,  # heterogeneous measures; see evidence card
                 "threshold": None,
                 "outcome": "survive" if survive else "fail",
-                "rule": (
-                    "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; "
-                    "fail if measured below those"
-                ),
+                "rule": RULES["brain_exposure"],
                 "tissue": None,
                 "region": None,
                 "platform": None,
@@ -269,52 +328,83 @@ def _exposure_rows(candidate_ids: list[str], processed: Path) -> list[dict]:
     return rows
 
 
+def _candidate_pool(processed: Path, ranking: str) -> pd.DataFrame:
+    """Eligible candidates (benchmark + development pools, pool_rank 1-100)."""
+    pool = pd.read_parquet(require(processed / "scores" / f"{ranking}__candidate_pool.parquet"))
+    pool = pool[pool["pool"].isin(["benchmark", "development"])].copy()
+    return pool.sort_values("pool_rank").reset_index(drop=True)
+
+
 def build_truth_table(
     processed: Path = PROCESSED,
-    ranking_name: str = PRIMARY_QUERY,
-    n_top: int = 50,
-    n_dev: int = 50,
+    ranking: str = PRIMARY_QUERY,
+    permctl: str | None = None,
     seed: int = SYNTHETIC_SEED,
 ) -> tuple[pd.DataFrame, dict]:
-    """Build the full truth table from upstream processed tables.
+    """Build the full truth table (both pools; server-side only) from real upstream tables.
 
-    Returns (table, provenance parameters incl. the cohort-QC gate log).
-    Raises ``FileNotFoundError`` naming the first missing upstream input.
+    Returns (table, provenance parameters incl. theta, cohort-gate log and
+    exposure flag). Raises ``FileNotFoundError`` naming the first missing
+    upstream input. Prints no outcome statistics (integrity: benchmark-pool
+    outcomes stay unseen until the preregistration is frozen).
     """
-    ranking_path = require(processed / "scores" / f"{ranking_name}__compound_ranking.parquet")
-    ranking = pd.read_parquet(ranking_path).sort_values("consensus_median")
-    pool = ranking["pert_id"].astype(str).tolist()[: n_top + n_dev]
-    candidate_ids = pool  # rows are identical for benchmark (top 50) and dev (51-100) pools
-    theta = load_theta(processed)
-    split = pd.read_parquet(require(processed / "lincs" / "context_split.parquet"))
-    ctx_scores = pd.read_parquet(
-        require(processed / "scores" / f"{ranking_name}__context_scores.parquet")
-    )
     import yaml
 
-    min_genes = int(
-        yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text()).get("cohort_qc_gate", {}).get(
-            "min_fdr05_genes", 100
-        )
+    pool = _candidate_pool(processed, ranking)
+    candidate_ids = pool["pert_id"].astype(str).tolist()
+    pools = dict(zip(pool["pert_id"].astype(str), pool["pool"], strict=True))
+    theta = load_theta(processed, permctl)
+    permctl = permctl or _default_permctl()
+    ctx_scores = pd.read_parquet(require(processed / "scores" / f"{ranking}__context_scores.parquet"))
+    min_rho = float(
+        yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text())
+        .get("cohort_qc_gate", {})
+        .get("spearman_vs_primary_min", 0.2)
     )
-    cohorts, gate = gated_cohorts(processed, _heldout_cohort_ids(), min_genes=min_genes)
+    gate = cohort_gate(processed, ranking, HELD_OUT_COHORTS, min_rho=min_rho)
+    passing = [cid for cid in HELD_OUT_COHORTS if gate[cid]["included"]]
+
     rows: list[dict] = []
-    for qc in cohorts:
-        rows += _cohort_rows(candidate_ids, qc, "held_out_cohort", f"{qc} (held-out cohort)", processed)
-    rows += _cohort_rows(
-        candidate_ids,
-        ADJUSTED_QUERY,
-        "composition_adjusted",
-        "GSE132903 composition-adjusted",
-        processed,
+    for qc in passing:
+        cr = pd.read_parquet(require(processed / "scores" / f"{qc}__main__compound_ranking.parquet"))
+        results = top5_rule(cr, candidate_ids)
+        platform, region = COHORT_META.get(qc, ("RNA-seq", "unspecified"))
+        rows += _query_rows(
+            candidate_ids, qc, "held_out_cohort", f"{qc} (held-out cohort)",
+            results, {str(r.pert_id): float(r.consensus_median) for r in cr.itertuples()},
+            platform=platform, region=region,
+        )
+    adj = pd.read_parquet(require(processed / "scores" / f"{ADJUSTED_QUERY}__compound_ranking.parquet"))
+    adj_results = top5_rule(adj, candidate_ids)
+    platform, region = COHORT_META[ADJUSTED_QUERY]
+    rows += _query_rows(
+        candidate_ids, ADJUSTED_QUERY, "composition_adjusted", "GSE132903 composition-adjusted",
+        adj_results, {str(r.pert_id): float(r.consensus_median) for r in adj.itertuples()},
+        platform=platform, region=region,
     )
-    rows += _lincs_rows(candidate_ids, split, ctx_scores, theta, seed=seed)
-    rows += _exposure_rows(candidate_ids, processed)
+    held = ctx_scores[ctx_scores["split"] == "held_out"]
+    held_by = {cid: held[held["pert_id"].astype(str) == cid] for cid in candidate_ids}
+    rows += _lincs_rows(held_by, theta, seed=seed)
+    exposure_path = processed / "evidence" / "exposure.parquet"
+    exposure_included = exposure_path.exists()
+    if exposure_included:
+        rows += _exposure_rows(candidate_ids, processed)
     df = pd.DataFrame(rows, columns=TRUTH_TABLE_COLUMNS)
+    type_counts = df.groupby("context_type").size().to_dict()
     params = {
-        "theta_source": "permutation_summary",
-        "max_lincs_contexts": 8,
-        "cohort_qc_gate": {"min_fdr05_genes": min_genes, **gate},
+        "ranking": ranking,
+        "permctl": permctl,
+        "theta": theta,
+        "theta_source": f"scores/{permctl}__permutation_null sidecar (summary sidecar checked)",
+        "max_lincs_contexts": MAX_LINCS_CONTEXTS,
+        "random_seed": seed,
+        "cohort_qc_gate": gate,
+        "exposure_included": exposure_included,
+        "cell_type": "skipped (stretch, no data)",
+        "n_candidates": len(candidate_ids),
+        "n_benchmark": sum(1 for p in pools.values() if p == "benchmark"),
+        "n_development": sum(1 for p in pools.values() if p == "development"),
+        "contexts_per_type": {str(k): int(v) for k, v in type_counts.items()},
     }
     return df, params
 
@@ -325,7 +415,7 @@ def write_truth_table(
     """Write truth_table.parquet plus its provenance sidecar."""
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out, index=False)
-    params = {"theta_source": "permutation_summary", "max_lincs_contexts": 8}
+    params = {"theta_source": "permctl_null_sidecar", "max_lincs_contexts": MAX_LINCS_CONTEXTS}
     params.update(extra_params or {})
     Provenance(
         step="truth_table",
@@ -623,14 +713,22 @@ def main(argv: list[str] | None = None) -> Path:
     ap = argparse.ArgumentParser(description="Build tauchstone/truth_table.parquet")
     ap.add_argument("--out", default=None, help="output parquet path")
     ap.add_argument("--processed", default=str(PROCESSED))
-    ap.add_argument("--n-top", type=int, default=50)
-    ap.add_argument("--n-dev", type=int, default=50)
+    ap.add_argument("--ranking", default=PRIMARY_QUERY, help="ranking query name (re-runs if it changes)")
+    ap.add_argument(
+        "--permctl", default=None,
+        help="permutation-control run name (default: prereg ranking.permutation_control_run)",
+    )
     ap.add_argument("--seed", type=int, default=SYNTHETIC_SEED)
     args = ap.parse_args(argv)
     out = Path(args.out) if args.out else Path(args.processed) / "tauchstone" / "truth_table.parquet"
-    df, params = build_truth_table(Path(args.processed), n_top=args.n_top, n_dev=args.n_dev, seed=args.seed)
+    df, params = build_truth_table(Path(args.processed), ranking=args.ranking, permctl=args.permctl, seed=args.seed)
     write_truth_table(df, out, seed=args.seed, extra_params=params)
+    # Integrity: counts per type only; never outcome statistics (benchmark pool unseen).
     print(f"wrote {out} ({len(df)} rows, {df['candidate_id'].nunique()} candidates)")
+    print(f"theta={params['theta']:.4f} exposure_included={params['exposure_included']}")
+    print(f"cohort gate: {params['cohort_qc_gate']}")
+    print(f"contexts per type: {params['contexts_per_type']}")
+    print(f"candidates: benchmark={params['n_benchmark']} development={params['n_development']}")
     return out
 
 

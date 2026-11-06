@@ -25,16 +25,18 @@ POLICIES = (
     "max_uncertainty",
     "expected_decision_change",
     "tauchstone_hybrid",
+    "decision_lookahead_hybrid",
 )
+
+#: Co-primary policies (prereg): each is tested against the five baselines.
+CO_PRIMARY = ("tauchstone_hybrid", "decision_lookahead_hybrid")
+BASELINES = tuple(p for p in POLICIES if p not in CO_PRIMARY)
 
 MODE_TO_POLICY = {"attack": "max_failure", "learn": "expected_decision_change"}
 
-#: EXPERIMENTAL candidate policies (lead review; not prereg, not in POLICIES).
+#: EXPERIMENTAL candidate policy (lead review; not prereg, not in POLICIES).
 #: Selectable in replay by name. Do not add to POLICIES or a real summary.
-CANDIDATE_POLICIES = (
-    "decision_lookahead",
-    "decision_lookahead_hybrid",
-)
+CANDIDATE_POLICIES = ("decision_lookahead",)
 
 _POLICY_LABELS = {
     "random": "random",
@@ -43,6 +45,7 @@ _POLICY_LABELS = {
     "max_uncertainty": "max uncertainty",
     "expected_decision_change": "learn (expected decision change)",
     "tauchstone_hybrid": "tauchstone hybrid",
+    "decision_lookahead_hybrid": "lookahead hybrid (co-primary)",
 }
 
 #: Context types that share the cohort-style similarity bonuses.
@@ -92,6 +95,7 @@ class EngineConfig:
     ranking_weight_cap: float = 4.0
     type_priors: Mapping[str, float] = field(default_factory=_default_type_priors)
     lam: float = 0.25
+    lam_lookahead: float = 0.25  # lambda_L for decision_lookahead_hybrid (co-primary)
     supported_threshold: float = 0.8
     fragile_threshold: float = 0.2
 
@@ -320,12 +324,16 @@ def acquisition(
     n_total: int,
     cfg: EngineConfig,
     rng: np.random.Generator,
+    budget_remaining: int | None = None,
 ) -> dict[str, float]:
     """Score every hidden context (higher = reveal next).
 
     attack/max_failure: 1 - p_x. learn/expected_decision_change: expected
     absolute change in P(C). hybrid: learn + lam * (1 - p_x).
     max_uncertainty: p_x * (1 - p_x). greedy_strongest: p_x. random: uniform.
+    decision_lookahead_hybrid (co-primary): two-step decision-lookahead score
+    + lam_lookahead * (1 - p_x); lookahead depth defaults to 2 when
+    budget_remaining is unknown.
     """
     if policy not in POLICIES:
         raise ValueError(f"unknown policy {policy!r}; expected one of {POLICIES}")
@@ -341,6 +349,15 @@ def acquisition(
     learn = _learn_scores(hidden, observations, n_total, cfg)
     if policy == "expected_decision_change":
         return learn
+    if policy == "decision_lookahead_hybrid":
+        lookahead, _ = decision_lookahead_scores(
+            hidden, observations, n_total, cfg, budget_remaining if budget_remaining is not None else 2
+        )
+        px2 = {x.context_id: p_survive(x, observations, cfg) for x in hidden}
+        return {
+            x.context_id: lookahead[x.context_id] + cfg.lam_lookahead * (1.0 - px2[x.context_id])
+            for x in hidden
+        }
     # tauchstone_hybrid
     return {x.context_id: learn[x.context_id] + cfg.lam * (1.0 - px[x.context_id]) for x in hidden}
 
@@ -357,18 +374,39 @@ def choose(
     """Pick the best hidden context: (context_id, score, rationale sentence).
 
     Ties break by lower context_id (random draws use the seed, so ties there
-    are effectively impossible); experimental lookahead policies break score
-    ties by the learn-mode score first. The rationale names the maximised
-    quantity. Experimental policies require ``budget_remaining``.
+    are effectively impossible); lookahead policies (experimental or
+    co-primary) break score ties by the learn-mode score first. The rationale
+    names the maximised quantity. The experimental lookahead policy requires
+    ``budget_remaining``; the co-primary hybrid accepts it and defaults to
+    depth 2 without it.
     """
     if not hidden:
         raise ValueError("no hidden contexts to choose from")
+    if policy == "decision_lookahead_hybrid":
+        if budget_remaining is None:
+            scores = acquisition(policy, hidden, observations, n_total, cfg, rng)
+            learn = _learn_scores(hidden, observations, n_total, cfg)
+            depth = 2
+        else:
+            scores, learn = decision_lookahead_scores(
+                hidden, observations, n_total, cfg, budget_remaining, cfg.lam_lookahead
+            )
+            depth = min(2, budget_remaining)
+        best = min(
+            hidden,
+            key=lambda x: (-scores[x.context_id], -learn[x.context_id], x.context_id),
+        )
+        score = scores[best.context_id]
+        rationale = (
+            f"Largest {depth}-step expected decision utility {score:.3f}: chance the "
+            "next test leaves the verdict correct and decisive."
+        )
+        return best.context_id, score, rationale
     if policy in CANDIDATE_POLICIES:
         if budget_remaining is None:
             raise ValueError(f"policy {policy!r} requires budget_remaining")
-        lam = cfg.lam if policy == "decision_lookahead_hybrid" else 0.0
         scores, learn = decision_lookahead_scores(
-            hidden, observations, n_total, cfg, budget_remaining, lam
+            hidden, observations, n_total, cfg, budget_remaining, 0.0
         )
         best = min(
             hidden,
