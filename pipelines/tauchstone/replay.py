@@ -189,22 +189,30 @@ def run_replay(
     return df
 
 
-def load_world_from_processed(processed: Path) -> list[SyntheticCandidate]:
-    """Build the replay world from the real truth table + ranking observations.
+def load_world_from_processed(
+    processed: Path,
+    ranking: str = "GSE132903__main",
+    permctl: str | None = None,
+    pools: Sequence[str] = ("benchmark", "development"),
+) -> list[SyntheticCandidate]:
+    """Build the replay world for the given pools from the real truth table.
 
-    Raises ``FileNotFoundError`` naming the first missing upstream input.
+    Ranking observations come from the ranking query's ranking context scores
+    (survive = consensus <= theta). The returned objects reuse the synthetic
+    container type; nothing here is synthetic.
     """
-    from pipelines.tauchstone.truth_table import require  # local import: builder helper
+    from pipelines.tauchstone.truth_table import _candidate_pool, load_theta, require
 
+    pool = _candidate_pool(processed, ranking)
+    pool = pool[pool["pool"].isin(list(pools))]
+    wanted = pool["pert_id"].astype(str).tolist()
     truth_path = require(processed / "tauchstone" / "truth_table.parquet")
-    # Ranking observations come from the primary query's ranking context scores.
-    from pipelines.tauchstone.truth_table import PRIMARY_QUERY
-
-    ctx_path = require(processed / "scores" / f"{PRIMARY_QUERY}__context_scores.parquet")
+    ctx_path = require(processed / "scores" / f"{ranking}__context_scores.parquet")
     truth = pd.read_parquet(truth_path)
+    truth = truth[truth["candidate_id"].astype(str).isin(wanted)]
     ctx_scores = pd.read_parquet(ctx_path)
     rank_scores = ctx_scores[ctx_scores["split"] == "ranking"]
-    theta = float(truth["threshold"].dropna().median()) if truth["threshold"].notna().any() else -0.5
+    theta = load_theta(processed, permctl)
     world: list[SyntheticCandidate] = []
     for cid, g in truth.groupby("candidate_id"):
         hidden = [
@@ -418,7 +426,7 @@ def main(argv: list[str] | None = None) -> Path:
 
     sha, commit = prereg_guard()  # refuses unless frozen + committed
     _ = MANIFESTS  # prereg lives under data/manifests; kept explicit for provenance.
-    world = load_world_from_processed(Path(args.processed))
+    world = load_world_from_processed(Path(args.processed), pools=["benchmark"])
     cfg = EngineConfig()
     seeds = [SEED_BASE + i for i in range(args.n_seeds)]
     runs = run_replay(world, seeds=seeds, budget=args.budget, cfg=cfg)

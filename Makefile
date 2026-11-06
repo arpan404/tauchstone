@@ -58,6 +58,9 @@ benchmark: ## Replay benchmark (refuses to run without a committed preregistrati
 # Synthetic dry run (no guard, synthetic outputs only):
 # 	make benchmark BENCHMARK_FLAGS=--dry-run-synthetic
 
+calibrate: ## Development-only calibration (type priors, lam/lam_L -> proposed values yaml)
+	uv run python -m pipelines.tauchstone.calibrate
+
 demo: ## Freeze data/demo bundle and build Docker images
 	@echo "TODO workstream 6/8: copy processed outputs into data/demo" && exit 1
 	docker compose build

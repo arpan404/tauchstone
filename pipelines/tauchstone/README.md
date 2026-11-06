@@ -69,6 +69,19 @@ Attack/Learn policies, replay benchmark, calibration. Output:
 16. Cross-type pairs (e.g. held-out cohort vs composition-adjusted) stay 0.1
     even with identical platform/region; the "decisive structure" a smart
     policy exploits is same-cell LINCS blocks (>= 0.7 mutual similarity).
+17. `decision_lookahead_hybrid` (co-primary) ties fall back to the learn score
+    then lower id, like the experimental lookahead; without a known
+    `budget_remaining` its lookahead depth defaults to 2. `lam_L` lives in
+    `EngineConfig.lam_lookahead`, selected on development candidates like lam.
+18. Benchmark tests: 10 Holm-corrected comparisons (each co-primary vs the 5
+    baselines) plus one co-primary head-to-head entry whose metric name is
+    suffixed `_descriptive` and whose `p_holm` holds the UNCORRECTED p-value —
+    schema-valid, labelled descriptive, reported as descriptive only.
+19. Theta default comes from prereg `ranking.permutation_control_run`
+    (gold run since 0f4c619); `--permctl` overrides. Unrankable candidates
+    (absent or < 3 ranking contexts in a cohort/adjusted query) fail with
+    "not rankable" appended to the rule string (the row schema has no detail
+    column).
 
 ## Experiment: decision lookahead (candidate policies, not prereg)
 
