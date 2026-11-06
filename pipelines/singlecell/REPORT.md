@@ -58,7 +58,7 @@ The 20 drugs have mixed directions across fitted signatures. Negative consensus 
 
 ## Verification
 
-- Initial make test: 172 passed, 5 skipped; web typecheck passed. Final suite result recorded in PR.
+- Final make test: 172 passed, 5 skipped; web typecheck passed.
 - Singlecell real-output tests: 6 passed. Data-marked suite: 32 passed, 1 skipped before panel generation; panel test subsequently passed.
 - make test-r: 37 passed; existing SummarizedExperiment import replacement warning.
 - Web install, build, typecheck, lint, test and check:api passed, 48 tests. Existing lint and Vite warnings remain.
