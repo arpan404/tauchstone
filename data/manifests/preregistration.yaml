@@ -13,6 +13,8 @@ ranking:
   methods: [wtcs, ks, cosine]          # all negative = reversal; consensus = mean of z-scores
   weights: [0.3333, 0.3333, 0.3333]   # fixed in advance
   gene_space: landmark_978           # tier 2: + best-inferred
+  signature_set: all_trt_cp          # gold-only exists for comparison only
+  candidate_pool: {source: open_targets_26.09_drug_molecule, match: [inchikey, inchikey_connectivity14], min_stage: PHASE_1}
   min_contexts_to_rank: 3
   lincs_context_split:
     seed: 20261105
@@ -24,11 +26,11 @@ claim:
   permutations: 200
   permutation_seed: 20261105
 
-cohort_qc_gate: {min_fdr05_genes: 100}
+cohort_qc_gate: {spearman_vs_primary_min: 0.2}   # replaced min_fdr05_genes: 100 after the GSE173955 TPM fix; see algorithms.md
 
 validation_contexts:                  # the hidden pool
   - {type: held_out_cohort, id: GSE173955, survive_rule: top_5pct_compounds}
-  # GSE53697 excluded by cohort_qc_gate (0 genes at FDR < 0.05); reported in reproduction.md only
+  # GSE53697 excluded by cohort_qc_gate (Spearman -0.002); reported in reproduction.md only
   - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: top_5pct_compounds}
   - {type: lincs_context, id: per_drug_held_out_split, max_per_candidate: 8, survive_rule: consensus_le_theta}
   - {type: brain_exposure, id: chembl_literature, survive_rule: "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; fail if measured below; no measured data -> context not in the pool"}
@@ -39,15 +41,17 @@ tauchstone_engine:
   prior_strength_kappa: 2
   ranking_context_weight_cap: 4
   verdict_thresholds: {supported: 0.8, fragile: 0.2}
-  development_candidates: ranks_51_to_100   # disjoint from the benchmark pool
+  development_candidates: eligible_ranks_51_to_100   # disjoint from the benchmark pool
 
 benchmark:
-  candidate_pool: top_50
+  candidate_pool: eligible_top_50
   seeds: 20
   seed_base: 20261105
   bootstrap_reps: 2000
   primary_analysis: contested_candidates   # step-0 verdict INSUFFICIENT_EVIDENCE
-  policies: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid]
+  policies: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid, decision_lookahead_hybrid]
+  co_primary: [tauchstone_hybrid, decision_lookahead_hybrid]
+  multiple_testing: holm_over_10   # each co-primary vs 5 baselines
 
 demo:
-  candidate_rule: "ranks 1, 5 and 12 of the consensus ranking"
+  candidate_rule: "eligible ranks 1, 5 and 12 of the consensus ranking"

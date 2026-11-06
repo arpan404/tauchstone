@@ -239,6 +239,134 @@
     "upstream_sha512_verified": null,
     "frozen_at": "2026-11-06T03:37:13+00:00"
   },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00025-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00025-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00025-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 70043654,
+    "sha256": "c7edaee2cb778fa976932fda7d689520227e5cd74307dfa741378c5c954d3607",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:42:24+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00026-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00026-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00026-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64576480,
+    "sha256": "f57d65a3123cf2a63c3c70d8000600bc8d7cc5fa139470907740b9b54d143002",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:44:34+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00027-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00027-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00027-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64689746,
+    "sha256": "78ac4b76cbca1ea9ab1fad51a6f88aed1fe66bc6eb9ccfa982477858b02702a7",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:44:25+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00028-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00028-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00028-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64306035,
+    "sha256": "cde724b2b86889672fd0dab98502de8fa057877f00558a2671544d1e7e368927",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:44:53+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00029-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00029-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00029-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64627025,
+    "sha256": "cb250481a8fd25217e73e177adb04a57b0c075f1078fa1aec23f6f72c310fe52",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:45:20+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00030-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00030-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00030-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 70050737,
+    "sha256": "5e787575ab4d2442a9cea4eb663df6fc22a103e45d65c65189eb608a51465e87",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:43:36+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00031-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00031-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00031-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64678177,
+    "sha256": "1c9029a9b4fe0d7d7b96c251bb13f7f7ac3427570312c68111f4c02b08d33d5b",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:46:42+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00032-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00032-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00032-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64703940,
+    "sha256": "aecf0cb391264f859d1b1aa8262497ce8f68295072c04f03e4e8412f7afe27d6",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:48:14+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00033-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00033-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00033-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64636961,
+    "sha256": "676bd7b069d289d77e8d42aa1a191bf70dbd1cb117857bcf36d3bbe4539eb285",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:47:42+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00034-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00034-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00034-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64593075,
+    "sha256": "6884e7940df420ad1bc3a7ba48551413d4134f2958f6ddcfb7abcfc06bc6b311",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:47:53+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00035-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00035-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00035-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 69633742,
+    "sha256": "f919ba8c276b31b29e7d9aa5d0f0bb938ab445a4c7fdd433ce89d3016b2d1204",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:47:01+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00036-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00036-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00036-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64585060,
+    "sha256": "f399717cc48c8dfc9fe7f7e6368d8d7ad79a0561a234fd62053c04dec7d56c56",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:22+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00037-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00037-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00037-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64655109,
+    "sha256": "54bb0b0dea31983b98f5e81573dee4303216822bcf85dee45a30c431dc4ebf7b",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:43+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00038-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00038-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00038-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 65084703,
+    "sha256": "478d0ecd67bf5a42d74bab33b770a07946370b134258ef7cce7e8cd53deb5e60",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:09+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00039-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00039-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00039-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 64627956,
+    "sha256": "f1f707b00a51a1fe410caefa97c717af937c80f2d7cdb502d31b6a9e4aa2af35",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:57+00:00"
+  },
+  "evidence/open_targets/26.09/association_by_datatype_indirect/part-00040-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_by_datatype_indirect/part-00040-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/association_by_datatype_indirect/part-00040-10181acd-244f-4d33-87fb-a2d902b95546-c000.zstd.parquet",
+    "bytes": 69981367,
+    "sha256": "6e577d883e0c7784e3101baae84b83bad5bdc9d70acc6db6484bed8e13267340",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:02+00:00"
+  },
   "evidence/open_targets/26.09/association_overall_direct/part-00000-a3ed3cdf-4640-405e-af76-16c0f0fba85a-c000.zstd.parquet": {
     "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/association_overall_direct/part-00000-a3ed3cdf-4640-405e-af76-16c0f0fba85a-c000.zstd.parquet",
     "path": "raw/evidence/open_targets/26.09/association_overall_direct/part-00000-a3ed3cdf-4640-405e-af76-16c0f0fba85a-c000.zstd.parquet",
@@ -662,6 +790,70 @@
     "sha256": "f81601e2710feda0f9a9d963d030738ae073f2c7bc2f638aa1e27f6e3baf3536",
     "upstream_sha512_verified": null,
     "frozen_at": "2026-11-06T03:07:24+00:00"
+  },
+  "evidence/open_targets/26.09/disease/00000000.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/disease/00000000.parquet",
+    "path": "raw/evidence/open_targets/26.09/disease/00000000.parquet",
+    "bytes": 6346458,
+    "sha256": "a89b8b8b89bad168016e6ff8302d2bcc8d9b7f9cbb35c459ef847c36a4f17aed",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:37+00:00"
+  },
+  "evidence/open_targets/26.09/drug_mechanism_of_action/00000000.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/drug_mechanism_of_action/00000000.parquet",
+    "path": "raw/evidence/open_targets/26.09/drug_mechanism_of_action/00000000.parquet",
+    "bytes": 322830,
+    "sha256": "8484accd3383837e0eaac2164eed89991daf58dc93f0a599072fb7e5ef4f6c28",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:36+00:00"
+  },
+  "evidence/open_targets/26.09/drug_molecule/00000000.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/drug_molecule/00000000.parquet",
+    "path": "raw/evidence/open_targets/26.09/drug_molecule/00000000.parquet",
+    "bytes": 6867467,
+    "sha256": "be65749aa1dbcc68d0930f8ac18126cec5c2bc2c0f232f11e8530dad4ba0585c",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:35+00:00"
+  },
+  "evidence/open_targets/26.09/target/part-00000-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/target/part-00000-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/target/part-00000-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "bytes": 7165956,
+    "sha256": "80186f1c9919d5d1351f009253480fad93b3bb3e2de506d8948ed2126ac48cab",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:50:57+00:00"
+  },
+  "evidence/open_targets/26.09/target/part-00001-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/target/part-00001-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/target/part-00001-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "bytes": 7196171,
+    "sha256": "a777ec38d5fbf6e6475d85158141c0a01f2c32cadc7f8769256eaab6e034e702",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:12+00:00"
+  },
+  "evidence/open_targets/26.09/target/part-00002-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/target/part-00002-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/target/part-00002-ddfc1f8c-60a1-40fe-885a-2c1dd3f9a9c1-c000.zstd.parquet",
+    "bytes": 7270990,
+    "sha256": "3621b2510eb3f9da9b533f40559b4f4de390fffc57935726a2b0eebcc40aa028",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:06+00:00"
+  },
+  "evidence/open_targets/26.09/target_tractability/part-00000-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/target_tractability/part-00000-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/target_tractability/part-00000-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet",
+    "bytes": 55708,
+    "sha256": "c81b9d1c61d3fa1e23e67a5b91c082e7d20829aba578ffe95adc9ea1ef2332fe",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:07+00:00"
+  },
+  "evidence/open_targets/26.09/target_tractability/part-00001-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet": {
+    "url": "https://ftp.ebi.ac.uk/pub/databases/opentargets/platform/26.09/output/target_tractability/part-00001-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet",
+    "path": "raw/evidence/open_targets/26.09/target_tractability/part-00001-e2201205-916c-4b28-971d-6511ae9ea691-c000.zstd.parquet",
+    "bytes": 72189,
+    "sha256": "ebc49a49ae182dee29be43664dfc61c21897bf3d776d9df18f7e0e73bc0990ea",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-06T03:51:14+00:00"
   },
   "evidence/pdb/pdb_chain_uniprot.tsv.gz": {
     "url": "https://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/tsv/pdb_chain_uniprot.tsv.gz",
