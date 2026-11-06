@@ -26,13 +26,14 @@ export function heatmapOption(data: Data, colors: { teal: string; warm: string; 
       return value == null ? {
         value: [x + 1, y, 0],
         itemStyle: { color: colors.muted, decal: { symbol: 'rect', dashArrayX: [1, 0], dashArrayY: [2, 4], rotation: -Math.PI / 4, color: colors.surface } },
-        label: { show: true, formatter: '×', color: '#e6edee' },
+        label: { show: true, formatter: '×', color: '#687182' },
       } : { value: [x + 1, y, value] };
     }),
   ]);
   const limit = Math.max(0.001, ...points.map(p => Math.abs(p.value[2]!)));
   return {
     animation: false,
+    textStyle: { color: '#687182', fontFamily: 'Geist Variable, sans-serif' },
     grid: { left: 220, right: 20, top: 115, bottom: 65 },
     xAxis: { type: 'category', position: 'top', data: ['Bulk reference', ...signatures.map(s => s.cell_type.replaceAll('_', ' '))], axisLabel: { interval: 0, rotate: 55, fontSize: 12 } },
     yAxis: { type: 'category', inverse: true, data: drugs.map(d => `${d.pool_rank}. ${d.name}`), axisLabel: { fontSize: 14 } },

@@ -1,3 +1,5 @@
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
@@ -21,21 +23,21 @@ export function SingleCellPanel() {
   }, []) ?? [];
   const tokens = getComputedStyle(document.documentElement);
   const option = data ? heatmapOption(data, {
-    teal: tokens.getPropertyValue('--primary').trim() || '#5de0cd',
-    warm: tokens.getPropertyValue('--warning').trim() || '#f4c16c',
-    surface: tokens.getPropertyValue('--card').trim() || '#182125',
-    muted: tokens.getPropertyValue('--input').trim() || '#41565e',
+    teal: tokens.getPropertyValue('--primary').trim() || '#3667d9',
+    warm: tokens.getPropertyValue('--warning').trim() || '#b56b29',
+    surface: tokens.getPropertyValue('--card').trim() || '#fefefe',
+    muted: tokens.getPropertyValue('--input').trim() || '#e5e8ed',
   }) : null;
   return <section className="single-cell" aria-labelledby="single-cell-title">
     <BoundaryBanner /><MockRibbon show={mock || synthetic} />
     <div className="sc-content">
       <h2 id="single-cell-title">Exploratory cell types</h2>
-      <p className="sc-label">{data?.label ?? 'Exploratory, not part of the preregistered benchmark'}</p>
+      <Alert><AlertTitle>Exploratory analysis</AlertTitle><AlertDescription>{data?.label ?? 'Exploratory, not part of the preregistered benchmark'}</AlertDescription></Alert>
       {isLoading && <p role="status">Loading cell-type signatures…</p>}
-      {error && <div role="alert"><p>{/failed: 404\b/.test(error.message) ? 'Panel not built yet' : 'Could not load cell-type signatures.'}</p><button onClick={() => void refetch()}>Retry</button></div>}
+      {error && <div role="alert"><p>{/failed: 404\b/.test(error.message) ? 'Panel not built yet' : 'Could not load cell-type signatures.'}</p><Button variant="outline" onClick={() => void refetch()}>Retry</Button></div>}
       {groups && (!groups.drugs.length || !groups.signatures.length) && <p role="status">No cell-type scores available.</p>}
       {groups && groups.drugs.length > 0 && groups.signatures.length > 0 && <>
-        <p className="sc-caption">Consensus by cell-type signature. Teal / negative = reversal; warm / positive = same direction. Grey hatching / × = not scored.</p>
+        <p className="sc-caption">Consensus by cell-type signature. Blue / negative = reversal; warm / positive = same direction. Grey hatching / × = not scored.</p>
         <div className="sc-scroll" tabIndex={0} aria-label="Cell-type heatmap, scroll horizontally">
           <div style={{ minWidth: Math.max(1200, groups.signatures.length * 60 + 260) }}>
             <div className="sc-column-groups" aria-hidden="true"><span style={{ flex: 1 }}>Bulk</span>{columnGroups.map(g => <span key={g.label} style={{ flex: g.count }}>{g.label}</span>)}</div>

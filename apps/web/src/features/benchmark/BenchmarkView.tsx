@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { useBenchmark, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
@@ -76,11 +77,11 @@ export function BenchmarkView() {
     <div className="flex h-full flex-col">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex-1 space-y-4 overflow-auto p-4">
+      <div className="flex-1 space-y-6 overflow-auto p-5 lg:p-7">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <h2 className="text-xl font-semibold">Benchmark</h2>
           {data && analysis && (
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-muted-foreground">
               {scope === 'all' && hasAll ? (
                 <>All candidates (n = <span className="tabular-nums">{analysis.n_candidates}</span>)</>
               ) : (
@@ -92,7 +93,7 @@ export function BenchmarkView() {
                   )
                 </>
               )}{' '}
-              <span className="tabular-nums text-neutral-500">
+              <span className="tabular-nums text-muted-foreground">
                 · {analysis.n_seeds} seeds · budget {analysis.budget} · prereg{' '}
                 <span className="font-mono">{data.preregistration_sha256.slice(0, 12)}…</span>
               </span>
@@ -101,18 +102,16 @@ export function BenchmarkView() {
           {hasAll && (
             <div className="flex gap-2" role="group" aria-label="Benchmark scope">
               {(['contested', 'all'] as const).map((s) => (
-                <button
+                <Button
+ variant={scope === s ? "default" : "outline"}
+ size="sm"
                   key={s}
                   onClick={() => setScope(s)}
                   aria-pressed={scope === s}
-                  className={`rounded border px-2 py-0.5 text-xs ${
-                    scope === s
-                      ? 'border-teal-700 bg-teal-50 text-teal-900'
-                      : 'border-neutral-300 text-neutral-600'
-                  }`}
+
                 >
                   {s === 'contested' ? 'undecided' : 'all candidates'}
-                </button>
+                </Button>
               ))}
             </div>
           )}
@@ -120,12 +119,12 @@ export function BenchmarkView() {
 
         {isLoading && <Skeleton className="h-[300px] w-full" />}
         {notRun && (
-          <p role="status" className="text-sm text-neutral-600">
+          <p role="status" className="text-sm text-muted-foreground">
             Benchmark not run yet (runs only after preregistration is committed).
           </p>
         )}
         {isError && !notRun && (
-          <p role="alert" className="text-sm text-red-700">
+          <p role="alert" className="text-sm text-destructive">
             Could not load the benchmark.
           </p>
         )}
@@ -134,11 +133,11 @@ export function BenchmarkView() {
           <>
             <section aria-label="Decision accuracy after five tests" className="space-y-3">
               <h3 className="text-xl font-medium">Decision accuracy after {analysis.budget} tests</h3>
-              <div className="accuracy-grid">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {analysis.policies.map((p) => (
-                  <div key={p.policy} className="accuracy-policy" data-primary={p.policy === 'tauchstone_hybrid'}>
+                  <div key={p.policy} className="space-y-2 border-l-2 border-border pl-4 data-[primary=true]:border-primary" data-primary={p.policy === 'tauchstone_hybrid'}>
                     <p className="text-sm">{p.label}</p>
-                    <p className="accuracy-number">{(p.decision_accuracy.estimate * 100).toFixed(0)}%</p>
+                    <p className="font-mono text-2xl font-semibold tabular-nums">{(p.decision_accuracy.estimate * 100).toFixed(0)}%</p>
                     <meter min={0} max={1} value={p.decision_accuracy.estimate} aria-label={p.label + ' decision accuracy'} />
                     <p className="font-mono text-xs text-muted-foreground">
                       95% CI [{p.decision_accuracy.ci95.map((v) => (v * 100).toFixed(1) + '%').join(', ')}]
@@ -181,7 +180,7 @@ export function BenchmarkView() {
                 <CardContent>
                   <table className="w-full text-sm tabular-nums">
                     <thead>
-                      <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500">
+                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
                         <th className="py-1 pr-2 font-medium">Policy</th>
                         <th className="py-1 pr-2 font-medium">Recall@3</th>
                         <th className="py-1 pr-2 font-medium">Recall@5</th>
@@ -192,7 +191,7 @@ export function BenchmarkView() {
                       {analysis.policies.map((p) => (
                         <tr
                           key={p.policy}
-                          className={`border-b border-neutral-100 ${p.policy === 'tauchstone_hybrid' ? 'bg-teal-50/60 font-medium' : ''}`}
+                          className={`border-b border-border ${p.policy === 'tauchstone_hybrid' ? 'bg-primary font-medium' : ''}`}
                         >
                           <td className="py-1.5 pr-2">{p.label}</td>
                           <td className="py-1.5 pr-2">
