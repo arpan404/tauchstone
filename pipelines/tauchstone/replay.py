@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from collections.abc import Sequence
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -263,6 +264,17 @@ def load_world_from_processed(
     return world
 
 
+def _json_safe(x):
+    """Replace NaN/inf with None so the summary is valid JSON (and valid against the contract)."""
+    if isinstance(x, dict):
+        return {k: _json_safe(v) for k, v in x.items()}
+    if isinstance(x, list | tuple):
+        return [_json_safe(v) for v in x]
+    if isinstance(x, float) and not math.isfinite(x):
+        return None
+    return x
+
+
 def write_outputs(
     runs: pd.DataFrame,
     summary: dict,
@@ -285,7 +297,7 @@ def write_outputs(
         validation_context="replay_benchmark",
     ).write(runs_path)
     summary_path = out_dir / "benchmark_summary.json"
-    summary_path.write_text(json.dumps(summary, indent=2) + "\n")
+    summary_path.write_text(json.dumps(_json_safe(summary), indent=2, allow_nan=False) + "\n")
     return runs_path, summary_path
 
 
