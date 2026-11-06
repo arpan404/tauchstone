@@ -481,7 +481,7 @@ components:
       properties:
         policy:
           type: string
-          enum: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid]
+          enum: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid, decision_lookahead_hybrid]
         label: { type: string }
         experiments_to_correct_verdict:
           type: object

@@ -400,7 +400,7 @@ export interface components {
         };
         PolicyResult: {
             /** @enum {string} */
-            policy: "random" | "greedy_strongest" | "max_failure" | "max_uncertainty" | "expected_decision_change" | "tauchstone_hybrid";
+            policy: "random" | "greedy_strongest" | "max_failure" | "max_uncertainty" | "expected_decision_change" | "tauchstone_hybrid" | "decision_lookahead_hybrid";
             label: string;
             experiments_to_correct_verdict: {
                 median: number;
