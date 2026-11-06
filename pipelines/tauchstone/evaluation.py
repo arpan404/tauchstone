@@ -42,9 +42,11 @@ def per_run_frame(
 ) -> pd.DataFrame:
     """One row per (policy, candidate, seed) with run-level metrics.
 
-    Columns: policy, candidate_id, seed, full (full-information verdict),
-    t_correct (experiments to correct verdict, budget+1 if censored),
-    verdict_at_{3,5}, correct_at_5.
+    Includes step-0 rows: a decisive step-0 verdict matching the full
+    verdict gives t_correct = 0. Columns: policy, candidate_id, seed, full
+    (full-information verdict), t_correct (experiments to correct verdict,
+    budget+1 if censored), verdict_at_{3,5}, verdict_at_budget,
+    correct_at_5, correct_at_budget.
     """
     full = {cid: full_information_verdict(t, q) for cid, t in truth_by_candidate.items()}
     out: list[dict] = []
@@ -59,18 +61,27 @@ def per_run_frame(
                 t_correct = int(s)
                 break
         by_step = dict(zip(steps, verdicts, strict=True))
+        v_budget = by_step.get(budget, "INSUFFICIENT_EVIDENCE")
         row = {
             "policy": policy,
             "candidate_id": cid,
             "seed": seed,
             "full": f,
             "t_correct": t_correct,
+            "verdict_at_budget": v_budget,
+            "correct_at_budget": _verdict_matches(f, v_budget),
         }
         for b in (3, 5):
             row[f"verdict_at_{b}"] = by_step.get(b)
         row["correct_at_5"] = _verdict_matches(f, by_step.get(5, "INSUFFICIENT_EVIDENCE"))
         out.append(row)
     return pd.DataFrame(out)
+
+
+def contested_candidates(runs: pd.DataFrame) -> list[str]:
+    """Candidates whose step-0 verdict is INSUFFICIENT_EVIDENCE (primary analysis set)."""
+    s0 = runs[runs["step"] == 0][["candidate_id", "verdict"]].drop_duplicates()
+    return sorted(s0.loc[s0["verdict"] == "INSUFFICIENT_EVIDENCE", "candidate_id"].tolist())
 
 
 def _cluster_bootstrap_ci(
@@ -106,23 +117,16 @@ def _ordered_candidates(runs: pd.DataFrame) -> list[str]:
     return cands
 
 
-def summarize(
+def _analyze(
     runs: pd.DataFrame,
     truth_by_candidate: Mapping[str, Mapping[str, bool]],
     cfg: EngineConfig,
     budget: int,
     reps: int = BOOTSTRAP_REPS,
     bootstrap_seed: int = BOOTSTRAP_SEED,
-) -> tuple[list[dict], list[dict], list[dict]]:
-    """Policy results, calibration bins, and Wilcoxon+Holm tests (Benchmark schema).
-
-    Returns (policies, calibration, tests). Metrics per policy:
-    - experiments_to_correct_verdict {median, iqr, ci95 of the median}
-    - fragile_recall_at_3/5 {estimate, ci95}, decision_accuracy {estimate, ci95}
-    - brier (point estimate over all reveals)
-    CIs are cluster bootstraps over candidates. Tests pair each policy's
-    per-candidate mean experiments-to-correct-verdict against the hybrid's.
-    """
+) -> dict:
+    """One analysis block: {n_candidates, n_seeds, budget, policies, calibration, tests}."""
+    runs = runs[runs["policy"].isin(POLICIES)]
     per = per_run_frame(runs, truth_by_candidate, cfg.q, budget)
     cands = _ordered_candidates(runs)
     cindex = {c: i for i, c in enumerate(cands)}
@@ -165,7 +169,7 @@ def summarize(
             amat[cindex[r["candidate_id"]], seed_order[r["seed"]]] = float(r["correct_at_5"])
         acc_lo, acc_hi = _cluster_bootstrap_ci(amat, np.arange(len(cands)), np.mean, reps, bootstrap_seed + 7)
 
-        rev = runs[runs["policy"] == pol]
+        rev = runs[(runs["policy"] == pol) & (runs["step"] >= 1)]
         errs = (rev["p_survive_before"] - (rev["outcome"] == "survive").astype(float)) ** 2
         brier = float(errs.mean()) if len(rev) else None
 
@@ -188,12 +192,13 @@ def summarize(
             }
         )
 
-    # Calibration: 10 equal-width bins over p_survive_before at reveal time.
+    # Calibration: 10 equal-width bins over p_survive_before at reveal time (step >= 1).
     calibration: list[dict] = []
-    if len(runs):
+    revealed = runs[runs["step"] >= 1]
+    if len(revealed):
         edges = np.linspace(0.0, 1.0, 11)
-        pred = runs["p_survive_before"].to_numpy(dtype=float)
-        obs = (runs["outcome"] == "survive").to_numpy(dtype=float)
+        pred = revealed["p_survive_before"].to_numpy(dtype=float)
+        obs = (revealed["outcome"] == "survive").to_numpy(dtype=float)
         for i in range(10):
             lo_e, hi_e = float(edges[i]), float(edges[i + 1])
             m = (pred >= lo_e) & (pred < hi_e if i < 9 else pred <= hi_e)
@@ -251,7 +256,39 @@ def summarize(
                         "p_holm": float(ph),
                     }
                 )
-    return policies, calibration, tests
+    return {
+        "n_candidates": int(runs["candidate_id"].nunique()) if len(runs) else 0,
+        "n_seeds": int(runs["seed"].nunique()) if len(runs) else 0,
+        "budget": budget,
+        "policies": policies,
+        "calibration": calibration,
+        "tests": tests,
+    }
+
+
+def summarize(
+    runs: pd.DataFrame,
+    truth_by_candidate: Mapping[str, Mapping[str, bool]],
+    cfg: EngineConfig,
+    budget: int,
+    reps: int = BOOTSTRAP_REPS,
+    bootstrap_seed: int = BOOTSTRAP_SEED,
+) -> dict:
+    """Two-block summary: 'contested' (step-0 INSUFFICIENT, the PRIMARY analysis) and 'all'.
+
+    Returns {"contested": block, "all": block, "contested_share": float}.
+    Wilcoxon+Holm tests run on the contested set. Non-competitor policies
+    (e.g. the synthetic oracle) are excluded from both blocks upstream.
+    """
+    contested = contested_candidates(runs)
+    n_all = int(runs["candidate_id"].nunique()) if len(runs) else 0
+    return {
+        "contested": _analyze(
+            runs[runs["candidate_id"].isin(contested)], truth_by_candidate, cfg, budget, reps, bootstrap_seed
+        ),
+        "all": _analyze(runs, truth_by_candidate, cfg, budget, reps, bootstrap_seed),
+        "contested_share": (len(contested) / n_all) if n_all else 0.0,
+    }
 
 
 def select_lambda(
