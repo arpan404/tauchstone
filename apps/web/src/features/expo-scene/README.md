@@ -27,3 +27,25 @@ Reduced motion stops rotation and skips belief/beam interpolation. Escape closes
 - `make test`: 138 passed, 35 skipped, one failure in `tests/lincs/test_ingest.py::test_ingest_outputs_exist_and_align` because local processed/lincs/sig_info.parquet is absent.
 - Real Piperacillin, scientific direction checks on real data, full-size real signature, real-data API/offline bundle and sustained performance on the expo display remain for the orchestrator. The mock browser calls candidates Mock compound 01–50.
 - Offline check skipped as instructed: this Mac lacks the real-data bundle. No scientific or frozen files changed.
+
+## Expo polish follow-up
+
+Orthographic framing fits the full sphere to 60% of the available stage height,
+with a width cap of 42%. Context labels sit on an outer orbit with 41% vertical
+radius. The validation beam uses the same orthographic bounds and label orbit.
+Point brightness rises from 0.48 to 0.8 for non-query genes; query genes remain
+at 1. Point diameter starts at 1.8px plus 0.32px per |stat|, with query genes
+larger. Point size also accounts for device pixel ratio and the stage height.
+This keeps low-stat genes visible on larger displays.
+
+Verified from the normal app: select mock rank 5 in Candidates, then click Expo
+mode. At 16k synthetic points, Chrome reported 61 fps at 1280×800 and 60 fps at
+1920×1080. Screenshots are `evidence/polish-1280.jpg` and
+`evidence/polish-1920.jpg`. The full sphere and its labels fit at both sizes.
+Validation and Escape close also passed the browser smoke check.
+
+The two GeneScene oxlint warnings are removed. Build, typecheck, lint, 37 web
+tests and check:api pass. Other existing lint warnings remain. `make test`
+reported 138 passed, 36 skipped and the same missing local LINCS
+sig_info.parquet failure. Real-data visibility from 3m and offline bundle
+verification remain with the orchestrator; there is no real-data bundle here.
