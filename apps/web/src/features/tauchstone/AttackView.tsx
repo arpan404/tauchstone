@@ -1,4 +1,4 @@
-import { useRunExperiment, useStartAttack, useMockStatus } from '@/api/hooks';
+import { useRunExperiment, useStartAttack, useMockStatus, useAttackSessionSnapshot, useCandidates } from '@/api/hooks';
 import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
@@ -6,7 +6,6 @@ import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { VerdictBadge, contextIcon } from '@/components/labels';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { useUi } from '@/store/ui';
 import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
@@ -34,8 +33,14 @@ function BudgetPips({ budget, remaining, hidden }: { budget: number; remaining: 
 }
 
 export function AttackView() {
-  const { selectedCandidateId, mode, setMode, sessionId, setSessionId } = useUi();
-  const [session, setSession] = useState<Session | null>(null);
+  const { selectedCandidateId, mode, setMode, sessionId, setSessionId, setStep } = useUi();
+  const snapshot = useAttackSessionSnapshot(sessionId);
+  const candidates = useCandidates();
+  const [localSession, setSession] = useState<Session | null>(snapshot);
+  const currentSession = localSession?.session_id === sessionId ? localSession : snapshot;
+  const session = currentSession?.candidate_id === selectedCandidateId ? currentSession : null;
+  const candidateName = session?.candidate_name ?? candidates.data?.candidates.find((c) => c.id === selectedCandidateId)?.name ?? selectedCandidateId;
+  const [budget, setBudget] = useState(5);
   const mockData = useMockStatus(session?.history?.[session.history.length - 1]?.provenance ?? null);
   const [picked, setPicked] = useState<string | null>(null);
   const [recommendationNote, setRecommendationNote] = useState<string | null>(null);
@@ -44,6 +49,7 @@ export function AttackView() {
   const run = useRunExperiment(session?.session_id ?? null);
 
   const effectivePicked = picked ?? session?.recommended_context_id ?? null;
+  const selectedContext = session?.contexts.find((c) => c.context_id === effectivePicked && c.status === 'hidden');
   const hiddenCount = session ? session.contexts.filter((c) => c.status === 'hidden').length : 0;
   const beliefChart = useMemo(
     () => buildBeliefOption(
@@ -70,12 +76,12 @@ export function AttackView() {
   const lastRevealed = session?.history?.[session.history.length - 1] ?? null;
 
   function handleStart() {
-    if (!selectedCandidateId) return;
+    if (!selectedCandidateId || start.isPending || run.isPending) return;
     setRecommendationNote(null);
     prevRecommended.current = null;
     setPicked(null);
     start.mutate(
-      { candidateId: selectedCandidateId, mode, budget: 5 },
+      { candidateId: selectedCandidateId, mode, budget },
       {
         onSuccess: (s) => {
           setSession(s);
@@ -87,15 +93,13 @@ export function AttackView() {
   }
 
   function handleRun() {
-    if (!effectivePicked) return;
-    const before = session;
+    if (!session || !selectedContext || run.isPending || start.isPending || session.budget_remaining < 1) return;
     run.mutate(
-      { contextId: effectivePicked, mode },
+      { contextId: selectedContext.context_id, mode },
       {
         onSuccess: (s) => {
           setSession(s);
           setPicked(null);
-          void before;
         },
       },
     );
@@ -107,46 +111,22 @@ export function AttackView() {
       {(mockData || session) && (
         <div className="sticky top-0 z-10 bg-[#fafaf9]">
           <MockRibbon show={mockData} />
-          {session && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 px-4 py-2">
-              <p className="text-sm text-neutral-600">
-                P(claim){' '}
-                <span className="text-2xl font-semibold tabular-nums text-teal-900" aria-live="polite">
-                  {session.belief.p_claim_holds.toFixed(2)}
-                </span>{' '}
-                {hasIntervalWidth(session.belief.interval) && (
-                  <span className="text-xs tabular-nums text-neutral-500">
-                    [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]
-                  </span>
-                )}
-              </p>
-              <VerdictBadge verdict={session.verdict} size="sm" />
-              <BudgetPips
-                budget={session.budget}
-                remaining={session.budget_remaining}
-                hidden={hiddenCount}
-              />
-              <label className="flex items-center gap-1.5 text-xs">
-                <span className={mode !== 'learn' ? 'font-semibold' : 'text-neutral-500'}>Attack</span>
-                <Switch
-                  checked={mode === 'learn'}
-                  onCheckedChange={(v) => setMode(v ? 'learn' : 'attack')}
-                  aria-label="Toggle attack or learn mode (sticky header)"
-                />
-                <span className={mode === 'learn' ? 'font-semibold' : 'text-neutral-500'}>Learn</span>
-              </label>
-            </div>
-          )}
+
         </div>
       )}
       <div className="attack-body flex-1 overflow-auto p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <h2 className="text-xl font-semibold">Attack the claim</h2>
+          <div className="mr-auto">
+            <p className="text-xs uppercase tracking-widest text-neutral-500">Experiment workspace</p>
+            <h2 className="text-2xl font-semibold">{candidateName ?? 'Choose a candidate'}</h2>
+            <Button variant="link" onClick={() => setStep('candidates')} disabled={run.isPending || start.isPending}>Change candidate</Button>
+          </div>
           <label className="flex items-center gap-2 text-sm">
             <span className={! (mode === 'learn') ? 'font-semibold' : 'text-neutral-500'}>Attack</span>
             <Switch
               checked={mode === 'learn'}
               onCheckedChange={(v) => setMode(v ? 'learn' : 'attack')}
+              disabled={run.isPending || start.isPending}
               aria-label="Toggle attack or learn mode"
             />
             <span className={mode === 'learn' ? 'font-semibold' : 'text-neutral-500'}>Learn</span>
@@ -162,21 +142,26 @@ export function AttackView() {
           <Card>
             <CardContent className="space-y-3 pt-4 text-sm">
               {!selectedCandidateId ? (
-                <p className="text-neutral-500">
-                  Select a candidate in step 2 first, then start an attack session here.
-                </p>
+                <div className="space-y-3"><p>Select a ranked candidate to plan an experiment.</p>
+                  <Button onClick={() => setStep('candidates')}>Choose candidate</Button></div>
               ) : (
                 <>
                   <p>
-                    Candidate <span className="font-mono">{selectedCandidateId}</span> · Mode:{' '}
-                    <span className="font-medium">{mode}</span> · Budget: 5
+                    Candidate <span className="font-medium">{candidateName}</span> · Mode:{' '}
+                    <span className="font-medium">{mode}</span>
                   </p>
+                  <label className="flex items-center gap-3">Session budget
+                    <select className="rounded border p-2" aria-label="Session budget" value={budget} onChange={(e) => setBudget(Number(e.target.value))} disabled={start.isPending}>
+                      {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</option>)}
+                    </select>
+                  </label>
+                  <p className="text-neutral-500">Each experiment costs 1 budget unit. Results stay hidden until you commit.</p>
                   <Button onClick={handleStart} disabled={start.isPending}>
-                    {start.isPending ? 'Starting…' : 'Start attack session'}
+                    {start.isPending ? 'Starting…' : 'Create experiment session'}
                   </Button>
                   {start.isError && (
                     <p role="alert" className="text-red-700">
-                      Could not start the session.
+                      Could not create the session. Try again.
                     </p>
                   )}
                 </>
@@ -190,7 +175,7 @@ export function AttackView() {
             <Card className="claim-panel">
               <CardContent className="space-y-3 pt-4">
                 <p className="text-sm text-neutral-600" aria-label="Claim under test">
-                  Claim: “{session.claim.text}”
+                  Claim under test: {session.claim.text}
                 </p>
                 <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
                   <div>
@@ -232,9 +217,9 @@ export function AttackView() {
                 <CardHeader className="pb-1">
                   <CardTitle className="text-sm font-medium">
                     {lastRevealed.outcome === 'survive' ? (
-                      <span className="text-[var(--success)]">✓ Survived — {lastRevealed.label}</span>
+                      <span className="text-[var(--success)]">Survived · {lastRevealed.label}</span>
                     ) : (
-                      <span className="text-[var(--failure)]">✗ Failed — {lastRevealed.label}</span>
+                      <span className="text-[var(--failure)]">Failed · {lastRevealed.label}</span>
                     )}
                   </CardTitle>
                 </CardHeader>
@@ -243,7 +228,7 @@ export function AttackView() {
                     {observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}
                   </p>
                   <p className="text-neutral-600">
-                    Belief {lastRevealed.belief_before.toFixed(3)} →{' '}
+                    Decision update · belief {lastRevealed.belief_before.toFixed(3)} →{' '}
                     <span className="font-semibold">{lastRevealed.belief_after.toFixed(3)}</span>
                   </p>
                 </CardContent>
@@ -252,7 +237,7 @@ export function AttackView() {
 
             <Card className="validation-panel">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Sample wells · sealed validation contexts</CardTitle>
+                <CardTitle className="text-sm font-medium">Choose a hidden experiment</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="sample-wells">
@@ -262,9 +247,9 @@ export function AttackView() {
                     return (
                       <button
                         data-recommended={isRec}
-                        data-outcome={c.outcome}
+                        data-outcome={c.status === 'revealed' ? c.outcome : undefined}
                         key={c.context_id}
-                        disabled={c.status === 'revealed'}
+                        disabled={c.status !== 'hidden' || run.isPending || start.isPending || session.budget_remaining < 1}
                         onClick={() => setPicked(c.context_id)}
                         aria-pressed={isPicked}
                         className={`sample-well flex w-full items-center gap-3 rounded border px-3 py-2 text-left text-sm tabular-nums disabled:cursor-default disabled:opacity-60 ${
@@ -281,7 +266,7 @@ export function AttackView() {
                           <span className="block text-xs text-neutral-500">
                             {c.status === 'revealed'
                               ? `revealed: ${c.outcome}`
-                              : `sealed · p(survive) ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}
+                              : `Hidden · cost 1 · predicted survival ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}
                           </span>
                         </span>
                         {isRec && (
@@ -296,21 +281,24 @@ export function AttackView() {
                 {session.recommended_context_id && (
                   <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
                 )}
-                <div className="flex items-center gap-3 pt-1">
+                <div className="rounded border border-teal-200 bg-teal-50 p-3 text-sm" aria-live="polite">
+                  {selectedContext ? <><p className="font-medium">Next experiment: {selectedContext.label}</p><p>Cost 1 · Budget {session.budget_remaining} → {session.budget_remaining - 1}. Commit to reveal one result.</p></> : <p>No hidden experiment selected.</p>}
+                </div>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
                   <Button
                     className="run-validation"
                     onClick={handleRun}
-                    disabled={!effectivePicked || run.isPending || session.budget_remaining <= 0}
+                    disabled={!selectedContext || run.isPending || start.isPending || session.budget_remaining <= 0}
                   >
-                    {run.isPending ? 'Running…' : 'Run validation'}
+                    {run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}
                   </Button>
                   {run.isError && (
                     <p role="alert" className="text-sm text-red-700">
-                      That context cannot be run (already revealed or budget exhausted).
+                      No result was returned. Retry this experiment; the server enforces budget and prevents duplicate reveals.
                     </p>
                   )}
                   {session.budget_remaining <= 0 && (
-                    <p className="text-sm text-neutral-500">Budget exhausted — session complete.</p>
+                    <p className="text-sm text-neutral-500">Budget exhausted. Review the decision or start a new session.</p>
                   )}
                 </div>
               </CardContent>
@@ -319,7 +307,7 @@ export function AttackView() {
             {(session.history?.length ?? 0) > 0 && (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">History</CardTitle>
+                  <CardTitle className="text-sm font-medium">Experiment history</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ol className="space-y-1 text-sm tabular-nums">
@@ -329,7 +317,9 @@ export function AttackView() {
                         <span className="font-medium">{h.label}</span>
                         <span className="text-neutral-500">
                           {h.outcome} · {observedText(h.value, h.threshold)} · {h.belief_before.toFixed(2)} →{' '}
-                          {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode}
+                          {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode} · cost 1
+                          <span className="block">{h.rule}</span>
+                          {h.detail && <span className="block">{h.detail}</span>}
                         </span>
                       </li>
                     ))}
@@ -341,17 +331,13 @@ export function AttackView() {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setSession(null);
-                  setSessionId(null);
-                  setPicked(null);
-                  setRecommendationNote(null);
-                  prevRecommended.current = null;
-                }}
+                onClick={handleStart}
+                disabled={start.isPending || run.isPending}
               >
-                Restart attack
+                {start.isPending ? 'Creating session…' : 'Start new session'}
               </Button>
-              {sessionId !== session.session_id && <Skeleton className="h-9 w-24" />}
+              <p className="text-xs text-neutral-500">Starts a fresh budget of {budget}. The current history is replaced in this workspace.</p>
+              {start.isError && <p role="alert">Could not create a new session. Your current results are retained.</p>}
             </div>
           </>
         )}
