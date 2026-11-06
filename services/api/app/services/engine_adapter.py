@@ -341,9 +341,6 @@ class MockAttackSession:
             self.mode = mode
         belief_before = self._belief()[0]
         h = by_id[context_id]
-        self._revealed_ids.add(context_id)
-        self.budget_remaining -= 1
-        belief_after = self._belief()[0]
         revealed = {
             "context_id": context_id,
             "type": h.context.type,
@@ -354,11 +351,16 @@ class MockAttackSession:
             "rule": h.rule,
             "detail": h.detail,
             "belief_before": belief_before,
-            "belief_after": belief_after,
+            "belief_after": None,  # filled in below, after the outcome is recorded
             "mode_used": self.mode if self.mode in ("attack", "learn") else "attack",
             "cohort": h.context.cohort,
         }
+        # Record the outcome before recomputing belief: the context leaves the hidden set and
+        # its result must enter both the survive count and the posterior observations.
         self.revealed.append(revealed)
+        self._revealed_ids.add(context_id)
+        self.budget_remaining -= 1
+        revealed["belief_after"] = self._belief()[0]
         out = self.state()
         out["revealed"] = revealed
         out["done"] = self.budget_remaining <= 0 or len(self._revealed_ids) >= len(self.hidden)
