@@ -37,7 +37,7 @@ On the build machine:
 
 ```sh
 make demo
-docker save <project>-api:latest <project>-web:latest | gzip > expo-images.tar.gz
+docker save tauchstone-api:latest tauchstone-web:latest | gzip > expo-images.tar.gz
 ```
 
 Copy to the expo laptop (USB stick / cable): `expo-images.tar.gz` (~sizes below),
