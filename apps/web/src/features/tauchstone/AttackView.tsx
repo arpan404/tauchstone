@@ -3,9 +3,10 @@ import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
-import { VerdictBadge, contextIcon } from '@/components/labels';
+import { VerdictBadge } from '@/components/labels';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CheckCircle2, Circle, FlaskConical, LockKeyhole, Play, RotateCcw } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { useUi } from '@/store/ui';
 import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
@@ -15,22 +16,6 @@ import { fmt2, hasIntervalWidth, observedText, testsLeftText } from './format';
 import { RecommendationRationale } from './RecommendationRationale';
 
 type Session = Schema<'AttackSession'>;
-
-function BudgetPips({ budget, remaining, hidden }: { budget: number; remaining: number; hidden: number }) {
-  const testsLeft = Math.min(remaining, hidden);
-  return (
-    <div
-      className="flex items-center gap-1.5"
-      role="img"
-      aria-label={`Budget ${remaining} of ${budget}; ${hidden} hidden contexts; ${testsLeftText(testsLeft)}`}
-    >
-      {Array.from({ length: testsLeft }, (_, i) => (
-        <span key={i} aria-hidden className="inline-block h-3 w-3 rounded-full bg-teal-700" />
-      ))}
-      <span className="ml-1 text-sm tabular-nums text-neutral-600">{testsLeftText(testsLeft)}</span>
-    </div>
-  );
-}
 
 export function AttackView() {
   const { selectedCandidateId, mode, setMode, sessionId, setSessionId, setStep } = useUi();
@@ -105,246 +90,114 @@ export function AttackView() {
     );
   }
 
+  const busy = run.isPending || start.isPending;
+  const budgetControl = <div className="flex items-center gap-3">
+    <label id="session-budget-label" className="text-muted-foreground">Session budget</label>
+    <Select value={budget} onValueChange={(value) => value !== null && setBudget(value)} disabled={busy}>
+      <SelectTrigger aria-labelledby="session-budget-label"><SelectValue>{budget} experiment{budget === 1 ? '' : 's'}</SelectValue></SelectTrigger>
+      <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
+    </Select>
+  </div>;
+
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-background text-foreground">
       <BoundaryBanner />
-      {(mockData || session) && (
-        <div className="sticky top-0 z-10 bg-[#fafaf9]">
-          <MockRibbon show={mockData} />
-
-        </div>
-      )}
-      <div className="attack-body flex-1 overflow-auto p-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <div className="mr-auto">
-            <p className="text-xs uppercase tracking-widest text-neutral-500">Experiment workspace</p>
-            <h2 className="text-2xl font-semibold">{candidateName ?? 'Choose a candidate'}</h2>
-            <Button variant="link" onClick={() => setStep('candidates')} disabled={run.isPending || start.isPending}>Change candidate</Button>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <span className={! (mode === 'learn') ? 'font-semibold' : 'text-neutral-500'}>Attack</span>
-            <Switch
-              checked={mode === 'learn'}
-              onCheckedChange={(v) => setMode(v ? 'learn' : 'attack')}
-              disabled={run.isPending || start.isPending}
-              aria-label="Toggle attack or learn mode"
-            />
-            <span className={mode === 'learn' ? 'font-semibold' : 'text-neutral-500'}>Learn</span>
-          </label>
-          <p className="w-full text-xs text-neutral-500">
-            {mode === 'attack'
-              ? 'Attack: run the validation most likely to break the claim.'
-              : 'Learn: run the validation expected to change belief the most.'}
-          </p>
-        </div>
-
-        {!session && (
-          <Card>
-            <CardContent className="space-y-3 pt-4 text-sm">
-              {!selectedCandidateId ? (
-                <div className="space-y-3"><p>Select a ranked candidate to plan an experiment.</p>
-                  <Button onClick={() => setStep('candidates')}>Choose candidate</Button></div>
-              ) : (
-                <>
-                  <p>
-                    Candidate <span className="font-medium">{candidateName}</span> · Mode:{' '}
-                    <span className="font-medium">{mode}</span>
-                  </p>
-                  <label className="flex items-center gap-3">Session budget
-                    <select className="rounded border p-2" aria-label="Session budget" value={budget} onChange={(e) => setBudget(Number(e.target.value))} disabled={start.isPending}>
-                      {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</option>)}
-                    </select>
-                  </label>
-                  <p className="text-neutral-500">Each experiment costs 1 budget unit. Results stay hidden until you commit.</p>
-                  <Button onClick={handleStart} disabled={start.isPending}>
-                    {start.isPending ? 'Starting…' : 'Create experiment session'}
-                  </Button>
-                  {start.isError && (
-                    <p role="alert" className="text-red-700">
-                      Could not create the session. Try again.
-                    </p>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {session && (
-          <>
-            <Card className="claim-panel">
-              <CardContent className="space-y-3 pt-4">
-                <p className="text-sm text-neutral-600" aria-label="Claim under test">
-                  Claim under test: {session.claim.text}
-                </p>
-                <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
-                  <div>
-                    <p className="text-xs text-neutral-500">P(claim holds)</p>
-                    <p className="claim-readout font-semibold tabular-nums" aria-live="polite">
-                      {session.belief.p_claim_holds.toFixed(2)}
-                    </p>
-                    {hasIntervalWidth(session.belief.interval) && (
-                      <p className="text-xs tabular-nums text-neutral-500">
-                        90% interval [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <VerdictBadge verdict={session.verdict} />
-                    <BudgetPips
-                      budget={session.budget}
-                      remaining={session.budget_remaining}
-                      hidden={hiddenCount}
-                    />
-                  </div>
-                </div>
-                <div className="w-full" role="img" aria-label="P(claim holds) across reveals">
-                  <ReactECharts option={beliefChart} style={{ height: 150 }} />
-                </div>
-                {recommendationNote && (
-                  <p role="status" className="rounded border border-teal-700/30 bg-teal-50 px-3 py-1.5 text-sm text-teal-950">
-                    {recommendationNote}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {lastRevealed && (
-              <Card
-                key={session.history?.length ?? 0}
-                className={`reveal-panel motion-safe:animate-[reveal_.5s_ease-out] ${lastRevealed.outcome === 'survive' ? 'border-[var(--success)]' : 'border-[var(--failure)]'}`}
-              >
-                <CardHeader className="pb-1">
-                  <CardTitle className="text-sm font-medium">
-                    {lastRevealed.outcome === 'survive' ? (
-                      <span className="text-[var(--success)]">Survived · {lastRevealed.label}</span>
-                    ) : (
-                      <span className="text-[var(--failure)]">Failed · {lastRevealed.label}</span>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm tabular-nums">
-                  <p>
-                    {observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}
-                  </p>
-                  <p className="text-neutral-600">
-                    Decision update · belief {lastRevealed.belief_before.toFixed(3)} →{' '}
-                    <span className="font-semibold">{lastRevealed.belief_after.toFixed(3)}</span>
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="validation-panel">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Choose a hidden experiment</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="sample-wells">
-                  {session.contexts.map((c) => {
-                    const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
-                    const isPicked = c.context_id === effectivePicked;
-                    return (
-                      <button
-                        data-recommended={isRec}
-                        data-outcome={c.status === 'revealed' ? c.outcome : undefined}
-                        key={c.context_id}
-                        disabled={c.status !== 'hidden' || run.isPending || start.isPending || session.budget_remaining < 1}
-                        onClick={() => setPicked(c.context_id)}
-                        aria-pressed={isPicked}
-                        className={`sample-well flex w-full items-center gap-3 rounded border px-3 py-2 text-left text-sm tabular-nums disabled:cursor-default disabled:opacity-60 ${
-                          isRec
-                            ? 'border-teal-700 bg-teal-50/60'
-                            : isPicked
-                              ? 'border-neutral-500 bg-neutral-50'
-                              : 'border-neutral-200'
-                        }`}
-                      >
-                        <span aria-hidden className="text-base">{contextIcon(c.type)}</span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-medium">{c.label}</span>
-                          <span className="block text-xs text-neutral-500">
-                            {c.status === 'revealed'
-                              ? `revealed: ${c.outcome}`
-                              : `Hidden · cost 1 · predicted survival ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}
-                          </span>
-                        </span>
-                        {isRec && (
-                          <span className="shrink-0 rounded-full bg-teal-700 px-2 py-0.5 text-xs text-white">
-                            recommended
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                {session.recommended_context_id && (
-                  <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
-                )}
-                <div className="rounded border border-teal-200 bg-teal-50 p-3 text-sm" aria-live="polite">
-                  {selectedContext ? <><p className="font-medium">Next experiment: {selectedContext.label}</p><p>Cost 1 · Budget {session.budget_remaining} → {session.budget_remaining - 1}. Commit to reveal one result.</p></> : <p>No hidden experiment selected.</p>}
-                </div>
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <Button
-                    className="run-validation"
-                    onClick={handleRun}
-                    disabled={!selectedContext || run.isPending || start.isPending || session.budget_remaining <= 0}
-                  >
-                    {run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}
-                  </Button>
-                  {run.isError && (
-                    <p role="alert" className="text-sm text-red-700">
-                      No result was returned. Retry this experiment; the server enforces budget and prevents duplicate reveals.
-                    </p>
-                  )}
-                  {session.budget_remaining <= 0 && (
-                    <p className="text-sm text-neutral-500">Budget exhausted. Review the decision or start a new session.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            {(session.history?.length ?? 0) > 0 && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Experiment history</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ol className="space-y-1 text-sm tabular-nums">
-                    {session.history!.map((h) => (
-                      <li key={h.context_id} className="flex flex-wrap gap-x-3 border-b border-neutral-100 py-1">
-                        <span aria-hidden>{h.outcome === 'survive' ? '✓' : '✗'}</span>
-                        <span className="font-medium">{h.label}</span>
-                        <span className="text-neutral-500">
-                          {h.outcome} · {observedText(h.value, h.threshold)} · {h.belief_before.toFixed(2)} →{' '}
-                          {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode} · cost 1
-                          <span className="block">{h.rule}</span>
-                          {h.detail && <span className="block">{h.detail}</span>}
-                        </span>
-                      </li>
-                    ))}
-                  </ol>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleStart}
-                disabled={start.isPending || run.isPending}
-              >
-                {start.isPending ? 'Creating session…' : 'Start new session'}
-              </Button>
-              <p className="text-xs text-neutral-500">Starts a fresh budget of {budget}. The current history is replaced in this workspace.</p>
-              {start.isError && <p role="alert">Could not create a new session. Your current results are retained.</p>}
+      <MockRibbon show={mockData} />
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
+          <div>
+            <p className="mb-1 text-sm text-muted-foreground">Experiment workspace</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-xl font-semibold">{candidateName ?? 'Choose a candidate'}</h2>
+              <Button variant="ghost" size="sm" onClick={() => setStep('candidates')} disabled={busy}>Change candidate</Button>
             </div>
-          </>
-        )}
+          </div>
+          <div className="space-y-2">
+            <label className="flex items-center justify-end gap-3 text-sm">
+              <span className={mode === 'attack' ? 'font-medium' : 'text-muted-foreground'}>Attack</span>
+              <Switch checked={mode === 'learn'} onCheckedChange={v => setMode(v ? 'learn' : 'attack')} disabled={busy} aria-label="Toggle attack or learn mode" />
+              <span className={mode === 'learn' ? 'font-medium' : 'text-muted-foreground'}>Learn</span>
+            </label>
+            <p className="max-w-sm text-xs text-muted-foreground">{mode === 'attack' ? 'Test the context most likely to break the claim.' : 'Test the context expected to change belief the most.'}</p>
+          </div>
+        </header>
+
+        {!session && <section className="max-w-2xl rounded-[10px] border border-border bg-card p-6 text-sm">
+          <FlaskConical className="mb-4 size-5 text-primary" />
+          <h3 className="mb-2 text-base font-semibold">Plan a bounded experiment session</h3>
+          {!selectedCandidateId ? <><p className="mb-4 text-muted-foreground">Select a ranked candidate to plan an experiment.</p><Button onClick={() => setStep('candidates')}>Choose candidate</Button></> : <>
+            <p className="mb-5 text-muted-foreground">Each experiment costs 1 budget unit. Results stay hidden until you commit.</p>
+            <div className="flex flex-wrap items-center gap-4">{budgetControl}<Button onClick={handleStart} disabled={busy}><Play />{start.isPending ? 'Starting…' : 'Create experiment session'}</Button></div>
+            {start.isError && <p role="alert" className="mt-3 text-destructive">Could not create the session. Try again.</p>}
+          </>}
+        </section>}
+
+        {session && <div className="space-y-5">
+          <section className="rounded-[10px] border border-border bg-card p-4">
+            <p className="mb-4 text-sm" aria-label="Claim under test">Claim under test: {session.claim.text}</p>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
+              <VerdictBadge verdict={session.verdict} />
+              <p aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden contexts; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}><span className="font-mono">{session.budget_remaining} / {session.budget}</span> <span className="text-muted-foreground">budget remaining</span></p>
+              <p aria-live="polite"><span className="text-muted-foreground">P(claim holds)</span> <span className="font-mono">{session.belief.p_claim_holds.toFixed(2)}</span>
+                {hasIntervalWidth(session.belief.interval) && <span className="ml-2 text-xs text-muted-foreground">90% interval [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]</span>}
+              </p>
+            </div>
+          </section>
+          {recommendationNote && <p role="status" className="text-sm text-muted-foreground">{recommendationNote}</p>}
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+            <section className="min-w-0">
+              <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-semibold">Choose a hidden experiment</h3><span className="text-xs text-muted-foreground">{hiddenCount} available</span></div>
+              <div className="space-y-2">
+                {session.contexts.map(c => {
+                  const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
+                  const isPicked = c.context_id === effectivePicked && c.status === 'hidden';
+                  return <Button key={c.context_id} variant="outline" data-recommended={isRec} data-outcome={c.status === 'revealed' ? c.outcome : undefined}
+                    disabled={c.status !== 'hidden' || busy || session.budget_remaining < 1} onClick={() => setPicked(c.context_id)} aria-pressed={isPicked}
+                    className={`h-auto w-full justify-start gap-3 whitespace-normal rounded-[10px] p-4 text-left ${isPicked ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'bg-card'}`}>
+                    {c.status === 'revealed' ? <CheckCircle2 className="text-muted-foreground" /> : isPicked ? <CheckCircle2 className="text-primary" /> : <Circle className="text-muted-foreground" />}
+                    <span className="min-w-0 flex-1"><span className="block font-medium">{c.label}</span>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">{c.status === 'revealed' ? `Revealed: ${c.outcome}` : `Hidden · cost 1 · predicted survival ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}</span>
+                    </span>
+                    {isRec && <span className="text-xs text-primary">Recommended</span>}
+                  </Button>;
+                })}
+              </div>
+              {session.recommended_context_id && <div className="mt-3"><RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} /></div>}
+              <footer className="mt-4 space-y-3 border-t border-border pt-4">
+                <div className="text-sm" aria-live="polite">{selectedContext ? <><p className="font-medium">Next experiment: {selectedContext.label}</p><p className="mt-1 text-xs text-muted-foreground">Cost 1 · Budget {session.budget_remaining} → {session.budget_remaining - 1}. Commit to reveal one result.</p></> : <p className="text-muted-foreground">No hidden experiment selected.</p>}</div>
+                <Button onClick={handleRun} disabled={!selectedContext || busy || session.budget_remaining <= 0}><Play />{run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}</Button>
+                {run.isError && <p role="alert" className="text-sm text-destructive">No result was returned. Retry this experiment; the server enforces budget and prevents duplicate reveals.</p>}
+                {session.budget_remaining <= 0 && <p className="text-sm text-muted-foreground">Budget exhausted. Review the decision or start a new session.</p>}
+              </footer>
+            </section>
+            <aside className="min-w-0 space-y-5">
+              <section className="rounded-[10px] border border-border bg-card p-4" aria-live="polite">
+                <h3 className="mb-3 text-sm font-semibold">Latest result</h3>
+                {lastRevealed ? <div className="space-y-2 text-sm">
+                  <p className="font-medium">{lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'} · {lastRevealed.label}</p>
+                  <p>{observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}</p>
+                  <p className="text-muted-foreground">Decision update · belief <span className="font-mono">{lastRevealed.belief_before.toFixed(3)} → {lastRevealed.belief_after.toFixed(3)}</span></p>
+                </div> : <div className="flex items-start gap-3 text-sm text-muted-foreground"><LockKeyhole className="mt-0.5 size-4 shrink-0" /><p>Results are hidden. Commit one experiment to reveal its server result.</p></div>}
+              </section>
+              <section><h3 className="mb-2 text-sm font-semibold">Belief across reveals</h3><div role="img" aria-label="P(claim holds) across reveals"><ReactECharts option={beliefChart} style={{ height: 160 }} /></div></section>
+              <section>
+                <h3 className="mb-3 text-sm font-semibold">Experiment history</h3>
+                {!session.history?.length ? <p className="text-sm text-muted-foreground">No experiments committed in this session.</p> : <ol className="divide-y divide-border">{session.history.map(h => <li key={h.context_id} className="space-y-1 py-3 text-sm">
+                  <p className="font-medium">{h.label} <span className="font-normal text-muted-foreground">· {h.outcome}</span></p>
+                  <p className="text-xs text-muted-foreground">{observedText(h.value, h.threshold)} · {h.belief_before.toFixed(2)} → {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode} · cost 1</p>
+                  <p className="text-xs text-muted-foreground">{h.rule}</p>{h.detail && <p className="text-xs text-muted-foreground">{h.detail}</p>}
+                </li>)}</ol>}
+              </section>
+            </aside>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 border-t border-border pt-5 text-sm">
+            {budgetControl}<Button variant="outline" onClick={handleStart} disabled={busy}><RotateCcw />{start.isPending ? 'Creating session…' : 'Start new session'}</Button>
+            <p className="text-xs text-muted-foreground">Starts a fresh budget of {budget}. The current history is replaced in this workspace.</p>
+            {start.isError && <p role="alert">Could not create a new session. Your current results are retained.</p>}
+          </div>
+        </div>}
       </div>
-      <ProvenanceStrip
-        provenance={session?.history?.[session.history.length - 1]?.provenance}
-      />
+      <ProvenanceStrip provenance={lastRevealed?.provenance} />
     </div>
   );
 }

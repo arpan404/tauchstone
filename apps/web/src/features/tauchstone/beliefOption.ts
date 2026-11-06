@@ -3,7 +3,7 @@ import type { Schema } from '@/api/types';
 /** Pure ECharts line-chart option builder for P(claim) across reveal steps. */
 export function buildBeliefOption(points: { step: number; p: number }[]): Record<string, unknown> {
   return {
-    textStyle: { color: '#a0b3ba', fontFamily: 'monospace' },
+    textStyle: { color: '#687182', fontFamily: 'Geist Variable, sans-serif' },
     grid: { left: 44, right: 16, top: 24, bottom: 30 },
     xAxis: {
       type: 'category',
@@ -12,7 +12,7 @@ export function buildBeliefOption(points: { step: number; p: number }[]): Record
       nameLocation: 'middle',
       nameGap: 24,
     },
-    yAxis: { type: 'value', min: 0, max: 1, name: 'P(claim holds)' },
+    yAxis: { type: 'value', min: 0, max: 1, splitLine: { lineStyle: { color: '#e5e8ed' } } },
     tooltip: {
       trigger: 'axis',
       formatter: (ps: { data?: number }[]) => `P(claim holds) = ${(ps[0]?.data ?? 0).toFixed(3)}`,
@@ -21,16 +21,11 @@ export function buildBeliefOption(points: { step: number; p: number }[]): Record
       {
         type: 'line',
         data: points.map((p) => p.p),
-        smooth: true,
+        smooth: false,
         symbolSize: 8,
-        lineStyle: { color: '#5de0cd', width: 3 },
-        itemStyle: { color: '#5de0cd' },
-        markLine: {
-          symbol: 'none',
-          lineStyle: { color: '#a16207', type: 'dashed' },
-          label: { formatter: '0.5', fontSize: 10 },
-          data: [{ yAxis: 0.5 }],
-        },
+        lineStyle: { color: '#3667d9', width: 2 },
+        itemStyle: { color: '#3667d9' },
+
       },
     ],
   };
