@@ -1,0 +1,91 @@
+{
+  "session_id": "55b0411eb47e43f0ad0181cf76e2711a",
+  "candidate_id": "MOCK-0002",
+  "candidate_name": "Mock compound 02",
+  "mode": "attack",
+  "budget": 5,
+  "budget_remaining": 5,
+  "claim": {
+    "text": "Mock compound 02 reverses the AD signature in at least 70% of predefined validation contexts",
+    "q": 0.7,
+    "theta": -1.05,
+    "n_contexts": 8
+  },
+  "belief": {
+    "p_claim_holds": 0.6481010577328649,
+    "interval": [
+      0.5281010577328649,
+      0.7681010577328649
+    ]
+  },
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "contexts": [
+    {
+      "context_id": "brain_exposure:measured",
+      "type": "brain_exposure",
+      "label": "measured CNS exposure",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "cell_type:astrocyte",
+      "type": "cell_type",
+      "label": "astrocyte pseudobulk",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "cell_type:microglia",
+      "type": "cell_type",
+      "label": "microglia pseudobulk",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "composition_adjusted:GSE132903",
+      "type": "composition_adjusted",
+      "label": "GSE132903 composition-adjusted",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "held_out_cohort:GSE173955",
+      "type": "held_out_cohort",
+      "label": "GSE173955 hippocampus (RNA-seq)",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "held_out_cohort:GSE53697",
+      "type": "held_out_cohort",
+      "label": "GSE53697 (RNA-seq counts)",
+      "status": "hidden",
+      "p_survive": 0.7058823529411766,
+      "acquisition": 0.2941176470588234
+    },
+    {
+      "context_id": "lincs_context:HEPG2|3.33 uM|6 h",
+      "type": "lincs_context",
+      "label": "HEPG2 \u00b7 3.33 uM \u00b7 6 h (held-out)",
+      "status": "hidden",
+      "p_survive": 0.8333333333333334,
+      "acquisition": 0.16666666666666663
+    },
+    {
+      "context_id": "lincs_context:HT29|1.11 uM|6 h",
+      "type": "lincs_context",
+      "label": "HT29 \u00b7 1.11 uM \u00b7 6 h (held-out)",
+      "status": "hidden",
+      "p_survive": 0.8333333333333334,
+      "acquisition": 0.16666666666666663
+    }
+  ],
+  "recommended_context_id": "brain_exposure:measured",
+  "rationale": "Maximising P(fail) (0.29) for brain_exposure:measured (attack: the context most likely to break the claim).",
+  "history": []
+}

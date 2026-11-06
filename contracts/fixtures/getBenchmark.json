@@ -1,0 +1,348 @@
+{
+  "n_candidates": 50,
+  "n_seeds": 20,
+  "budget": 5,
+  "policies": [
+    {
+      "policy": "random",
+      "label": "Random",
+      "experiments_to_correct_verdict": {
+        "median": 5.0,
+        "iqr": [
+          4.5,
+          5.5
+        ],
+        "ci95": [
+          4.0,
+          6.0
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.2,
+        "ci95": [
+          0.1,
+          0.30000000000000004
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.35,
+        "ci95": [
+          0.24999999999999997,
+          0.44999999999999996
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.5,
+        "ci95": [
+          0.42,
+          0.58
+        ]
+      },
+      "brier": 0.2
+    },
+    {
+      "policy": "greedy_strongest",
+      "label": "Greedy strongest (confirmation bias)",
+      "experiments_to_correct_verdict": {
+        "median": 4.5,
+        "iqr": [
+          4.0,
+          5.0
+        ],
+        "ci95": [
+          3.5,
+          5.5
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.15,
+        "ci95": [
+          0.04999999999999999,
+          0.25
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.3,
+        "ci95": [
+          0.19999999999999998,
+          0.4
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.55,
+        "ci95": [
+          0.47000000000000003,
+          0.63
+        ]
+      },
+      "brier": 0.2
+    },
+    {
+      "policy": "max_failure",
+      "label": "Attack (max failure)",
+      "experiments_to_correct_verdict": {
+        "median": 3.0,
+        "iqr": [
+          2.5,
+          3.5
+        ],
+        "ci95": [
+          2.0,
+          4.0
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.6,
+        "ci95": [
+          0.5,
+          0.7
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.75,
+        "ci95": [
+          0.65,
+          0.85
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.78,
+        "ci95": [
+          0.7000000000000001,
+          0.86
+        ]
+      },
+      "brier": 0.2
+    },
+    {
+      "policy": "max_uncertainty",
+      "label": "Max uncertainty",
+      "experiments_to_correct_verdict": {
+        "median": 3.5,
+        "iqr": [
+          3.0,
+          4.0
+        ],
+        "ci95": [
+          2.5,
+          4.5
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.5,
+        "ci95": [
+          0.4,
+          0.6
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.65,
+        "ci95": [
+          0.55,
+          0.75
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.72,
+        "ci95": [
+          0.64,
+          0.7999999999999999
+        ]
+      },
+      "brier": 0.2
+    },
+    {
+      "policy": "expected_decision_change",
+      "label": "Learn (expected decision change)",
+      "experiments_to_correct_verdict": {
+        "median": 3.0,
+        "iqr": [
+          2.5,
+          3.5
+        ],
+        "ci95": [
+          2.0,
+          4.0
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.55,
+        "ci95": [
+          0.45000000000000007,
+          0.65
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.7,
+        "ci95": [
+          0.6,
+          0.7999999999999999
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.8,
+        "ci95": [
+          0.7200000000000001,
+          0.88
+        ]
+      },
+      "brier": 0.2
+    },
+    {
+      "policy": "tauchstone_hybrid",
+      "label": "Tauchstone hybrid",
+      "experiments_to_correct_verdict": {
+        "median": 2.5,
+        "iqr": [
+          2.0,
+          3.0
+        ],
+        "ci95": [
+          1.5,
+          3.5
+        ]
+      },
+      "fragile_recall_at_3": {
+        "estimate": 0.65,
+        "ci95": [
+          0.55,
+          0.75
+        ]
+      },
+      "fragile_recall_at_5": {
+        "estimate": 0.8,
+        "ci95": [
+          0.7000000000000001,
+          0.9
+        ]
+      },
+      "decision_accuracy": {
+        "estimate": 0.85,
+        "ci95": [
+          0.77,
+          0.9299999999999999
+        ]
+      },
+      "brier": 0.2
+    }
+  ],
+  "calibration": [
+    {
+      "bin_lo": 0.0,
+      "bin_hi": 0.1,
+      "mean_predicted": 0.05,
+      "observed_rate": 0.05,
+      "n": 121
+    },
+    {
+      "bin_lo": 0.1,
+      "bin_hi": 0.2,
+      "mean_predicted": 0.15,
+      "observed_rate": 0.146,
+      "n": 44
+    },
+    {
+      "bin_lo": 0.2,
+      "bin_hi": 0.3,
+      "mean_predicted": 0.25,
+      "observed_rate": 0.246,
+      "n": 124
+    },
+    {
+      "bin_lo": 0.3,
+      "bin_hi": 0.4,
+      "mean_predicted": 0.35,
+      "observed_rate": 0.401,
+      "n": 154
+    },
+    {
+      "bin_lo": 0.4,
+      "bin_hi": 0.5,
+      "mean_predicted": 0.45,
+      "observed_rate": 0.497,
+      "n": 159
+    },
+    {
+      "bin_lo": 0.5,
+      "bin_hi": 0.6,
+      "mean_predicted": 0.55,
+      "observed_rate": 0.59,
+      "n": 133
+    },
+    {
+      "bin_lo": 0.6,
+      "bin_hi": 0.7,
+      "mean_predicted": 0.65,
+      "observed_rate": 0.638,
+      "n": 155
+    },
+    {
+      "bin_lo": 0.7,
+      "bin_hi": 0.8,
+      "mean_predicted": 0.75,
+      "observed_rate": 0.76,
+      "n": 175
+    },
+    {
+      "bin_lo": 0.8,
+      "bin_hi": 0.9,
+      "mean_predicted": 0.85,
+      "observed_rate": 0.798,
+      "n": 173
+    },
+    {
+      "bin_lo": 0.9,
+      "bin_hi": 1.0,
+      "mean_predicted": 0.95,
+      "observed_rate": 0.927,
+      "n": 153
+    }
+  ],
+  "tests": [
+    {
+      "policy_a": "tauchstone_hybrid",
+      "policy_b": "random",
+      "metric": "decision_accuracy",
+      "statistic": 120.0,
+      "p_holm": 0.001
+    },
+    {
+      "policy_a": "tauchstone_hybrid",
+      "policy_b": "greedy_strongest",
+      "metric": "decision_accuracy",
+      "statistic": 121.0,
+      "p_holm": 0.002
+    },
+    {
+      "policy_a": "tauchstone_hybrid",
+      "policy_b": "max_failure",
+      "metric": "decision_accuracy",
+      "statistic": 122.0,
+      "p_holm": 0.003
+    },
+    {
+      "policy_a": "tauchstone_hybrid",
+      "policy_b": "max_uncertainty",
+      "metric": "decision_accuracy",
+      "statistic": 123.0,
+      "p_holm": 0.004
+    },
+    {
+      "policy_a": "tauchstone_hybrid",
+      "policy_b": "expected_decision_change",
+      "metric": "decision_accuracy",
+      "statistic": 124.0,
+      "p_holm": 0.005
+    }
+  ],
+  "preregistration_sha256": "mock000000000000000000000000000000000000000000000000000000000000",
+  "preregistration_commit": "mock",
+  "provenance": {
+    "step": "mock-benchmark",
+    "dataset_accession": "MOCK",
+    "random_seed": 20261105,
+    "processing_version": "mock-0.1",
+    "git_commit": "mock",
+    "timestamp": "2026-11-06T00:00:00Z"
+  }
+}

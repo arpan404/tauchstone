@@ -1,0 +1,111 @@
+{
+  "candidate_id": "MOCK-0002",
+  "name": "Mock compound 02",
+  "mechanism": "MOCK mechanism 1",
+  "targets": [
+    {
+      "symbol": "MOCKT02A",
+      "uniprot": "M0CK020",
+      "entrez_id": "10010",
+      "ensembl_id": "ENSG00000MOCK020",
+      "action_type": "AGONIST",
+      "brain_expression": [
+        {
+          "context": "cerebral cortex",
+          "kind": "region",
+          "ntpm": 38.62
+        },
+        {
+          "context": "microglia",
+          "kind": "cell_type",
+          "ntpm": 15.72
+        }
+      ],
+      "ad_association_score": 0.233,
+      "sources": [
+        {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      ]
+    },
+    {
+      "symbol": "MOCKT02B",
+      "uniprot": "M0CK021",
+      "entrez_id": "10011",
+      "ensembl_id": "ENSG00000MOCK021",
+      "brain_expression": [
+        {
+          "context": "cerebral cortex",
+          "kind": "region",
+          "ntpm": 37.99
+        },
+        {
+          "context": "microglia",
+          "kind": "cell_type",
+          "ntpm": 12.44
+        }
+      ],
+      "ad_association_score": 0.407,
+      "sources": [
+        {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      ]
+    },
+    {
+      "symbol": "MOCKT02C",
+      "uniprot": "M0CK022",
+      "entrez_id": "10012",
+      "ensembl_id": "ENSG00000MOCK022",
+      "action_type": "INHIBITOR",
+      "brain_expression": [
+        {
+          "context": "cerebral cortex",
+          "kind": "region",
+          "ntpm": 59.76
+        },
+        {
+          "context": "microglia",
+          "kind": "cell_type",
+          "ntpm": 13.73
+        }
+      ],
+      "ad_association_score": 0.537,
+      "sources": [
+        {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      ]
+    }
+  ],
+  "approval_status": {
+    "status": "investigational",
+    "max_phase": 2.0,
+    "source": {
+      "label": "ChEMBL MOCK",
+      "url": "https://example.com/chembl/mock"
+    }
+  },
+  "brain_exposure": {
+    "level": "predicted",
+    "summary": "Predicted CNS MPO pass (predicted; measured exposure is hidden validation data revealed only by an attack).",
+    "sources": [
+      {
+        "label": "predicted MPO",
+        "url": "https://example.com/mpo/mock"
+      }
+    ]
+  },
+  "boundary": "Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.",
+  "provenance": {
+    "step": "mock-evidence",
+    "dataset_accession": "MOCK",
+    "random_seed": 20261105,
+    "processing_version": "mock-0.1",
+    "git_commit": "mock",
+    "timestamp": "2026-11-06T00:00:00Z"
+  }
+}
