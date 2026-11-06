@@ -16,9 +16,10 @@ from pydantic import BaseModel, Field
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from app.deps import get_repository
+from app.deps import get_repository, get_session_store
 from app.schemas.models import BOUNDARY_TEXT
 from app.services.repository import NotFoundError, Repository
+from app.services.sessions import SessionStore
 from app.settings import settings
 
 router = APIRouter(prefix="/lab", tags=["exploratory lab"])
@@ -150,7 +151,26 @@ def status():
 
 
 # No recursive serialization: each nested field must be explicitly admitted.
-def sources(repo, candidate_id):
+def scalar_fields(record, keys):
+    return {k: record[k] for k in keys if k in record and
+            (record[k] is None or isinstance(record[k], (str, int, float, bool)))}
+
+
+def display_value(value):
+    if value is None:
+        return "unspecified"
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    return str(value)
+
+
+def readable(fields):
+    """Deterministic formatting; numbers and assertions come only from admitted fields."""
+    return "; ".join(f"{key.replace('_', ' ')}: {display_value(value)}"
+                     for key, value in fields.items())
+
+
+def sources(repo, candidate_id, history=()):
     try:
         ev = repo.get_evidence(candidate_id)
     except NotFoundError as exc:
@@ -158,7 +178,7 @@ def sources(repo, candidate_id):
     rows = []
 
     def add(title, fields, url=None):
-        excerpt = json.dumps(fields, ensure_ascii=True)[:1000]
+        excerpt = readable(fields)[:1400]
         # Clinical assertions are not passed through even when present in source text.
         if re.search(r"\b(treats?|effective|safe|dose|cures?|efficacy|dosing)\b", excerpt, re.I):
             return
@@ -167,23 +187,74 @@ def sources(repo, candidate_id):
             row["source_url"] = url[:500]
         rows.append(row)
 
-    add("Candidate identity", {k: ev[k] for k in ("candidate_id", "name", "chembl_id") if k in ev})
-    if ev.get("mechanism"):
+    for candidate in repo.list_candidates(200).get("candidates", []):
+        if candidate.get("id") != candidate_id:
+            continue
+        fields = scalar_fields(candidate, ("id", "name", "rank", "consensus", "n_ranking_contexts"))
+        scores = candidate.get("scores", {})
+        fields.update({f"{k} score": v for k, v in scalar_fields(scores, ("wtcs", "ks", "cosine")).items()})
+        iqr = candidate.get("consensus_iqr")
+        if isinstance(iqr, list) and len(iqr) == 2 and all(isinstance(v, (int, float)) for v in iqr):
+            fields["consensus iqr"] = f"{iqr[0]} to {iqr[1]}"
+        flags = candidate.get("flags") or []
+        fields["flags"] = ", ".join(f for f in flags if isinstance(f, str) and f in (
+            "composition_sensitive", "few_contexts", "known_positive")) or "none recorded"
+        fields["interpretation"] = "AD minus control signature; negative reversal score opposes discovery signature"
+        add("Discovery signal and ranking scores", fields)
+        break
+    targets = ev.get("targets", [])
+    source_count = sum(len(t.get("sources") or []) for t in targets)
+    add("Evidence coverage and missing data", {
+        "available_target_count": len(targets), "mechanism_recorded": bool(ev.get("mechanism")),
+        "public_source_count": source_count,
+        "missing_data": "Missing evidence is unknown, not negative evidence.",
+    })
+    add("Candidate identity", scalar_fields(ev, ("candidate_id", "name", "chembl_id")))
+    if isinstance(ev.get("mechanism"), str):
         add("Public mechanism", {"mechanism": ev["mechanism"]})
     for target in ev.get("targets", [])[:12]:
-        add("Public target", {k: target[k] for k in (
-            "symbol", "uniprot", "entrez_id", "ensembl_id", "action_type") if k in target})
+        add("Public target", scalar_fields(target, (
+            "symbol", "uniprot", "entrez_id", "ensembl_id", "action_type")))
         for expression in target.get("brain_expression", [])[:6]:
-            add("Brain expression", {k: expression[k] for k in ("context", "kind", "ntpm") if k in expression})
+            add("Brain expression", scalar_fields(expression, ("context", "kind", "ntpm")))
         for source in target.get("sources", [])[:3]:
-            add("Public source", {"label": source.get("label", "Public source")}, source.get("url"))
+            add("Public source", scalar_fields(source, ("label",)), source.get("url"))
+    for entry in history:
+        # Only committed history entries, never snapshot contexts or future values.
+        # Exposure is excluded even when a session has committed an exposure experiment.
+        if entry.get("type") == "brain_exposure":
+            continue
+        fields = scalar_fields(entry, (
+            "context_id", "label", "type", "outcome", "value", "threshold", "rule", "detail",
+            "belief_before", "belief_after", "mode_used", "public",
+        ))
+        if not fields.get("context_id") or fields.get("outcome") not in ("survive", "fail"):
+            continue
+        provenance = entry.get("provenance")
+        if isinstance(provenance, dict):
+            fields.update({f"provenance {k}": v for k, v in scalar_fields(provenance, (
+                "step", "dataset_accession", "processing_version", "git_commit", "timestamp",
+                "random_seed", "validation_context",
+            )).items()})
+        add("Committed experiment history", fields)
     return rows
 
 
 @router.post("/chat")
-def chat(request: ChatRequest, repo: Annotated[Repository, Depends(get_repository)]):
-    # Session history is intentionally optional and unused: never inspect an engine.
-    rows = sources(repo, request.candidate_id)
+def chat(
+    request: ChatRequest,
+    repo: Annotated[Repository, Depends(get_repository)],
+    store: Annotated[SessionStore, Depends(get_session_store)],
+):
+    history = ()
+    if request.session_id:
+        rec = store.get(request.session_id)
+        if rec is None:
+            raise HTTPException(404, "Session not found.")
+        if rec.candidate_id != request.candidate_id:
+            raise HTTPException(409, "Session belongs to another candidate.")
+        history = rec.engine.state().get("history", [])
+    rows = sources(repo, request.candidate_id, history)
     selected = []
     if rows:
         vectorizer = TfidfVectorizer(stop_words="english")
@@ -231,7 +302,8 @@ def chat(request: ChatRequest, repo: Annotated[Repository, Depends(get_repositor
                     or len(ids) > len(allowed) or any(not isinstance(i, str) or i not in allowed for i in ids)):
                 raise ValueError("Ungrounded output")
             used = [allowed[i] for i in dict.fromkeys(ids)]
-            mode, prefix = "generated", "Ollama selected these source-grounded excerpts."
+            mode = "generated"
+            prefix = "Extractive copilot: Ollama selected these exact source excerpts; no generated paraphrase."
         except Exception:
             pass
     else:
