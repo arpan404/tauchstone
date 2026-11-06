@@ -17,7 +17,7 @@ interface UiState {
 export const useUi = create<UiState>((set) => ({
   selectedCandidateId: null,
   mode: 'attack',
-  step: 'signature',
+  step: 'candidates',
   sessionId: null,
   selectCandidate: (id) => set({ selectedCandidateId: id }),
   setMode: (mode) => set({ mode }),
@@ -26,9 +26,9 @@ export const useUi = create<UiState>((set) => ({
 }));
 
 export const STEPS: { id: StepId; label: string; hint: string }[] = [
-  { id: 'signature', label: '1 · Signature', hint: 'AD minus control volcano' },
-  { id: 'candidates', label: '2 · Candidates', hint: 'Reversal ranking' },
-  { id: 'evidence', label: '3 · Evidence', hint: 'Targets + exposure' },
-  { id: 'attack', label: '4 · Attack', hint: 'Break the claim' },
-  { id: 'benchmark', label: '5 · Benchmark', hint: 'Policy replay' },
+  { id: 'candidates', label: 'Candidates', hint: 'Discovery ranking' },
+  { id: 'signature', label: 'Disease signature', hint: 'AD minus control' },
+  { id: 'evidence', label: 'Evidence', hint: 'Targets and exposure' },
+  { id: 'attack', label: 'Experiments', hint: 'Held-out validation' },
+  { id: 'benchmark', label: 'Benchmark', hint: 'Policy replay' },
 ];
