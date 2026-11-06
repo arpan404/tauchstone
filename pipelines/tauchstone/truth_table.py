@@ -655,10 +655,9 @@ def prereg_guard() -> tuple[str, str]:
 
     prereg = MANIFESTS / "preregistration.yaml"
     text = prereg.read_text()
-    status = None
-    for line in text.splitlines():
-        if line.startswith("status:"):
-            status = line.split(":", 1)[1].strip()
+    import yaml
+
+    status = (yaml.safe_load(text) or {}).get("status")
     if status != "frozen":
         raise SystemExit(
             f"refusing: {prereg} status is {status!r}, expected 'frozen'. "
