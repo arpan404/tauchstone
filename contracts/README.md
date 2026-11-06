@@ -1,24 +1,25 @@
-# Contracts (freeze before parallel work starts)
+# Contracts (frozen Nov 5 2026)
 
-Workstreams 6 (API) and 7 (web) build against these while 1–5 compute real data.
-Changes after freeze go through the engineering lead.
+The API (WS6) and web app (WS7) build against these while workstreams 1–5 compute real data.
+Changes go through the engineering lead.
 
-To write here:
-- `parquet/*.md` — one schema per processed table (columns, types, keys, units, sign convention)
-- `openapi.yaml` — the six endpoints from the build plan + provenance object
-- `fixtures/*.json` — mock responses matching `openapi.yaml`
-- `truth_table.md` — hidden outcome schema
+- [openapi.yaml](openapi.yaml): the six endpoints, plus `/health`
+- [algorithms.md](algorithms.md): every method, formula, threshold and seed
+- [parquet/README.md](parquet/README.md): every processed table
+- `fixtures/`: mock responses; WS6 generates them from a mock truth table, and they must validate against openapi.yaml
 
-## Decisions to settle in the contract
+## Decisions taken (defaults; the science lead may revise them before the preregistration hash)
 
-1. **GSE173955 has no counts on GEO** (TPM only, 8 AD + 10 non-AD). Tier 1: limma-trend on
-   log2(TPM+1). Optional upgrade: re-quantify from SRA with salmon, then DESeq2.
-2. **GSE53697 counts are partly non-integer** (8 control + 9 AD). Round before DESeq2; record it.
-3. **LINCS context split.** A drug's held-out LINCS contexts (cell line / dose / time) must be
-   excluded from its ranking median, or the Tauchstone test is already inside the ranking.
-   Split per drug with a fixed seed, written into `data/manifests/preregistration.yaml`.
-4. **Per-context-type survive rule.** The claim formula assumes a reversal score s ≤ θ, which
-   fits cohorts and LINCS contexts but not brain exposure (yes/no) or composition-adjusted
-   rank. Define pass/fail per context type in the truth-table schema.
-5. **Join key:** Entrez Gene ID as string everywhere; HGNC symbol and Ensembl as extra columns.
-6. **Approval status from ChEMBL `max_phase`**, not DrugBank (avoids the license question).
+1. **GSE173955** has no counts on GEO (TPM only, 8 AD + 10 non-AD), so it uses limma-trend on log2(TPM+1).
+2. **GSE53697** counts are partly non-integer, so they are rounded before DESeq2, and the rounding is logged.
+3. **LINCS context split.** 30% of each compound's contexts are held out (always leaving ≥ 3 for
+   ranking, seed 20261105). They never enter the ranking, the score scaling or θ.
+4. **Survive rules** are set per context type (algorithms.md §3). Signature-type contexts use a top-5%
+   rule, LINCS contexts use consensus ≤ θ, and brain exposure is a measured-evidence threshold.
+5. **Join key**: Entrez Gene ID as a string; HGNC symbol and Ensembl are extra columns.
+6. **Approval status** comes from ChEMBL `max_phase`, not DrugBank.
+7. **Brain exposure on the evidence card.** The card shows only the *predicted* level before an
+   attack. Measured CNS exposure is a hidden validation context, so showing it up front would
+   leak a hidden outcome.
+8. **Score sign.** All scores are negative = reversal, matching the demo script. The plan's
+   R(d) = mean of Z(−τ), Z(GSEA), Z(−cos) is the same ranking with the sign flipped.

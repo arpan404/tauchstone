@@ -10,36 +10,40 @@ signature:
   fdr_method: BH
 
 ranking:
-  methods: [cmap_wtcs, gsea, neg_cosine]
+  methods: [wtcs, ks, cosine]          # all negative = reversal; consensus = mean of z-scores
   weights: [0.3333, 0.3333, 0.3333]   # fixed in advance
   gene_space: landmark_978           # tier 2: + best-inferred
   min_contexts_to_rank: 3
   lincs_context_split:
-    seed: null                        # TODO
-    held_out_fraction: null           # TODO: per-drug share of contexts hidden from ranking
+    seed: 20261105
+    held_out_fraction: 0.3            # never fewer than 3 ranking contexts
 
 claim:
   q: 0.7
-  theta: from_permutation_null_p05    # computed on GSE132903 label permutations only
+  theta: from_permutation_null_p05    # 5th pct of pooled ranking-context consensus, GSE132903 perms only
   permutations: 200
-  permutation_seed: null              # TODO
+  permutation_seed: 20261105
 
 validation_contexts:                  # the hidden pool
-  - {type: held_out_cohort, id: GSE173955, survive_rule: TODO}
-  - {type: held_out_cohort, id: GSE53697, survive_rule: TODO}
-  - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: TODO}
-  - {type: lincs_context, id: per_drug_held_out_split, survive_rule: TODO}
-  - {type: brain_exposure, id: chembl_literature, survive_rule: TODO}
+  - {type: held_out_cohort, id: GSE173955, survive_rule: top_5pct_compounds}
+  - {type: held_out_cohort, id: GSE53697, survive_rule: top_5pct_compounds}
+  - {type: composition_adjusted, id: GSE132903_adjusted, survive_rule: top_5pct_compounds}
+  - {type: lincs_context, id: per_drug_held_out_split, max_per_candidate: 8, survive_rule: consensus_le_theta}
+  - {type: brain_exposure, id: chembl_literature, survive_rule: "measured human CNS PK, or Kp >= 0.1, or PAMPA-BBB Pe >= 4e-6 cm/s; else fail"}
 
-tauchstone:
+tauchstone_engine:
   budget: 5
-  lambda: null                        # TODO: fixed on development candidates only
-  development_candidates: []          # TODO: must not overlap benchmark pool
+  lambda: null                        # set from grid [0, 0.1, 0.25, 0.5, 1] on development candidates only
+  prior_strength_kappa: 2
+  ranking_context_weight_cap: 4
+  verdict_thresholds: {supported: 0.8, fragile: 0.2}
+  development_candidates: ranks_51_to_100   # disjoint from the benchmark pool
 
 benchmark:
   candidate_pool: top_50
   seeds: 20
-  seed_base: null                     # TODO
+  seed_base: 20261105
+  bootstrap_reps: 2000
   policies: [random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change, tauchstone_hybrid]
 
 demo:
