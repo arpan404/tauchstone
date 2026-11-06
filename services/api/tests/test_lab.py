@@ -2,13 +2,23 @@ import json
 import threading
 from types import SimpleNamespace
 
-from app.deps import get_repository
+from app.deps import get_repository, get_session_store
 from app.main import app
 from app.routes import lab
+from app.services.sessions import SessionStore
 from fastapi.testclient import TestClient
 
 
 class MaliciousRepo:
+    def list_candidates(self, limit):
+        assert limit == 200
+        return {"candidates": [{"id": "other", "consensus": "SECRET_OTHER"}, {
+            "id": "x", "name": "Example", "rank": 3, "consensus": -0.42,
+            "n_ranking_contexts": 7, "n_held_out_contexts": "SECRET_HELDOUT",
+            "scores": {"wtcs": -0.4, "ks": -0.3, "cosine": -0.5, "hidden": "SECRET_SCORE"},
+            "consensus_iqr": [-0.6, -0.2], "flags": ["few_contexts", "SECRET_FLAG"],
+            "truth": "SECRET_TRUTH"}]}
+
     def get_attack_world(self, *_):
         raise AssertionError("Never inspect truth")
 
@@ -19,7 +29,7 @@ class MaliciousRepo:
                              "sources": [{"label": "ChEMBL", "url": "https://example.org"}]}]}
 
 
-def test_grounded_real_payload_and_session_ignored(monkeypatch):
+def test_grounded_real_payload(monkeypatch):
     def provider(path, payload):
         wire = json.dumps(payload)
         assert "SECRET" not in wire
@@ -30,8 +40,7 @@ def test_grounded_real_payload_and_session_ignored(monkeypatch):
     monkeypatch.setattr(lab, "ollama", provider)
     app.dependency_overrides[get_repository] = MaliciousRepo
     try:
-        r = TestClient(app).post("/lab/chat", json={"candidate_id": "x", "question": "MAPK mechanism",
-                                                  "session_id": "different-candidate-session"})
+        r = TestClient(app).post("/lab/chat", json={"candidate_id": "x", "question": "MAPK mechanism"})
         assert r.status_code == 200
         body = r.json()
         assert body["mode"] == "generated"
@@ -130,3 +139,64 @@ def test_provider_unavailable_status(monkeypatch):
     body = TestClient(app).get("/lab/status").json()["copilot"]
     assert not body["ready"]
     assert "Private" not in body["detail"]
+
+
+def test_discovery_coverage_and_readable_excerpts():
+    rows = lab.sources(MaliciousRepo(), "x")
+    wire = json.dumps(rows)
+    assert "SECRET" not in wire
+    assert "held_out" not in wire
+    discovery = next(r for r in rows if "Discovery" in r["title"])
+    assert "consensus: -0.42" in discovery["excerpt"]
+    assert "wtcs score: -0.4" in discovery["excerpt"]
+    assert "consensus iqr: -0.6 to -0.2" in discovery["excerpt"]
+    coverage = next(r for r in rows if "coverage" in r["title"])
+    assert "available target count: 1" in coverage["excerpt"]
+    assert "unknown, not negative" in coverage["excerpt"]
+
+
+def test_committed_history_and_session_mismatch(monkeypatch):
+    class Engine:
+        def state(self):
+            return {"history": [{
+                "context_id": "committed-1", "label": "Committed cohort", "type": "held_out_cohort",
+                "outcome": "fail", "value": -0.03, "threshold": -0.2, "rule": "value below threshold",
+                "belief_before": 0.7, "belief_after": 0.3, "mode_used": "attack",
+                "hidden": "SECRET_HISTORY", "provenance": {"step": "validation", "truth": "SECRET_PROV"},
+            }, {"context_id": "exposure", "type": "brain_exposure", "outcome": "fail",
+                "value": "SECRET_EXPOSURE"}],
+                "contexts": [{"value": "SECRET_FUTURE"}], "hidden": "SECRET_SNAPSHOT"}
+
+    store = SessionStore()
+    session = store.create(Engine(), "x")
+    app.dependency_overrides[get_repository] = MaliciousRepo
+    app.dependency_overrides[get_session_store] = lambda: store
+    observed = []
+
+    def provider(_, payload):
+        wire = json.dumps(payload)
+        assert "SECRET" not in wire
+        assert "exposure" not in wire
+        rows = json.loads(payload["messages"][1]["content"])["sources"]
+        observed.extend(rows)
+        row = next(r for r in rows if r["title"] == "Committed experiment history")
+        return {"message": {"content": json.dumps({"citation_ids": [row["id"]]})}}
+
+    monkeypatch.setattr(lab, "ollama", provider)
+    try:
+        client = TestClient(app)
+        body = client.post("/lab/chat", json={"candidate_id": "x", "session_id": session.session_id,
+                                             "question": "What committed experiment outcome and value?"}).json()
+        assert body["mode"] == "generated"
+        assert "value: -0.03" in body["answer"]
+        assert "Extractive copilot" in body["answer"]
+        assert "SECRET" not in json.dumps(body)
+        assert observed
+        # Reject before inspecting the mismatched engine snapshot.
+        wrong = store.create(SimpleNamespace(state=lambda: (_ for _ in ()).throw(AssertionError())), "other")
+        assert client.post("/lab/chat", json={"candidate_id": "x", "session_id": wrong.session_id,
+                                              "question": "outcome"}).status_code == 409
+        assert client.post("/lab/chat", json={"candidate_id": "x", "session_id": "missing",
+                                              "question": "outcome"}).status_code == 404
+    finally:
+        app.dependency_overrides.clear()
