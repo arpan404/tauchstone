@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { ArrowUpRight, BookOpen, ChartNoAxesCombined, ChevronRight, Dna, FlaskConical, Layers3, Microscope, Moon, Search, ShieldCheck, Sun, Table2 } from 'lucide-react';
+import { BookOpen, ChartNoAxesCombined, Dna, FlaskConical, Layers3, Microscope, Moon, Search, ShieldCheck, Sun, Table2 } from 'lucide-react';
 import { useCandidates, useMockStatus } from '@/api/hooks';
 import { About } from '@/features/about';
 import { BenchmarkView } from '@/features/benchmark/BenchmarkView';
@@ -36,7 +36,7 @@ const ITEMS = [
 type PageId = typeof ITEMS[number]['id'];
 type ExtraId = 'cells' | 'about';
 
-function WorkspaceSidebar({ page, navigate }: { page: PageId; navigate: (id: PageId) => void }) {
+function WorkspaceSidebar({ page, navigate, candidateId, candidateName }: { page: PageId; navigate: (id: PageId) => void; candidateId: string | null; candidateName?: string }) {
   const { isMobile, setOpenMobile } = useSidebar();
   function open(id: PageId) {
     navigate(id);
@@ -69,9 +69,14 @@ function WorkspaceSidebar({ page, navigate }: { page: PageId; navigate: (id: Pag
         </nav>
       </SidebarContent>
       <SidebarFooter className="gap-3 p-4 group-data-[collapsible=icon]:px-2">
-        <div className="rounded-lg border border-sidebar-border bg-background/60 px-3 py-3 group-data-[collapsible=icon]:hidden">
-          <p className="text-[11px] text-muted-foreground">Discovery cohort</p><p className="mt-1 font-mono text-xs font-medium text-foreground">GSE132903</p><p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">AD minus control. Negative drug scores indicate reversal.</p>
-        </div>
+        <section aria-label="Selected candidate" className="rounded-lg border border-sidebar-border bg-card p-3 group-data-[collapsible=icon]:hidden">
+          <p className="text-[11px] text-muted-foreground">Current investigation</p>
+          <p className="mt-1.5 break-words text-sm font-medium text-foreground">{candidateName ?? candidateId ?? 'No candidate selected'}</p>
+          {candidateId ? <div className="mt-3 flex flex-col items-start gap-1">
+            <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => open('evidence')}>View evidence</Button>
+            <Button size="sm" variant="secondary" className="w-full justify-start" onClick={() => open('attack')}>Open experiments</Button>
+          </div> : <Button size="sm" variant="outline" className="mt-3" onClick={() => open('candidates')}>Choose a candidate</Button>}
+        </section>
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground"><ShieldCheck className="size-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /><span className="group-data-[collapsible=icon]:hidden">Research hypotheses only</span></div>
       </SidebarFooter>
     </Sidebar>
@@ -116,7 +121,7 @@ export default function App() {
     <TooltipProvider>
       <SidebarProvider className="h-dvh min-h-0 overflow-hidden" style={{ '--sidebar-width': '14rem' } as CSSProperties}>
         <a className="workspace-skip" href="#workspace">Skip to workspace</a>
-        <WorkspaceSidebar page={page} navigate={navigate} />
+        <WorkspaceSidebar page={page} navigate={navigate} candidateId={selectedCandidateId} candidateName={candidate?.name} />
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-card px-4 md:px-6">
             <SidebarTrigger className="text-muted-foreground" />
@@ -128,14 +133,6 @@ export default function App() {
               <Button variant="ghost" size="icon" onClick={() => setDark(value => !value)} aria-label={dark ? 'Use light theme' : 'Use dark theme'}>{dark ? <Sun className="size-4" /> : <Moon className="size-4" />}</Button>
             </div>
           </header>
-          <section aria-label="Selected candidate" className="flex min-h-11 shrink-0 flex-wrap items-center gap-2 border-b border-border bg-card px-4 py-2 text-xs md:px-6">
-            <span className="text-muted-foreground">Selected candidate</span><ChevronRight className="size-3 text-muted-foreground" aria-hidden="true" />
-            <strong className="text-xs font-medium">{candidate?.name ?? selectedCandidateId ?? 'No candidate selected'}</strong>
-            {selectedCandidateId && <span className="hidden font-mono text-[10px] text-muted-foreground md:inline">{selectedCandidateId}</span>}
-            <div className="ml-auto flex items-center gap-1">
-              {selectedCandidateId ? <><Button size="xs" variant="ghost" onClick={() => navigate('evidence')}>View evidence</Button><Button size="xs" variant="secondary" onClick={() => navigate('attack')}>Open experiments<ArrowUpRight className="size-3" /></Button></> : <Button size="xs" variant="ghost" onClick={() => navigate('candidates')}>Choose a candidate</Button>}
-            </div>
-          </section>
           <main id="workspace" tabIndex={-1} className="workspace-main min-h-0 flex-1 overflow-auto outline-none" aria-label={title}><View /></main>
         </div>
         <CommandDialog open={searchOpen} onOpenChange={setSearchOpen} title="Search workspace" description="Open a research view or inspect a discovery candidate.">
