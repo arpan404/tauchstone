@@ -6,7 +6,7 @@ import {
   within,
   waitFor,
 } from "@testing-library/react";
-import { afterEach, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, it, expect, vi } from "vitest";
 import { useUi } from "@/store/ui";
 vi.mock("@/api/hooks", () => ({
   useCandidates: () => ({
@@ -50,6 +50,7 @@ vi.mock("@/components/ProvenanceStrip", () => ({
   ProvenanceStrip: () => null,
 }));
 import { RepurposingView } from "./RepurposingView";
+beforeEach(() => { localStorage.clear(); });
 afterEach(() => {
   cleanup();
   useUi.setState({ selectedCandidateId: null, step: "candidates" });
@@ -118,6 +119,8 @@ it("shows all discovery metrics and opens evidence only on the explicit action",
   render(<RepurposingView />);
   fireEvent.click(screen.getByRole("button", { name: /Select Alpha,/ }));
   const inspector = screen.getByRole("region", { name: "Candidate inspector" });
+  expect(within(inspector).getByRole("button", {name: "Discovery metrics"}).getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(within(inspector).getByRole("button", {name: "Discovery metrics"}));
   for (const metric of ["Discovery rank", "Consensus", "IQR", "Ranking contexts", "WTCS", "KS", "Cosine", "Approval"]) {
     expect(within(inspector).getByText(metric)).toBeTruthy();
   }
@@ -126,4 +129,35 @@ it("shows all discovery metrics and opens evidence only on the explicit action",
   fireEvent.click(within(inspector).getByRole("button", { name: "Evidence" }));
   expect(useUi.getState().step).toBe("evidence");
   expect(useUi.getState().selectedCandidateId).toBe("BRD-1");
+});
+
+
+it("defaults to Browse and switches to Ranking without losing the selected candidate", () => {
+  render(<RepurposingView />);
+  expect(screen.getByRole("tab", {name: "Browse"}).getAttribute("aria-selected")).toBe("true");
+  expect(screen.queryByRole("table")).toBeNull();
+  expect(screen.getByText("Choose a candidate to investigate")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", {name: /Select Alpha,/}));
+  fireEvent.click(screen.getByRole("tab", {name: "Ranking"}));
+  expect(screen.getByRole("table")).toBeTruthy();
+  expect(useUi.getState().selectedCandidateId).toBe("BRD-1");
+  fireEvent.click(screen.getByRole("tab", {name: "Browse"}));
+  expect(screen.queryByRole("table")).toBeNull();
+});
+
+it("restores separate candidate notes and comparison after remount", () => {
+  const view = render(<RepurposingView />);
+  fireEvent.click(screen.getByRole("button", {name: /Select Alpha,/}));
+  fireEvent.change(screen.getByRole("textbox", {name: "Research notes"}), {target: {value: "Check Alpha context coverage"}});
+  fireEvent.click(screen.getByRole("button", {name: "Add to comparison"}));
+  fireEvent.click(screen.getByRole("button", {name: /Select Beta,/}));
+  expect((screen.getByRole("textbox", {name: "Research notes"}) as HTMLTextAreaElement).value).toBe("");
+  fireEvent.change(screen.getByRole("textbox", {name: "Research notes"}), {target: {value: "Question for Beta"}});
+  view.unmount();
+  render(<RepurposingView />);
+  expect((screen.getByRole("textbox", {name: "Research notes"}) as HTMLTextAreaElement).value).toBe("Question for Beta");
+  fireEvent.click(screen.getByRole("button", {name: /Select Alpha,/}));
+  expect((screen.getByRole("textbox", {name: "Research notes"}) as HTMLTextAreaElement).value).toBe("Check Alpha context coverage");
+  expect(screen.getByText("Saved on this device")).toBeTruthy();
+  expect(within(screen.getByRole("region", {name: "Candidate comparison"})).getByText("Alpha")).toBeTruthy();
 });
