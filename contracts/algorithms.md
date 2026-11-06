@@ -106,11 +106,16 @@ hidden pool S_d (prereg):
 
 | type | contexts | value | survive rule (prereg) |
 |---|---|---|---|
-| `held_out_cohort` | GSE173955, GSE53697 | d's compound consensus with that cohort's signature as the query (same gene space, split and pipeline) | d is in the 5% most-reversing ranked compounds for that query |
+| `held_out_cohort` | GSE173955 (GSE53697 excluded by the cohort QC gate below) | d's compound consensus with that cohort's signature as the query (same gene space, split and pipeline) | d is in the 5% most-reversing ranked compounds for that query |
 | `composition_adjusted` | GSE132903 adjusted | same, with the adjusted signature | same 5% rule |
 | `lincs_context` | d's held-out LINCS contexts, at most 8 (if more, sample 8 stratified by cell line, seed 20261105) | context consensus against the primary signature | consensus ≤ θ |
-| `brain_exposure` | 1 | best measured CNS evidence | survive if measured human CNS PK or measured preclinical brain/plasma Kp ≥ 0.1, or PAMPA-BBB Pe ≥ 4×10⁻⁶ cm/s; otherwise fail (no measured data = fail) |
+| `brain_exposure` | 1, only if measured data exists | best measured CNS evidence | survive if measured human CNS PK or measured preclinical brain/plasma Kp ≥ 0.1, or PAMPA-BBB Pe ≥ 4×10⁻⁶ cm/s; fail if measured below those. **No measured data: the context is not in S_d** (it is untestable, not a failure) |
 | `cell_type` (stretch) | microglia/astrocyte/neuron pseudobulk | as for cohorts | same 5% rule |
+
+**Cohort QC gate** (prereg, decided on signature quality before any candidate outcome was computed):
+a held-out cohort enters S_d only if its own signature has ≥ 100 genes at FDR < 0.05. GSE53697 has
+0 (8 vs 9 samples; ρ = −0.002 with GSE132903), so it is reported in the reproduction table but is
+not a hidden test. GSE173955 has 2,182 and is included.
 
 Row schema (`processed/tauchstone/truth_table.parquet`): candidate_id, context_id, context_type,
 label, value, threshold, outcome (`survive` or `fail`), rule, plus metadata used for similarity:
@@ -177,6 +182,15 @@ quantity being maximised and its value.
 Runs only after the preregistration hash is committed; the code must refuse otherwise.
 
 - Pool: top 50 candidates × 20 seeds × 6 policies, budget 5 (prereg).
+- Every run also records step 0, the belief before any reveal. A verdict that is already decisive at
+  step 0 gives experiments to correct verdict = 0 for every policy.
+- **Primary analysis = contested candidates**: those whose step-0 verdict is INSUFFICIENT_EVIDENCE.
+  Policy choice can only matter there. The all-candidates analysis is reported alongside it, and the
+  contested share is reported.
+- **Harness check (synthetic only, not reported as a competitor)**: an `oracle` policy that picks the
+  hidden context whose true outcome moves P(C) furthest toward the full-information verdict. In a
+  synthetic world built with exploitable structure, the hybrid policy must beat random and the oracle
+  must beat everything. If not, the harness or a policy is wrong.
 - Full-information verdict = SUPPORTED if the claim holds using every y in S_d, else FRAGILE.
 - **Experiments to correct verdict**: the first t ≤ 5 at which the verdict is not INSUFFICIENT and
   equals the full-information verdict; budget + 1 if that never happens (censored, and reported).
