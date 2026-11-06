@@ -34,8 +34,9 @@ def lctx(cid, cell=None, dose=None, time=None):
 
 
 def test_candidate_policies_kept_out_of_prereg_set():
-    assert set(CANDIDATE_POLICIES) == {"decision_lookahead", "decision_lookahead_hybrid"}
+    assert set(CANDIDATE_POLICIES) == {"decision_lookahead"}
     assert not (set(CANDIDATE_POLICIES) & set(POLICIES))
+    assert "decision_lookahead_hybrid" in POLICIES  # co-primary, promoted
     with pytest.raises(ValueError):
         acquisition("decision_lookahead", [], [], 0, CFG, np.random.default_rng(0))
     with pytest.raises(ValueError):
