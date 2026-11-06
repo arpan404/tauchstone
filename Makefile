@@ -36,7 +36,7 @@ unpack-lincs: ## Decompress LINCS Level 5 GCTX (keeps the .gz)
 
 ## ---- Pipeline (workstreams 2-5) ------------------------------------------
 signatures: ## Disease signatures for all cohorts (R: limma / DESeq2)
-	@echo "TODO workstream 2: pipelines/geo" && exit 1
+	Rscript pipelines/geo/R/run_all.R
 
 rank: ## LINCS reversal scores + consensus ranking
 	@echo "TODO workstream 3: pipelines/lincs" && exit 1
