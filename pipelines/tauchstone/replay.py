@@ -399,6 +399,26 @@ def dry_run_synthetic(
     return runs, summary, out
 
 
+def engine_config_from_prereg(path: Path | None = None) -> tuple[EngineConfig, dict]:
+    """EngineConfig built only from the frozen preregistration (never from code defaults)."""
+    import yaml
+
+    prereg = yaml.safe_load((path or (MANIFESTS / "preregistration.yaml")).read_text())
+    eng = prereg["tauchstone_engine"]
+    th = eng["verdict_thresholds"]
+    cfg = EngineConfig(
+        q=float(prereg["claim"]["q"]),
+        kappa=float(eng["prior_strength_kappa"]),
+        ranking_weight_cap=float(eng["ranking_context_weight_cap"]),
+        type_priors={**EngineConfig().type_priors, **{k: float(v) for k, v in eng["type_priors"].items()}},
+        lam=float(eng["lambda"]),
+        lam_lookahead=float(eng["lambda_lookahead"]),
+        supported_threshold=float(th["supported"]),
+        fragile_threshold=float(th["fragile"]),
+    )
+    return cfg, prereg
+
+
 def main(argv: list[str] | None = None) -> Path:
     """CLI for `make benchmark`."""
     ap = argparse.ArgumentParser(description="Tauchstone replay benchmark")
@@ -427,11 +447,14 @@ def main(argv: list[str] | None = None) -> Path:
     sha, commit = prereg_guard()  # refuses unless frozen + committed
     _ = MANIFESTS  # prereg lives under data/manifests; kept explicit for provenance.
     world = load_world_from_processed(Path(args.processed), pools=["benchmark"])
-    cfg = EngineConfig()
-    seeds = [SEED_BASE + i for i in range(args.n_seeds)]
-    runs = run_replay(world, seeds=seeds, budget=args.budget, cfg=cfg)
+    cfg, prereg = engine_config_from_prereg()
+    bench = prereg["benchmark"]
+    budget = int(prereg["tauchstone_engine"]["budget"])
+    seeds = [int(bench["seed_base"]) + i for i in range(int(bench["seeds"]))]
+    print(f"engine config from frozen preregistration: {cfg}")
+    runs = run_replay(world, seeds=seeds, budget=budget, cfg=cfg)
     truth = {c.candidate_id: c.truth for c in world}
-    summary = build_summary(runs, truth, cfg, args.budget, sha, commit, reps=args.reps)
+    summary = build_summary(runs, truth, cfg, budget, sha, commit, reps=int(bench["bootstrap_reps"]))
     out_dir = Path(args.out_dir) if args.out_dir else (Path(args.processed) / "tauchstone")
     write_outputs(runs, summary, out_dir, seed=args.seed)
     print(f"wrote {out_dir}/benchmark_runs.parquet + benchmark_summary.json (prereg {sha[:12]} @ {commit[:12]})")
