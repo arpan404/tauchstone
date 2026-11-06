@@ -52,187 +52,150 @@ A science change now invalidates the benchmark.
 - No clinical language. Brain exposure is always labelled measured or predicted. A structure is
   target context, not binding evidence.
 
-## Tracks
+## Tracks (site-first: the website is the pitch; there is no separate slide deck)
 
-They can run in parallel. The arrows mark the only dependencies.
+They run in parallel and each owns its own folders. Only the orchestrator edits `apps/web/src/App.tsx`
+to wire in new screens, at merge time.
 
-| ID | Track | Owns (folders) | Depends on | Size |
+| ID | Track | Owns (folders) | Where it runs | Size |
 |---|---|---|---|---|
-| T1 | Lab-instrument restyle of the whole app | `apps/web/src/components`, `apps/web/src/features/{disease-signature,repurposing,evidence,protein-viewer,tauchstone,benchmark}`, `apps/web/src/index.css`, `apps/web/src/App.tsx` | — | 1 day |
-| T2 | 3D expo scene (Three.js) | `apps/web/src/features/expo-scene/` (new), `apps/web/package.json` (three only) | T1 merges first for `App.tsx`; one lazy route line | 1 day |
-| T3 | Deck figures from real results | `pipelines/reporting/` (new), `docs/figures/` | — | half a day |
-| T4 | Deck, pitch script, Q&A | `docs/deck/` (new) | T3 figures (can start now with placeholders) | 1 day |
-| T5 | Science loose ends | `pipelines/evidence/`, `pipelines/lincs/clue.py` (new), `tests/redteam/`, `docs/qa_report.md` | CLUE key from Arpan for part C | half a day |
-| T6 | Judge-facing README and repo polish | `README.md`, `docs/` (except `deck/`, `figures/`) | screenshots after T1 | half a day |
-| T7 | Automated fallback recording and release | `tests/e2e/` (new), `scripts/`, `Makefile` (release targets), `compose.yaml` | T1 and T2 merged (prepare now) | half a day |
-| T8 | Optional: single-cell exploratory view | `pipelines/singlecell/` (new), `apps/web/src/features/single-cell/` (new) | only if T1–T7 are on track; never enters the benchmark | 1 day |
+| S1 | Lab-instrument restyle of all 5 views + benchmark view leads with accuracy and p-values | `apps/web/src/index.css`, `apps/web/src/components/`, `apps/web/src/features/{disease-signature,repurposing,evidence,protein-viewer,tauchstone,benchmark}/` | Rijan's Mac | 1 day |
+| S2 | 3D expo scene (Three.js), optional full-screen mode | `apps/web/src/features/expo-scene/` (new); `three` in `apps/web/package.json` | Rijan's Mac | 1 day |
+| S3 | Story mode (the 3-minute guided walkthrough with the key numbers on screen) + landing screen | `apps/web/src/features/story/` (new), `apps/web/src/features/landing/` (new) | Rijan's Mac | 1 day |
+| S4 | Science loose ends: 2 odd exposure rows, Mol* structure check, CLUE cross-check | `pipelines/evidence/`, `pipelines/lincs/clue.py`, `tests/redteam/`, `docs/qa_report.md` | Arpan's Mac (needs the real data) | half a day |
+| S5 | Judge-facing README, in-site "How it works" and integrity text | `README.md`, `docs/` (except `figures/`), `apps/web/src/features/about/` (new) | Rijan's Mac | half a day |
+| S6 | Reliability: Playwright demo walkthrough (also records the fallback video), `make release`, expo-day checklist | `tests/e2e/` (new), `scripts/`, `Makefile` release targets | Rijan's Mac to build; final recording on Arpan's Mac | half a day |
+| S7 | Optional: single-cell exploratory panel (never enters the benchmark) | `pipelines/singlecell/`, `apps/web/src/features/single-cell/` | only if S1–S6 are on track | 1 day |
 
 Timeline:
-- **Fri:** T1, T2, T3, T5 and T6 start. T4 starts the outline.
-- **Sat noon:** T1 and T2 merged. T4 drops in the T3 figures.
-- **Sat evening:** UI freeze. T7 records the fallback video and builds the release bundle.
-- **Sun:** human rehearsal with Wi-Fi off on both laptops. Code freeze at 8 pm.
+- **Fri:** S1–S6 start.
+- **Sat noon:** S1, S2, S3 merged; the orchestrator wires the screens into `App.tsx`.
+- **Sat evening:** UI freeze. S6 records the fallback video on Arpan's Mac with real data.
+- **Sun:** human rehearsal with Wi-Fi off. Code freeze at 8 pm.
+
+**Data on Rijan's Mac:** there is no real data there, so UI tracks build against mock mode
+(`TS_API_MOCK=1 make api` + `VITE_USE_MOCK=0 bun run dev`, or `VITE_USE_MOCK=1`). The orchestrator on
+Arpan's Mac checks every branch against real data (`TS_API_MOCK=0`) before merging.
 
 ## Human tasks (Arpan / Rijan)
 
-1. Register the CLUE academic account and put the key in `.env` as `TS_CLUE_API_KEY=...` (unblocks T5 part C).
-2. Science look-over: the signature (volcano, sign check), the top 20, and the claim wording. 30 min, Sat morning.
-3. Pick the design direction; the default is lab instrument plus an optional 3D expo scene.
-4. Sun: rehearse the 3-minute and 90-second versions with Wi-Fi off on both laptops (`docs/offline.md`).
-5. Make sure both laptops can answer the five Q&A questions (T4 writes the answers).
+1. Register the CLUE academic account and put the key in `.env` on Arpan's Mac as `TS_CLUE_API_KEY=...` (unblocks S4 part C).
+2. Science look-over: the signature, the top 20 and the claim wording. 30 min, Sat morning.
+3. Sun: rehearse the 3-minute and 90-second versions with Wi-Fi off on both laptops (`docs/offline.md`).
 
 ---
 
-## Agent briefs (paste one into each agent)
+## Agent briefs (the orchestrator pastes these; each agent also reads this file)
 
-### T1 — Lab-instrument restyle
+Common to every brief: read `AGENTS.md` and `docs/parallel_plan.md`, stay in your folders, keep
+every existing test green, don't touch `App.tsx` (S1 excepted), push your branch to `origin`,
+and open a PR to `main` with screenshots for UI work and anything you could not verify.
 
-> You are restyling the web app of Tauchstone: Second Life (expo Mon Nov 9). Read `AGENTS.md` and
-> `docs/parallel_plan.md` (rules, your folders). The app is React 19, Vite 8, Tailwind v4, shadcn/ui,
-> ECharts and Mol* in `apps/web`, and it already works on real data. Goal: it should look like a
-> credible **lab instrument** on an expo monitor seen from 3 m: a dark graphite surface, a fine grid
-> texture, monospace readouts for numbers, teal for reversal and attention, amber for warnings, red
-> only for failures, and green only for survives.
-> - Apply it as design tokens in `index.css`, then use them in every view: Signature, Candidates,
->   Evidence, Attack, Benchmark.
-> - Attack view: P(claim) as a large instrument readout with a live trace across reveals. Hidden tests
->   are "sample wells" that stay sealed until run, pulse when recommended, and turn red or green on
->   reveal. One big Run validation button.
-> - Benchmark view: lead with decision accuracy after 5 tests and the Holm-corrected p-values against
->   random and greedy (from `/benchmark`, the `tests` field). The median-experiments chart is a tie,
->   so move it below.
-> - Keep the boundary banner text exactly as it is. Keep every existing data binding and test. Keep
->   keyboard navigation (1–5) and the visible focus rings.
-> - Check at 1280×800 and 1920×1080 against the real API (`TS_API_MOCK=0`). Respect
->   prefers-reduced-motion.
+### S1 — Lab-instrument restyle
+
+> Restyle the Tauchstone: Second Life web app (`apps/web`; React 19, Vite 8, Tailwind v4, shadcn/ui,
+> ECharts, Mol*) as a credible **lab instrument** on an expo monitor seen from 3 m:
+> - dark graphite surface, fine grid texture, monospace readouts for numbers
+> - teal for reversal and focus, amber for warnings, red only for failures, green only for survives
 >
-> The reference mockup is the "A. Lab instrument" direction Arpan approved (dark panel, wells, trace).
-> Done = all checks in the plan pass, plus screenshots of all 5 views in the PR.
+> Put the look in design tokens in `index.css` and apply them across Signature, Candidates, Evidence,
+> Attack and Benchmark.
+> - **Attack view:** P(claim) as a large readout with a live trace across reveals. Hidden tests are
+>   "sample wells", sealed until run, pulsing when recommended, red or green on reveal. One big Run
+>   validation button.
+> - **Benchmark view:** lead with decision accuracy after 5 tests per policy (with CIs) and the
+>   Holm-corrected p-values against random and greedy (`/benchmark` field `tests`). The
+>   median-experiments chart is a tie, so put it below.
+> - Keep the boundary banner text exactly as it is. Keep every data binding, keyboard shortcut (1–5),
+>   focus ring and test. Respect prefers-reduced-motion.
+> - Check at 1280×800 and 1920×1080. Done = build, typecheck, lint, test and check:api pass, plus
+>   screenshots of all 5 views.
 
-### T2 — 3D expo scene
+### S2 — 3D expo scene
 
-> Build an optional full-screen **expo mode** for Tauchstone: Second Life in
-> `apps/web/src/features/expo-scene/` with Three.js (add `three` and `@types/three` only). Read
-> `AGENTS.md` and `docs/parallel_plan.md`. Lazy-load it, so it is not in the main bundle. Add one
-> entry point: a key (`E`) or button that opens it over the current view. That needs a single line in
-> `App.tsx`; coordinate with T1 by rebasing after T1 merges.
-> - **Scene:** the AD signature as a slowly rotating sphere of genes. Use the real `/signatures/GSE132903`
->   data: position by gene index, colour by sign of `stat` (up warm, down teal), size by |stat|, and the
->   300 query-set genes brighter. The selected drug sits at the centre with a ring showing P(claim).
->   Its hidden tests orbit as labelled nodes (`contexts` from the attack session).
-> - **Run validation** in this mode calls the same API. A beam travels to the recommended node, the
->   node turns red or green, and the ring animates to the new P(claim).
-> - It must hold 60 fps on an M-series MacBook with 16k points: use one `Points` geometry and no
->   per-gene meshes. Degrade if WebGL is missing: show a message and stay on the normal view. Respect
->   prefers-reduced-motion (no rotation). Clean up the WebGL context on close. It must work offline.
->
-> Done = it opens, runs a full attack on Piperacillin (pool rank 5), keeps 60 fps, all checks pass,
-> and the PR includes a short screen recording.
+> In `apps/web/src/features/expo-scene/`, build an optional full-screen **expo mode** with Three.js (add
+> only `three` and `@types/three`). Export one lazily loaded component `<ExpoScene onClose />`; the
+> orchestrator wires the entry point.
+> - **Scene:** the AD signature as a slowly rotating sphere of genes, from the real
+>   `/signatures/GSE132903` response. Position by gene index, colour by sign of `stat` (up warm, down
+>   teal), size by |stat|, and the `query_set` genes brighter. The selected drug sits at the centre with
+>   a ring showing P(claim). Its hidden tests orbit as labelled nodes (`contexts` from the attack session).
+> - **Run validation** calls the same API hooks (`src/api/hooks.ts`). A beam travels to the recommended
+>   node, the node turns red or green, and the ring animates to the new P(claim).
+> - Use a single `Points` geometry for about 16k genes and hold 60 fps on an M-series MacBook. Show a
+>   message if WebGL is missing. Respect prefers-reduced-motion. Dispose the WebGL context on close.
+>   It must work offline.
+> - Done = a full attack runs inside the scene on mock data, with a short recording in the PR.
 
-### T3 — Deck figures
+### S3 — Story mode and landing screen
 
-> Create `pipelines/reporting/figures.py` for Tauchstone: Second Life. It writes PNG and SVG figures to
-> `docs/figures/` from the real outputs in `$TS_DATA_DIR/processed`, which you must not modify. Read
-> `AGENTS.md`, `docs/integrity_log.md` and `docs/parallel_plan.md`. Use matplotlib: a dark lab style
-> for slides and a light style for print (both). Every number is computed from files, never typed in.
-> Figures:
-> 1. Volcano of GSE132903 with the 7 sign-check genes labelled.
-> 2. Decision accuracy after 5 tests by policy (from `tauchstone/benchmark_summary.json`), with 95%
->    CIs, Tauchstone highlighted, and Holm p-values against random and greedy annotated.
-> 3. Experiments to the correct verdict: the distribution per policy (from
->    `tauchstone/benchmark_runs.parquet`, primary contested set).
-> 4. The permutation control: reuse `pipelines.lincs.permutation_report.rank_matched_curve`.
-> 5. A candidate funnel: 21,299 LINCS compounds, 5,690 rankable on gold signatures, 1,816
->    clinical-stage, top 50 sealed benchmark, 3 demo picks.
-> 6. Calibration of P(survive), from the benchmark summary bins.
-> 7. A one-attack storyboard for Piperacillin: start the real engine through `pipelines.tauchstone`
->    and plot P(claim) per step.
->
-> Add `make figures`. Done = all figures regenerate from one command, plus a pytest that each figure
-> file is produced.
+> The website is the pitch, so there is no slide deck. Build two new screens:
+> - **(a)** `apps/web/src/features/landing/`: one screen.
+>   - Title: "Tauchstone: Second Life".
+>   - Line: "Find a drug. Attack the hypothesis. Keep only what survives."
+>   - Three numbers, read live from the API: drugs ranked (candidates `n_ranked`), hidden tests
+>     prepared, and the benchmark headline (decision accuracy after 5 tests, Tauchstone vs random, from
+>     `/benchmark`).
+>   - The boundary sentence, and a "Start the 3-minute tour" button.
+> - **(b)** `apps/web/src/features/story/`: a guided walkthrough that drives the real views in order,
+>   with a step bar, Next and Back, a timer, and an on-screen caption per step.
+>   - 0:00 volcano: "Alzheimer's changes these genes in 195 human brains".
+>   - 0:20 ranking: "We scored every LINCS drug three ways; negative means it pushes the disease
+>     pattern back".
+>   - 0:50 evidence card plus Mol* for a demo candidate: "Is the target in the brain? Does the drug
+>     reach the brain, measured or only predicted?".
+>   - 1:15 attack: run validation twice with the Learn toggle; "Now we try to break it".
+>   - 2:15 benchmark: "Across 50 sealed drugs, the attack reaches the right call in fewer tests".
+>   - 2:40 boundary and close.
+>   - Captions use only numbers fetched from the API. Never hard-code results.
+> - Export `<Landing onStart />` and `<StoryMode onExit />`; the orchestrator wires them. Use the
+>   existing Zustand store (`src/store/ui.ts`) to switch views and selected candidate. If you need new
+>   store fields, add them in `src/store/story.ts`.
+> - Done = the tour runs end to end on mock data, with a recording in the PR.
 
-### T4 — Deck, pitch script, Q&A
+### S4 — Science loose ends (Arpan's Mac, real data)
 
-> Build the pitch for Tauchstone: Second Life (expo Mon Nov 9, a 3-minute judge-driven demo). Read
-> `AGENTS.md`, `docs/integrity_log.md`, `docs/qa_report.md`, `docs/parallel_plan.md` and the build
-> plan's demo script in `docs/plan_demo_script.md` if present (otherwise follow the 0:00–3:00 script
-> below). Produce `docs/deck/`:
-> - (a) `deck.md` with 10–12 slides: title, problem, what we built, signature, ranking, the attack (with
->   storyboard), the benchmark result, integrity (preregistration hash, the log, the honest
->   limitations), business slide, close with the boundary sentence.
-> - (b) `build_deck.py`, which renders it to `deck.pptx` with python-pptx (add it as a dev dependency),
->   using the figures from `docs/figures/` (T3 produces them; use placeholders until they exist).
-> - (c) `script.md`: the 3-minute and 90-second spoken scripts, timed.
-> - (d) `qa.md`: answers to the five likely judge questions, plus these, all from the logs: "Hasn't
->   CMap for AD been done?", "LINCS uses cancer lines", "Could it be neuron loss?", "Did you tune on
->   the test?", "Why trust P(survive)?", "Why did the permutation gate fail?", "Why did the
->   decision-aware policy not beat random?"
->
-> Every number must trace to a file. Never claim the drugs treat AD. The business slide has no cost
-> figure unless it is sourced. The 3-minute script order:
-> - 0:00 volcano;
-> - 0:20 ranking;
-> - 0:50 evidence card plus Mol*;
-> - 1:15 attack, toggling Attack/Learn and running validation twice;
-> - 2:15 benchmark;
-> - 2:40 boundary and close: "Find a drug. Attack the hypothesis. Keep only what survives."
+> Without changing any frozen output (truth table, benchmark, preregistration):
+> - **(A)** The two flagged exposure rows, locked as xfail in `tests/redteam/test_exposure_bounds.py`:
+>   look up the ChEMBL assays, decide whether each is a real value or a parse error, and document it in
+>   `docs/qa_report.md`. If a parse is wrong, fix `pipelines/evidence/exposure.py` and report which
+>   truth-table rows it would change. Do not rebuild or rerun anything frozen.
+> - **(B)** For the targets of pool ranks 1–10, confirm each structure has a local `.cif` that parses
+>   and that `GET /structures/{id}.cif` serves it.
+> - **(C)** Once `TS_CLUE_API_KEY` is set: add `pipelines/lincs/clue.py`, query CLUE with our top 150
+>   up and 150 down genes (from `pipelines.lincs.scoring.build_query_sets`), cache the response, and
+>   report the Spearman correlation between CLUE tau and our consensus for overlapping top-50
+>   compounds. Report only.
 
-### T5 — Science loose ends
+### S5 — README and in-site "How it works"
 
-> Finish three checks for Tauchstone: Second Life without changing any frozen output (the truth
-> table, benchmark and preregistration). Read `AGENTS.md`, `docs/qa_report.md` and
-> `docs/parallel_plan.md`.
-> - **(A) Exposure rows.** Two flagged rows are locked as xfail in `tests/redteam/test_exposure_bounds.py`:
->   a preclinical CSF ratio above 1 and a CSF value in % units. Look up the ChEMBL assays, decide
->   whether each is a real value or a parsing error, and document it in `docs/qa_report.md`. If a parse
->   is wrong, fix `pipelines/evidence/exposure.py` and report which truth-table rows it would change.
->   Do not rebuild the truth table or rerun the benchmark; the lead decides.
-> - **(B) Mol\* check.** For the targets of the top 10 pool drugs, confirm each `structures.parquet`
->   entry has a local `.cif` that parses (gemmi or Biopython, or a minimal mmCIF header check) and that
->   `GET /structures/{id}.cif` serves it. Write the list to the report.
-> - **(C) CLUE cross-check**, once `TS_CLUE_API_KEY` is set. Add `pipelines/lincs/clue.py`: query CLUE
->   with our top 150 up and 150 down genes (Entrez, from `pipelines.lincs.scoring.build_query_sets`),
->   then report the Spearman correlation between CLUE tau and our consensus for the top 50 overlapping
->   compounds. Cache the response locally. Report only; no tuning.
+> - Rewrite `README.md` for judges:
+>   - what it does in 5 lines, plus screenshots (Arpan's Mac can provide them after S1)
+>   - the headline result, with links to `docs/integrity_log.md` and the frozen preregistration hash
+>   - how to run offline (`docs/offline.md`) and reproduce from scratch
+>   - a Mermaid architecture diagram, data sources with licences, and the scientific boundary
+> - Also build `apps/web/src/features/about/`: an in-site "How it works and how we kept it honest"
+>   panel, exporting `<About />`. It contains a pipeline diagram and the integrity log as a readable
+>   timeline (render `docs/integrity_log.md` content, copied into a TS module), the preregistration
+>   hash, and the honest limitations: the permutation gate not met at 17/20; the top 5 not beyond the
+>   null; the decision-aware co-primary not beating random.
+> - Use only claims as the docs state them.
 
-### T6 — Judge-facing README
+### S6 — Reliability and fallback
 
-> Rewrite `README.md` for judges and new contributors of Tauchstone: Second Life:
-> - what it does in 5 lines
-> - a screenshot of each view (from the running app, after T1 merges)
-> - the headline result with links to `docs/integrity_log.md` and the frozen preregistration (with its
->   hash)
-> - how to run it offline (`docs/offline.md`) and how to reproduce from scratch (`make setup data
->   signatures rank evidence truth-table benchmark`, with rough times)
-> - an architecture diagram (Mermaid)
-> - data sources with licences: GEO, LINCS, Open Targets, HPA, ChEMBL, UniProt, PDB
-> - the scientific boundary
->
-> Read `AGENTS.md` and `docs/parallel_plan.md`. Keep claims exactly as the docs state them.
+> - **(A)** `tests/e2e/demo_walkthrough.spec.ts` (Playwright): drives the 3-minute demo against the
+>   Docker stack (`make up`): volcano, ranking, Piperacillin evidence with Mol*, attack with two
+>   validations and the Learn toggle, then the benchmark. Use realistic pauses and record video at
+>   1920×1080. `make record` writes `data/demo/fallback_recording.webm` (and `.mp4` if ffmpeg exists).
+>   Make it work on mock data now; the final recording runs on Arpan's Mac with real data after the UI
+>   freeze.
+> - **(B)** `make release`: rebuild the bundle (`make demo`), run `scripts/offline_check.sh`, save
+>   images to `~/Data/tauchstone/expo/expo-images.tar.gz`, and write a checksum manifest.
+> - **(C)** A one-page `docs/expo_day_checklist.md`.
 
-### T7 — Fallback recording and release
+### S7 — Optional single-cell exploratory panel
 
-> Make the expo fail-safe for Tauchstone: Second Life. Read `AGENTS.md`, `docs/offline.md` and
-> `docs/parallel_plan.md`.
-> - **(A)** Add a Playwright script in `tests/e2e/demo_walkthrough.spec.ts`. It drives the real 3-minute
->   demo against the Docker stack (`make up`): volcano, ranking, evidence for Piperacillin with Mol*,
->   attack with two validations and the Learn toggle, then the benchmark. Use realistic pauses and
->   record video at 1920×1080. Add `make record`, which outputs `data/demo/fallback_recording.webm`
->   (and `.mp4` via ffmpeg if available).
-> - **(B)** Add `make release`, which rebuilds the bundle (`make demo`), runs `scripts/offline_check.sh`,
->   saves images to `~/Data/tauchstone/expo/expo-images.tar.gz`, and writes a checksum manifest.
-> - **(C)** Write a one-page `docs/expo_day_checklist.md`.
->
-> Prepare now on mock or current UI. The final recording runs after T1 and T2 merge (Sat evening).
-
-### T8 — Optional single-cell exploratory view
-
-> Only start if T1–T7 are on track. Read `AGENTS.md` and `docs/parallel_plan.md`. From
-> `raw/geo/GSE272082` (filtered 10x h5, 9 donors) and `raw/geo/GSE175814`:
-> - build pseudobulk per donor and cell type (microglia, astrocytes, excitatory neurons,
->   oligodendrocytes) in `pipelines/singlecell/`;
-> - run limma-voom AD vs control per cell type where donors allow, recording n per group;
-> - score the top 20 pool drugs against each cell-type signature with `pipelines.lincs.rank`.
->
-> Show it in a separate "Exploratory: cell types" panel, clearly labelled **exploratory, not part of
-> the preregistered benchmark**. It must not touch the truth table, engine or benchmark.
+> Only start if S1–S6 are on track. Build pseudobulk per donor and cell type from GSE272082 and
+> GSE175814, run limma-voom AD vs control per cell type, and score the top 20 pool drugs against each.
+> Show it in a separate panel labelled **exploratory, not part of the preregistered benchmark**. It
+> never touches the truth table, engine or benchmark.
