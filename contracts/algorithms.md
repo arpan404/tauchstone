@@ -53,6 +53,12 @@ the four scores added as covariates → `GSE132903__composition_adjusted.parquet
 
 ---
 
+## 1c. GSE173955 normalization
+
+GEO provides only TPM, which is compositional. After the expression filter, log2(TPM+1) is
+quantile-normalized between samples (`limma::normalizeBetweenArrays(method = "quantile")`) before
+limma-trend.
+
 ## 2. Reversal scoring (WS3, Python)
 
 Gene space: the 978 landmark genes present in the query (Tier 1). X = drug z-scores
@@ -94,6 +100,16 @@ p_perm = (1 + #perms with score ≤ real score) / 201. The control passes if eve
 p_perm < 0.05. **θ** (prereg) = 5th percentile of the pooled ranking-context consensus across all
 permutations.
 
+**Candidate pool** (prereg). Only compounds with a clinical history can be Tauchstone candidates.
+LINCS compounds are matched to Open Targets 26.09 `drug_molecule` by full InChIKey, or else by the
+14-character InChIKey connectivity block, taking the highest stage on ties. A compound is eligible if
+`maximumClinicalStage` ∈ {PHASE_1, PHASE_1_2, PHASE_2, PHASE_2_3, PHASE_3, PREAPPROVAL, APPROVAL}.
+The ranking itself covers every compound. The benchmark pool is the top 50 eligible compounds, the
+development pool is eligible ranks 51–100, and the demo candidates are eligible ranks 1, 5 and 12.
+
+**Signature set.** All trt_cp signatures are used (the person's decision). An optional `--gold-only`
+mode (distil_cc_q75 ≥ 0.2, 0 ≤ pct_self_rank_q25 ≤ 5, ≥ 2 replicates) exists for comparison only.
+
 **Known-positive check.** Compounds reported in prior AD CMap papers should rank above the median.
 Report this; never tune toward it.
 
@@ -112,10 +128,17 @@ hidden pool S_d (prereg):
 | `brain_exposure` | 1, only if measured data exists | best measured CNS evidence | survive if measured human CNS PK or measured preclinical brain/plasma Kp ≥ 0.1, or PAMPA-BBB Pe ≥ 4×10⁻⁶ cm/s; fail if measured below those. **No measured data: the context is not in S_d** (it is untestable, not a failure) |
 | `cell_type` (stretch) | microglia/astrocyte/neuron pseudobulk | as for cohorts | same 5% rule |
 
-**Cohort QC gate** (prereg, decided on signature quality before any candidate outcome was computed):
-a held-out cohort enters S_d only if its own signature has ≥ 100 genes at FDR < 0.05. GSE53697 has
-0 (8 vs 9 samples; ρ = −0.002 with GSE132903), so it is reported in the reproduction table but is
-not a hidden test. GSE173955 has 2,182 and is included.
+**Cohort QC gate** (prereg; decided on signature quality before any candidate outcome was computed):
+a held-out cohort enters S_d only if its gene-level statistics agree with the primary signature,
+with Spearman ρ ≥ 0.2 over shared genes. GSE173955 passes (ρ = 0.50). GSE53697 fails (ρ = −0.002), so it
+is reported in the reproduction table but is not a hidden test.
+
+History, disclosed: the first gate was "≥ 100 genes at FDR < 0.05". GSE173955 first appeared to
+pass with 2,182 such genes, but that was a TPM compositional artifact (98% of genes "down"). After
+quantile normalization of log2(TPM+1) it has 0 such genes, so the first gate would have excluded every
+held-out cohort. With the person's sign-off, the gate was replaced by the correlation gate above,
+before any truth-table outcome was computed. Queries built from a held-out cohort use the top-150 rule
+when fewer than 10 genes pass FDR < 0.05 (§2).
 
 Row schema (`processed/tauchstone/truth_table.parquet`): candidate_id, context_id, context_type,
 label, value, threshold, outcome (`survive` or `fail`), rule, plus metadata used for similarity:
@@ -164,6 +187,10 @@ computed by dynamic programming. P(C | D) = P(K_hidden ≥ K* − r). It is dete
 - attack (`max_failure`): a(x) = 1 − p_x
 - learn (`expected_decision_change`): a(x) = Σ_{y∈{0,1}} P(y | x, D) · |P(C | D ∪ (x,y)) − P(C | D)|.
   Each hypothetical y updates every other hidden context's posterior via w before P(C) is recomputed.
+- decision_lookahead: U(p) = p if p ≥ 0.8, 1 − p if p ≤ 0.2, else 0. With depth d = min(2, budget left):
+  d = 1: a(x) = Σ_y P(y|x,D)·U(P(C|D∪(x,y))). d = 2: a(x) = Σ_y P(y|x,D)·max(U(P(C|D∪(x,y))), V1(D∪(x,y))),
+  where V1(D) = max_x' Σ_y' P(y'|x',D)·U(P(C|D∪(x',y'))). Ties break by the learn score, then by lower context_id.
+- decision_lookahead_hybrid: decision_lookahead(x) + λ_L·(1 − p_x), with λ_L chosen like λ, on development candidates only.
 - tauchstone hybrid: a(x) = learn(x) + λ·(1 − p_x), with λ (prereg) fixed on development
   candidates only, chosen from the grid {0, 0.1, 0.25, 0.5, 1} by decision accuracy, then by median
   experiments to correct verdict.
@@ -201,5 +228,9 @@ Runs only after the preregistration hash is committed; the code must refuse othe
 - **Brier and reliability**: p_x at the moment x is revealed vs y_x, over all reveals; 10 equal-width bins.
 - **CIs**: cluster bootstrap over candidates (resample candidates with their 20 seeds), 2,000 reps,
   seed 20261105; percentile 95% CI.
+- **Policies (7)**: random, greedy_strongest, max_failure, max_uncertainty, expected_decision_change,
+  tauchstone_hybrid, decision_lookahead_hybrid. **Co-primary**: tauchstone_hybrid (the plan's formula) and
+  decision_lookahead_hybrid (the person's decision, after a synthetic-only experiment).
 - **Tests**: per candidate, average the metric over seeds. Paired Wilcoxon signed-rank of
-  tauchstone_hybrid vs each other policy, with Holm correction across the five comparisons.
+  each co-primary vs each of the five baselines, with Holm correction across all ten comparisons. The two
+  co-primaries are also compared head to head, as a descriptive result only.
