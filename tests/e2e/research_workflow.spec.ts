@@ -1,0 +1,83 @@
+import { test, expect } from '@playwright/test';
+import { ui } from './selectors';
+
+test('discovery comparison and one committed experiment retain session across evidence', async ({ page }) => {
+  const s = ui(page);
+  const boundary = async () => {
+    await expect(page.getByRole('note').filter({ hasText: 'Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.' })).toBeVisible();
+    await expect(page.getByRole('complementary', { name: 'Guided tour' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Start.*tour|Finish tour/ })).toHaveCount(0);
+  };
+  let creates = 0;
+  let runs = 0;
+  page.on('request', r => {
+    if (r.method() !== 'POST') return;
+    if (new URL(r.url()).pathname.endsWith('/attack')) creates++;
+    if (/\/attack\/[^/]+\/run$/.test(new URL(r.url()).pathname)) runs++;
+  });
+  await page.goto('/');
+  await boundary();
+  await expect(s.selected).toContainText('No candidate selected');
+  await expect(s.results.first()).toBeVisible();
+  // Candidate choice uses discovery order only, before any held-out evidence.
+  const names = await s.results.evaluateAll(rows => rows.slice(0, 2).map(row => row.getAttribute('aria-label')!.replace(/^Select /, '').replace(/, rank \d+, consensus .*$/, '')));
+  expect(names).toHaveLength(2);
+  for (const name of names) {
+    await s.search.fill(name);
+    await s.results.first().click();
+    await expect(s.inspector).toContainText(name);
+    await s.inspector.getByRole('button', { name: 'Add to comparison', exact: true }).click();
+    await expect(s.comparison).toContainText(name);
+  }
+  await expect(s.comparison.getByRole('button', { name: /^Remove / })).toHaveCount(2);
+  await s.search.fill(names[0]);
+  await s.results.first().click();
+  await s.inspector.getByRole('button', { name: 'Evidence', exact: true }).click();
+  await expect(s.evidence).toBeVisible();
+  await boundary();
+  await s.selected.getByRole('button', { name: 'Open experiments', exact: true }).click();
+  await boundary();
+  await page.getByRole('combobox', { name: 'Session budget' }).selectOption('2');
+  const started = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith('/attack'));
+  await page.getByRole('button', { name: 'Create experiment session', exact: true }).click();
+  const startResponse = await started;
+  expect(startResponse.ok()).toBeTruthy();
+  const session = await startResponse.json();
+  expect(session.history ?? []).toHaveLength(0);
+  expect(session.budget_remaining).toBe(2);
+  await expect(s.budget).toHaveAttribute('aria-label', /^Budget 2 of 2;/);
+  await expect(s.history).toHaveCount(0);
+  const context = session.contexts.find((c: { status: string }) => c.status === 'hidden');
+  expect(context).toBeTruthy();
+  const experiment = page.getByRole('button', { name: /Hidden · cost 1/ }).filter({ hasText: context.label });
+  await experiment.click();
+  await expect(experiment).toHaveAttribute('aria-pressed', 'true');
+  expect(runs).toBe(0);
+  const committed = page.waitForResponse(r => r.request().method() === 'POST' && new URL(r.url()).pathname.endsWith(`/attack/${session.session_id}/run`));
+  await page.getByRole('button', { name: 'Commit & run experiment', exact: true }).click();
+  const response = await committed;
+  expect(response.ok()).toBeTruthy();
+  expect(response.request().postDataJSON().context_id).toBe(context.context_id);
+  const result = await response.json();
+  expect(result.session_id).toBe(session.session_id);
+  expect(result.history).toHaveLength(1);
+  expect(result.revealed.context_id).toBe(context.context_id);
+  expect(result.budget_remaining).toBe(session.budget_remaining - 1);
+  await expect(s.history).toHaveCount(1);
+  await expect(s.history.first()).toContainText(context.label);
+  await expect(s.history.first()).toContainText(result.revealed.outcome);
+  await expect(s.budget).toHaveAttribute('aria-label', /^Budget 1 of 2;/);
+  const history = await s.history.first().innerText();
+  await s.selected.getByRole('button', { name: 'View evidence', exact: true }).click();
+  await expect(s.evidence).toBeVisible();
+  await boundary();
+  await s.selected.getByRole('button', { name: 'Open experiments', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Create experiment session', exact: true })).toHaveCount(0);
+  await expect(s.history).toHaveCount(1);
+  await expect(s.history.first()).toHaveText(history, { useInnerText: true });
+  await expect(s.budget).toHaveAttribute('aria-label', /^Budget 1 of 2;/);
+  await expect(s.selected).toContainText(names[0]);
+  await boundary();
+  expect(creates).toBe(1);
+  expect(runs).toBe(1);
+});

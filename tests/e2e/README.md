@@ -1,15 +1,20 @@
-# Demo walkthrough
+# Research workflow E2E
 
-Install once with `cd tests/e2e && bun install --frozen-lockfile`. The run uses the installed Google Chrome by default (Playwright's bundled Chromium does not launch on the newest macOS); set `TS_E2E_CHANNEL=chromium` after `bunx playwright install chromium` to use that instead.
-From the repo root, `make up && make record` records the real Docker stack.
-Override the URL with `TS_E2E_BASE_URL=http://localhost:5178 make record`.
-Use `TS_E2E_PAUSE_MS=500` for a quick check; the default pauses total about 140 seconds.
-`TS_E2E_CHANNEL=chrome` uses installed Chrome if the bundled browser is unavailable.
-Selectors live in selectors.ts. No test ids or candidate names are required.
-The test requires a rendered structure canvas and two committed history entries.
-Videos and traces stay untracked. Only a passing run replaces data/demo/fallback_recording.webm.
+Install with `cd tests/e2e && bun install --frozen-lockfile`.
+Run against the real API and frontend with:
 
-On the real-data Mac, run `make release`, then `make up && make record`.
-Release exports images, bundle manifest, commit and SHA256SUMS to
-`$TS_DATA_DIR/expo` or `~/Data/tauchstone/expo`; override with TS_EXPO_DIR.
-Transfer the entire data/demo bundle separately. Release does not rebuild scientific outputs.
+```sh
+TS_E2E_BASE_URL=http://localhost:5273 bun run test
+```
+
+Installed Google Chrome is the default. Set `TS_E2E_CHANNEL=chromium` to use an installed Playwright Chromium instead.
+
+The test chooses two candidates from discovery ranking, searches and compares them,
+opens evidence, creates a budget-two session and commits exactly one hidden experiment.
+It checks the server response, history, budget and session continuity through evidence
+navigation. Boundary notes and absence of the removed tour are checked throughout.
+No candidate is chosen using held-out outcomes. No structure canvas or fixed scientific
+outcome is required. There are no timed tour pauses or screenshot assertions.
+
+Set `TS_E2E_RECORD=1` to record video. Failure traces stay enabled.
+Videos and failure traces stay untracked in `test-results/`.
