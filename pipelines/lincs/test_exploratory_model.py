@@ -51,7 +51,10 @@ def test_training_split_provenance_and_allowlist(tmp_path, monkeypatch):
         assert provenance['output_sha256'] == sha256_file(path)
         assert provenance['random_seed'] == 20261105
         assert len(provenance['inputs']) == 3
-    assert predict_candidate(tmp_path, 'c0')['run_id'] == second['run_id']
+    prediction = predict_candidate(tmp_path, 'c0')
+    assert prediction['run_id'] == second['run_id']
+    assert prediction['prediction'] == prediction['predicted']
+    assert prediction['training_membership'] in {'train', 'internal_test'}
     with pytest.raises(ValueError, match='absent'):
         predict_candidate(tmp_path, 'unknown')
 

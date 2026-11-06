@@ -1,7 +1,8 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { BookOpen, ChartNoAxesCombined, Dna, FlaskConical, Layers3, Microscope, Moon, Search, ShieldCheck, Sun, Table2 } from 'lucide-react';
+import { BookOpen, BrainCircuit, ChartNoAxesCombined, Dna, FlaskConical, Layers3, Microscope, Moon, Search, ShieldCheck, Sun, Table2 } from 'lucide-react';
 import { useCandidates, useMockStatus } from '@/api/hooks';
 import { About } from '@/features/about';
+import { LabView } from '@/features/lab';
 import { BenchmarkView } from '@/features/benchmark/BenchmarkView';
 import { DiseaseSignatureView } from '@/features/disease-signature/DiseaseSignatureView';
 import { EvidenceView } from '@/features/evidence/EvidenceView';
@@ -19,6 +20,7 @@ import { useUi, type StepId } from '@/store/ui';
 
 const VIEWS: Record<StepId, () => React.JSX.Element> = {
   candidates: RepurposingView,
+  lab: LabView,
   signature: DiseaseSignatureView,
   evidence: EvidenceView,
   attack: AttackView,
@@ -26,6 +28,7 @@ const VIEWS: Record<StepId, () => React.JSX.Element> = {
 };
 const ITEMS = [
   { id: 'candidates', label: 'Candidates', icon: Table2, group: 'Research' },
+  { id: 'lab', label: 'AI lab', icon: BrainCircuit, group: 'Research' },
   { id: 'signature', label: 'Disease signature', icon: Dna, group: 'Research' },
   { id: 'evidence', label: 'Evidence', icon: Layers3, group: 'Research' },
   { id: 'attack', label: 'Experiments', icon: FlaskConical, group: 'Validation' },
@@ -73,6 +76,7 @@ function WorkspaceSidebar({ page, navigate, candidateId, candidateName }: { page
           <p className="text-[11px] text-muted-foreground">Current investigation</p>
           <p className="mt-1.5 break-words text-sm font-medium text-foreground">{candidateName ?? candidateId ?? 'No candidate selected'}</p>
           {candidateId ? <div className="mt-3 flex flex-col items-start gap-1">
+            <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => open('lab')}>Ask copilot</Button>
             <Button size="sm" variant="ghost" className="w-full justify-start" onClick={() => open('evidence')}>View evidence</Button>
             <Button size="sm" variant="secondary" className="w-full justify-start" onClick={() => open('attack')}>Open experiments</Button>
           </div> : <Button size="sm" variant="outline" className="mt-3" onClick={() => open('candidates')}>Choose a candidate</Button>}

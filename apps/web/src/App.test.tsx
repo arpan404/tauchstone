@@ -26,9 +26,11 @@ describe('research workspace shell', () => {
     expect(screen.getByRole('main', { name: 'Candidates' }).textContent).toContain('Candidate explorer');
     const nav = within(screen.getByRole('navigation', { name: 'Research workspace' }));
     expect(nav.getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Candidates', 'Disease signature', 'Evidence', 'Experiments', 'Benchmark', 'Cell types', 'Methods',
+      'Candidates', 'AI lab', 'Disease signature', 'Evidence', 'Experiments', 'Benchmark', 'Cell types', 'Methods',
     ]);
     expect(STEPS[0].id).toBe('candidates');
+    expect(screen.getAllByRole('navigation', { name: 'breadcrumb' })).toHaveLength(1);
+    expect(screen.getByRole('region', { name: 'Selected candidate' }).closest('header')).toBeNull();
     expect(screen.queryByRole('button', { name: /tour|^expo\b/i })).toBeNull();
     fireEvent.keyDown(window, { key: 'e' });
     fireEvent.keyDown(window, { key: '1' });

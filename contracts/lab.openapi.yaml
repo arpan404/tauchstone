@@ -1,0 +1,317 @@
+openapi: 3.1.0
+info:
+  title: Tauchstone exploratory lab extension
+  version: 0.1.0
+  description: Additive contract for the exploratory AI lab. The frozen preregistered
+    contracts/openapi.yaml remains unchanged. Model training reads discovery-only
+    structure and ranking artifacts, never benchmark outcomes. All predictions are
+    separate from official rankings.
+paths:
+  /lab/status:
+    get:
+      tags:
+      - exploratory lab
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabStatus'
+  /lab/chat:
+    post:
+      tags:
+      - exploratory lab
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '404':
+          description: Unknown candidate or expired session
+        '409':
+          description: Session belongs to another candidate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+  /lab/model:
+    get:
+      tags:
+      - exploratory lab
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelState'
+  /lab/model/train:
+    post:
+      tags:
+      - exploratory lab
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelState'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainRequest'
+  /lab/model/predict:
+    post:
+      tags:
+      - exploratory lab
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'
+        '409':
+          description: No completed model
+        '422':
+          description: Structure or prediction unavailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PredictRequest'
+components:
+  schemas:
+    ChatRequest:
+      properties:
+        question:
+          maxLength: 2000
+          minLength: 1
+          title: Question
+          type: string
+        candidate_id:
+          maxLength: 200
+          minLength: 1
+          title: Candidate Id
+          type: string
+        session_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: null
+          title: Session Id
+      required:
+      - question
+      - candidate_id
+      title: ChatRequest
+      type: object
+    TrainRequest:
+      properties:
+        algorithm:
+          const: random_forest
+          default: random_forest
+          title: Algorithm
+          type: string
+        seed:
+          const: 20261105
+          default: 20261105
+          title: Seed
+          type: integer
+      title: TrainRequest
+      type: object
+    PredictRequest:
+      properties:
+        candidate_id:
+          maxLength: 200
+          minLength: 1
+          title: Candidate Id
+          type: string
+      required:
+      - candidate_id
+      title: PredictRequest
+      type: object
+    ModelReport:
+      properties:
+        run_id:
+          title: Run Id
+          type: string
+        created_at:
+          title: Created At
+          type: string
+        algorithm:
+          title: Algorithm
+          type: string
+        task:
+          title: Task
+          type: string
+        seed:
+          title: Seed
+          type: integer
+        n_train:
+          title: N Train
+          type: integer
+        n_test:
+          title: N Test
+          type: integer
+        n_excluded:
+          title: N Excluded
+          type: integer
+        split:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: string
+          title: Split
+        feature_count:
+          title: Feature Count
+          type: integer
+        metrics:
+          additionalProperties:
+            anyOf:
+            - type: number
+            - type: 'null'
+          title: Metrics
+          type: object
+        training_sources:
+          items: {}
+          title: Training Sources
+          type: array
+        limitations:
+          items: {}
+          title: Limitations
+          type: array
+        provenance:
+          additionalProperties: true
+          title: Provenance
+          type: object
+      required:
+      - run_id
+      - created_at
+      - algorithm
+      - task
+      - seed
+      - n_train
+      - n_test
+      - n_excluded
+      - split
+      - feature_count
+      - metrics
+      - training_sources
+      - limitations
+      - provenance
+      title: ModelReport
+      type: object
+    Citation:
+      type: object
+      required:
+      - id
+      - title
+      - excerpt
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        excerpt:
+          type: string
+        source_url:
+          type: string
+          format: uri
+    ChatResponse:
+      type: object
+      required:
+      - answer
+      - citations
+      - provider
+      - model
+      - mode
+      - boundary
+      properties:
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        provider:
+          type: string
+          const: ollama
+        model:
+          type: string
+        mode:
+          type: string
+          enum:
+          - generated
+          - evidence_search
+        boundary:
+          type: string
+      description: 'Generated mode is extractive: the local model selects exact source
+        excerpts. No hidden experiment outcomes are retrieved.'
+    ModelState:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - not_trained
+          - training
+          - ready
+          - failed
+        report:
+          $ref: '#/components/schemas/ModelReport'
+        error:
+          type: string
+    LabStatus:
+      type: object
+      required:
+      - copilot
+      - model
+      properties:
+        copilot:
+          type: object
+          required:
+          - provider
+          - model
+          - ready
+          - detail
+          properties:
+            provider:
+              type: string
+            model:
+              type: string
+            ready:
+              type: boolean
+            detail:
+              type: string
+        model:
+          $ref: '#/components/schemas/ModelState'
+    Prediction:
+      type: object
+      required:
+      - candidate_id
+      - prediction
+      - training_membership
+      - run_id
+      properties:
+        candidate_id:
+          type: string
+        prediction:
+          type: number
+        training_membership:
+          type: string
+          enum:
+          - train
+          - internal_test
+          - unseen
+        run_id:
+          type: string

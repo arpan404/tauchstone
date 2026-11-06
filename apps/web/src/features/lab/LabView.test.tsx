@@ -89,7 +89,7 @@ it('posts training parameters then polls the server until ready and displays hon
   readyReadAt=Date.now();return json({status:'ready',report})
  },()=>{started=true;return json({status:'training'})})
  fireEvent.click(screen.getByRole('tab',{name:'Model studio'}))
- await screen.findByText('not_trained')
+ await screen.findByText('Ready to train')
  fireEvent.click(screen.getByRole('button',{name:'Train random forest'}))
  await screen.findByText(/Training job running/)
  await screen.findByText('Internal test results',{}, {timeout:5000})

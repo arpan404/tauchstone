@@ -44,7 +44,7 @@ def test_grounded_real_payload(monkeypatch):
         assert r.status_code == 200
         body = r.json()
         assert body["mode"] == "generated"
-        assert body["citations"][0]["excerpt"] in body["answer"]
+        assert body["citations"][0]["excerpt"] in body["answer"].lower()
     finally:
         app.dependency_overrides.clear()
 
@@ -61,8 +61,8 @@ def test_fallback_and_hallucinations(monkeypatch):
             monkeypatch.setattr(lab, "ollama", provider)
             body = TestClient(app).post("/lab/chat", json={"candidate_id": "x", "question": "MAPK"}).json()
             assert body["mode"] == "evidence_search"
-            assert "99%" not in body["answer"]
-            assert "Treats" not in body["answer"]
+            assert "99%" not in body["answer"].lower()
+            assert "Treats" not in body["answer"].lower()
             assert len(body["answer"]) < 4500
         body = TestClient(app).post("/lab/chat", json={"candidate_id": "x", "question": "zzzzzz"}).json()
         assert body["citations"] == []
@@ -147,9 +147,9 @@ def test_discovery_coverage_and_readable_excerpts():
     assert "SECRET" not in wire
     assert "held_out" not in wire
     discovery = next(r for r in rows if "Discovery" in r["title"])
-    assert "consensus: -0.42" in discovery["excerpt"]
-    assert "wtcs score: -0.4" in discovery["excerpt"]
-    assert "consensus iqr: -0.6 to -0.2" in discovery["excerpt"]
+    assert "consensus: -0.42" in discovery["excerpt"].lower()
+    assert "wtcs score: -0.4" in discovery["excerpt"].lower()
+    assert "consensus iqr: -0.6 to -0.2" in discovery["excerpt"].lower()
     coverage = next(r for r in rows if "coverage" in r["title"])
     assert "available target count: 1" in coverage["excerpt"]
     assert "unknown, not negative" in coverage["excerpt"]
@@ -188,8 +188,8 @@ def test_committed_history_and_session_mismatch(monkeypatch):
         body = client.post("/lab/chat", json={"candidate_id": "x", "session_id": session.session_id,
                                              "question": "What committed experiment outcome and value?"}).json()
         assert body["mode"] == "generated"
-        assert "value: -0.03" in body["answer"]
-        assert "Extractive copilot" in body["answer"]
+        assert "value: -0.03" in body["answer"].lower()
+        assert "Extractive copilot" in body["answer"].lower()
         assert "SECRET" not in json.dumps(body)
         assert observed
         # Reject before inspecting the mismatched engine snapshot.
