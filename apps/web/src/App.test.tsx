@@ -4,7 +4,7 @@ import App from './App';
 import { STEPS, useUi } from './store/ui';
 vi.mock('@/api/hooks', () => ({
   useMockStatus: () => true,
-  useCandidates: () => ({ data: { candidates: [{ id: 'compound-a', name: 'Compound A' }] } }),
+  useCandidates: () => ({ data: { candidates: [{ id: 'compound-a', name: 'Compound A', rank: 1 }] } }),
 }));
 vi.mock('@/features/repurposing/RepurposingView', () => ({ RepurposingView: () => <div>Candidate explorer</div> }));
 vi.mock('@/features/disease-signature/DiseaseSignatureView', () => ({ DiseaseSignatureView: () => <div>Signature view</div> }));
@@ -15,6 +15,8 @@ vi.mock('@/features/about', () => ({ About: () => <div>Methods view</div> }));
 vi.mock('@/features/single-cell', () => ({ SingleCellPanel: () => <div>Cell view</div> }));
 
 Object.defineProperty(window, 'matchMedia', { writable: true, value: vi.fn().mockImplementation(query => ({ matches: false, media: query, onchange: null, addEventListener: vi.fn(), removeEventListener: vi.fn(), dispatchEvent: vi.fn() })) });
+vi.stubGlobal('ResizeObserver', class { observe() {} unobserve() {} disconnect() {} });
+HTMLElement.prototype.scrollIntoView = vi.fn();
 beforeEach(() => { localStorage.clear(); document.documentElement.classList.remove('dark'); });
 beforeEach(() => useUi.setState({ step: 'candidates', selectedCandidateId: null, sessionId: null, mode: 'attack' }));
 afterEach(cleanup);
@@ -53,5 +55,23 @@ describe('research workspace shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Choose a candidate' }));
     expect(useUi.getState().selectedCandidateId).toBeNull();
     expect(useUi.getState().step).toBe('candidates');
+  });
+  it('switches theme without losing the selected candidate', () => {
+    useUi.getState().selectCandidate('compound-a');
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Use dark theme' }));
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(localStorage.getItem('tauchstone-theme')).toBe('dark');
+    fireEvent.click(screen.getByRole('button', { name: 'Use light theme' }));
+    expect(document.documentElement.classList.contains('dark')).toBe(false);
+    expect(useUi.getState().selectedCandidateId).toBe('compound-a');
+  });
+  it('opens a discovery candidate from workspace search', async () => {
+    render(<App />);
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    const dialog = await screen.findByRole('dialog', { name: 'Search workspace' });
+    fireEvent.click(await within(dialog).findByRole('option', { name: /Compound A/ }));
+    expect(useUi.getState().selectedCandidateId).toBe('compound-a');
+    expect(useUi.getState().step).toBe('evidence');
   });
 });
