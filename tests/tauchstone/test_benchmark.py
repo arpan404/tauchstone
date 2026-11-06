@@ -162,3 +162,20 @@ def test_select_lambda_returns_grid_value():
     best, table = select_lambda(dev, grid=(0.0, 1.0), seeds=[20261105, 20261106], budget=2)
     assert best in (0.0, 1.0)
     assert [r["lambda"] for r in table] == [0.0, 1.0]
+
+
+def test_verdict_carried_forward_when_run_ends_before_budget():
+    """A candidate with 2 hidden contexts finishes at step 2; its verdict at 3 and 5 is the step-2 verdict."""
+    import pandas as pd
+
+    from pipelines.tauchstone.evaluation import per_run_frame
+
+    runs = pd.DataFrame({
+        "policy": ["random"] * 3, "candidate_id": ["C"] * 3, "seed": [1] * 3, "step": [0, 1, 2],
+        "verdict": ["INSUFFICIENT_EVIDENCE", "INSUFFICIENT_EVIDENCE", "SUPPORTED_SO_FAR"],
+    })
+    per = per_run_frame(runs, {"C": {"a": True, "b": True}}, q=0.7, budget=5)
+    row = per.iloc[0]
+    assert row["verdict_at_3"] == "SUPPORTED_SO_FAR"
+    assert row["verdict_at_5"] == "SUPPORTED_SO_FAR"
+    assert bool(row["correct_at_5"]) and bool(row["correct_at_budget"])

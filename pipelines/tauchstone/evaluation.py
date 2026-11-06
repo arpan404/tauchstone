@@ -37,6 +37,12 @@ def _verdict_matches(full: str, v: str) -> bool:
     )
 
 
+def _verdict_at(by_step: Mapping[int, str], b: int) -> str:
+    """Verdict at budget b. A run that reveals every hidden context before step b keeps its last verdict."""
+    done = [s for s in by_step if s <= b]
+    return by_step[max(done)] if done else "INSUFFICIENT_EVIDENCE"
+
+
 def per_run_frame(
     runs: pd.DataFrame, truth_by_candidate: Mapping[str, Mapping[str, bool]], q: float, budget: int
 ) -> pd.DataFrame:
@@ -61,7 +67,8 @@ def per_run_frame(
                 t_correct = int(s)
                 break
         by_step = dict(zip(steps, verdicts, strict=True))
-        v_budget = by_step.get(budget, "INSUFFICIENT_EVIDENCE")
+
+        v_budget = _verdict_at(by_step, budget)
         row = {
             "policy": policy,
             "candidate_id": cid,
@@ -72,8 +79,8 @@ def per_run_frame(
             "correct_at_budget": _verdict_matches(f, v_budget),
         }
         for b in (3, 5):
-            row[f"verdict_at_{b}"] = by_step.get(b)
-        row["correct_at_5"] = _verdict_matches(f, by_step.get(5, "INSUFFICIENT_EVIDENCE"))
+            row[f"verdict_at_{b}"] = _verdict_at(by_step, b)
+        row["correct_at_5"] = _verdict_matches(f, _verdict_at(by_step, 5))
         out.append(row)
     return pd.DataFrame(out)
 
