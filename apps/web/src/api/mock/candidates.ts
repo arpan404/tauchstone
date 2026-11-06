@@ -92,7 +92,6 @@ export function getMockCandidates(): CandidateList {
       git_commit: 'mock',
       timestamp: '2026-11-05T00:00:00Z',
       random_seed: MOCK_SEED,
-      parameters: { theta: MOCK_THETA },
     },
   };
   return cache;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildHeatmapOption, iqrBar } from './heatmapOption';
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 describe('heatmap helpers', () => {
   it('iqrBar stays inside 0..100 and has positive width', () => {

@@ -1,4 +1,4 @@
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 export function SignCheckTable({
   rows,

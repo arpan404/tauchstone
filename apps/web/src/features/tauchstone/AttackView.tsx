@@ -1,6 +1,7 @@
-import { useRunExperiment, useStartAttack } from '@/api/hooks';
-import type { Schema } from '@/api/schema';
+import { useRunExperiment, useStartAttack, useMockStatus } from '@/api/hooks';
+import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
+import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { VerdictBadge, contextIcon } from '@/components/labels';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ function BudgetPips({ budget, remaining }: { budget: number; remaining: number }
 export function AttackView() {
   const { selectedCandidateId, mode, setMode, sessionId, setSessionId } = useUi();
   const [session, setSession] = useState<Session | null>(null);
+  const mockData = useMockStatus(session?.history?.[session.history.length - 1]?.provenance ?? null);
   const [picked, setPicked] = useState<string | null>(null);
   const [recommendationNote, setRecommendationNote] = useState<string | null>(null);
   const prevRecommended = useRef<string | null>(null);
@@ -96,6 +98,42 @@ export function AttackView() {
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
+      {(mockData || session) && (
+        <div className="sticky top-0 z-10 -mx-4 bg-[#fafaf9] px-4">
+          <MockRibbon show={mockData} />
+          {session && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-200 py-2">
+              <p className="text-sm text-neutral-600">
+                P(claim){' '}
+                <span className="text-2xl font-semibold tabular-nums text-teal-900" aria-live="polite">
+                  {session.belief.p_claim_holds.toFixed(2)}
+                </span>{' '}
+                <span className="text-xs tabular-nums text-neutral-500">
+                  [{session.belief.interval?.[0].toFixed(2)}, {session.belief.interval?.[1].toFixed(2)}]
+                </span>
+              </p>
+              <VerdictBadge verdict={session.verdict} size="sm" />
+              <BudgetPips budget={session.budget} remaining={session.budget_remaining} />
+              <label className="flex items-center gap-1.5 text-xs">
+                <span className={mode !== 'learn' ? 'font-semibold' : 'text-neutral-500'}>Attack</span>
+                <Switch
+                  checked={mode === 'learn'}
+                  onCheckedChange={(v) => setMode(v ? 'learn' : 'attack')}
+                  aria-label="Toggle attack or learn mode (sticky header)"
+                />
+                <span className={mode === 'learn' ? 'font-semibold' : 'text-neutral-500'}>Learn</span>
+              </label>
+              <Button
+                size="sm"
+                onClick={handleRun}
+                disabled={!effectivePicked || run.isPending || session.budget_remaining <= 0}
+              >
+                {run.isPending ? 'Running…' : 'Run validation'}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex-1 space-y-4 overflow-auto p-4">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <h2 className="text-xl font-semibold">Attack the claim</h2>
@@ -277,7 +315,8 @@ export function AttackView() {
                         <span aria-hidden>{h.outcome === 'survive' ? '✓' : '✗'}</span>
                         <span className="font-medium">{h.label}</span>
                         <span className="text-neutral-500">
-                          {h.outcome} · {h.belief_before.toFixed(2)} → {h.belief_after.toFixed(2)} · mode {h.mode_used}
+                          {h.outcome} · {h.belief_before.toFixed(2)} → {h.belief_after.toFixed(2)} · mode{' '}
+                          {h.mode_used ?? session.mode}
                         </span>
                       </li>
                     ))}
