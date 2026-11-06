@@ -1,4 +1,4 @@
-import type { Schema } from '@/api/schema';
+import type { Schema } from '@/api/types';
 
 /** Pure ECharts line-chart option builder for P(claim) across reveal steps. */
 export function buildBeliefOption(points: { step: number; p: number }[]): Record<string, unknown> {

@@ -1,5 +1,6 @@
-import { useEvidence } from '@/api/hooks';
+import { useEvidence, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
+import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { exposureLabel } from '@/components/labels';
 import { Badge } from '@/components/ui/badge';
@@ -33,10 +34,12 @@ function BrainBars({
 export function EvidenceView() {
   const { selectedCandidateId, setStep, setSessionId } = useUi();
   const { data, isLoading, isError } = useEvidence(selectedCandidateId);
+  const mockData = useMockStatus(data?.provenance);
 
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
+      <MockRibbon show={mockData} />
       <div className="flex-1 space-y-4 overflow-auto p-4">
         <h2 className="text-xl font-semibold">Evidence card</h2>
         {!selectedCandidateId && (

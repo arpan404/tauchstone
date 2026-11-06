@@ -1,16 +1,54 @@
-import { useBenchmark } from '@/api/hooks';
+import { useBenchmark, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
+import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import ReactECharts from 'echarts-for-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { buildCalibrationOption, buildPolicyOption } from './benchmarkOptions';
+
+import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
+
+function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): BenchmarkAnalysis {
+  const all = data.all_candidates;
+  if (scope === 'all' && all?.policies && all.policies.length > 0) {
+    return {
+      n_candidates: all.n_candidates ?? data.n_candidates,
+      n_seeds: all.n_seeds ?? data.n_seeds,
+      budget: all.budget ?? data.budget,
+      policies: all.policies,
+      calibration: all.calibration ?? data.calibration,
+      tests: all.tests ?? [],
+    };
+  }
+  return {
+    n_candidates: data.n_candidates,
+    n_seeds: data.n_seeds,
+    budget: data.budget,
+    policies: data.policies,
+    calibration: data.calibration,
+    tests: data.tests,
+  };
+}
 
 export function BenchmarkView() {
   const { data, isLoading, isError, error } = useBenchmark();
-  const policyOption = useMemo(() => (data ? buildPolicyOption(data.policies) : null), [data]);
-  const calibOption = useMemo(() => (data ? buildCalibrationOption(data.calibration) : null), [data]);
+  const mockData = useMockStatus(data?.provenance);
+  const [scope, setScope] = useState<'contested' | 'all'>('contested');
+  const hasAll = !!data?.all_candidates?.policies && data.all_candidates.policies.length > 0;
+  const analysis = useMemo(
+    () => (data ? activeAnalysis(data, hasAll ? scope : 'contested') : null),
+    [data, scope, hasAll],
+  );
+  const policyOption = useMemo(
+    () => (analysis ? buildPolicyOption(analysis.policies) : null),
+    [analysis],
+  );
+  const calibOption = useMemo(
+    () => (analysis ? buildCalibrationOption(analysis.calibration) : null),
+    [analysis],
+  );
 
   const notRun =
     isError &&
@@ -19,14 +57,46 @@ export function BenchmarkView() {
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
+      <MockRibbon show={mockData} />
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
           <h2 className="text-xl font-semibold">Benchmark</h2>
-          {data && (
-            <p className="text-sm tabular-nums text-neutral-500">
-              {data.n_candidates} candidates · {data.n_seeds} seeds · budget {data.budget} ·
-              prereg <span className="font-mono">{data.preregistration_sha256.slice(0, 12)}…</span>
+          {data && analysis && (
+            <p className="text-sm text-neutral-600">
+              {scope === 'all' && hasAll ? (
+                <>All candidates (n = <span className="tabular-nums">{analysis.n_candidates}</span>)</>
+              ) : (
+                <>
+                  Candidates undecided before testing (n ={' '}
+                  <span className="tabular-nums">{analysis.n_candidates}</span>
+                  {data.contested_share !== undefined &&
+                    `, ${Math.round(data.contested_share * 100)}% of pool`}
+                  )
+                </>
+              )}{' '}
+              <span className="tabular-nums text-neutral-500">
+                · {analysis.n_seeds} seeds · budget {analysis.budget} · prereg{' '}
+                <span className="font-mono">{data.preregistration_sha256.slice(0, 12)}…</span>
+              </span>
             </p>
+          )}
+          {hasAll && (
+            <div className="flex gap-2" role="group" aria-label="Benchmark scope">
+              {(['contested', 'all'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setScope(s)}
+                  aria-pressed={scope === s}
+                  className={`rounded border px-2 py-0.5 text-xs ${
+                    scope === s
+                      ? 'border-teal-700 bg-teal-50 text-teal-900'
+                      : 'border-neutral-300 text-neutral-600'
+                  }`}
+                >
+                  {s === 'contested' ? 'undecided' : 'all candidates'}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
@@ -42,7 +112,7 @@ export function BenchmarkView() {
           </p>
         )}
 
-        {data && (
+        {analysis && (
           <>
             <Card>
               <CardHeader className="pb-2">
@@ -75,7 +145,7 @@ export function BenchmarkView() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.policies.map((p) => (
+                      {analysis.policies.map((p) => (
                         <tr
                           key={p.policy}
                           className={`border-b border-neutral-100 ${p.policy === 'tauchstone_hybrid' ? 'bg-teal-50/60 font-medium' : ''}`}
