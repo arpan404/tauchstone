@@ -16,5 +16,6 @@ navigation. Boundary notes and absence of the removed tour are checked throughou
 No candidate is chosen using held-out outcomes. No structure canvas or fixed scientific
 outcome is required. There are no timed tour pauses or screenshot assertions.
 
-Set `TS_E2E_RECORD=1` to record video. Failure traces stay enabled.
+Video recording is enabled by default, preserving `make record` compatibility.
+Set `TS_E2E_RECORD=0` to disable video for a quick check. Failure traces stay enabled.
 Videos and failure traces stay untracked in `test-results/`.
