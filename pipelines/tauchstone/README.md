@@ -70,6 +70,32 @@ Attack/Learn policies, replay benchmark, calibration. Output:
     even with identical platform/region; the "decisive structure" a smart
     policy exploits is same-cell LINCS blocks (>= 0.7 mutual similarity).
 
+## Experiment: decision lookahead (candidate policies, not prereg)
+
+Lead review of the synthetic dry run: learn/hybrid reach a verdict fastest
+(median t_correct 2 vs 3) with the best fragile recall@3 (0.60), but final
+decision accuracy at budget 5 is BELOW random (0.53 vs 0.57) and recall drops
+from 0.60 at b=3 to 0.47 at b=5. Diagnosis: E|ΔP(C)| rewards volatile tests,
+not tests that lead to a CORRECT DECISIVE verdict.
+
+`engine.CANDIDATE_POLICIES = ("decision_lookahead", "decision_lookahead_hybrid")`
+— kept out of `POLICIES`, replay defaults, and every real summary:
+- `decision_utility(p)`: p if p ≥ 0.8, 1−p if p ≤ 0.2, else 0 (probability the
+  verdict we would announce now is correct; 0 when INSUFFICIENT).
+- `decision_lookahead_scores(...)`: depth d = min(2, budget_remaining).
+  d=1: a(x) = E_y[U(after)]; d=2: a(x) = E_y[max(U(after), V1(after-state))],
+  where V1 is the best d=1 value from the after-state (stop-early max). Every
+  hypothetical updates all other hidden posteriors via similarity, exactly as
+  in learn. P(C) evaluations are cached by revealed-set key. `_hybrid` adds
+  lam·(1−p_x). All-zero scores fall back to the learn score, then lower id.
+- Honesty protocol (`pipelines/tauchstone/experiment_lookahead.py`): lam
+  selection (dev half) and all comparisons on 5 fresh synthetic worlds
+  (seeds 9001–9005, never the dry-run world), 100 candidates each, eval on the
+  contested subset at budget 5 (metrics also at b=3), cluster-bootstrap CIs
+  pooled over worlds plus paired Wilcoxon (per-candidate seed-means) of
+  lookahead(_hybrid) vs hybrid and vs random. Outputs to
+  `processed/tauchstone/synthetic/lookahead_experiment/`, labelled synthetic.
+
 ## Synthetic world
 
 `make_synthetic_world(n, seed)`: latent robustness `rho ~ Beta(2.0, 1.6)` plus a

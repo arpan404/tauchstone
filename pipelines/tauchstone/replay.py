@@ -25,6 +25,7 @@ import pandas as pd
 from pipelines.common.paths import MANIFESTS, PROCESSED
 from pipelines.common.provenance import Provenance
 from pipelines.tauchstone.engine import (
+    CANDIDATE_POLICIES,
     POLICIES,
     Context,
     EngineConfig,
@@ -70,9 +71,11 @@ BUDGET = 5
 
 
 def policy_index(policy: str) -> int:
-    """Stable rng stream index per policy (oracle gets its own stream)."""
+    """Stable rng stream index per policy (oracle/candidates get their own streams)."""
     if policy == ORACLE_POLICY:
         return len(BENCHMARK_POLICIES)
+    if policy in CANDIDATE_POLICIES:
+        return len(BENCHMARK_POLICIES) + 1 + CANDIDATE_POLICIES.index(policy)
     return BENCHMARK_POLICIES.index(policy)
 
 
@@ -111,7 +114,7 @@ def replay_candidate(
     cfg: EngineConfig,
 ) -> list[dict]:
     """Replay one (candidate, seed, policy): reveal ``budget`` tests greedily."""
-    if policy != ORACLE_POLICY and policy not in BENCHMARK_POLICIES:
+    if policy not in BENCHMARK_POLICIES and policy != ORACLE_POLICY and policy not in CANDIDATE_POLICIES:
         raise ValueError(f"unknown policy {policy!r}")
     rng = np.random.default_rng([seed, policy_index(policy)])
     obs: list[Observation] = list(cand.ranking)
@@ -137,6 +140,10 @@ def replay_candidate(
             break
         if policy == ORACLE_POLICY:
             cid, _ = oracle_choice(cand, hidden, obs, n_total, cfg)
+        elif policy in CANDIDATE_POLICIES:
+            cid, _, _ = choose(
+                policy, hidden, obs, n_total, cfg, rng, budget_remaining=budget - step + 1
+            )
         else:
             cid, _, _ = choose(policy, hidden, obs, n_total, cfg, rng)
         ctx = next(h for h in hidden if h.context_id == cid)
