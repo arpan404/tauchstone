@@ -40,10 +40,13 @@ it('links the empty workspace to candidate selection without starting a session'
   expect(useUi.getState().step).toBe('candidates');
   expect(mocks.start).not.toHaveBeenCalled();
 });
-it('creates only on explicit action with the chosen budget', () => {
+it('creates only on explicit action with the chosen budget', async () => {
   render(<AttackView />);
   expect(mocks.start).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('Session budget'), { target: { value: '2' } });
+  fireEvent.click(screen.getByRole('combobox', { name: 'Session budget' }));
+  const option = await screen.findByRole('option', { name: '2 experiments' });
+  fireEvent.pointerDown(option);
+  fireEvent.click(option);
   fireEvent.click(screen.getByRole('button', { name: 'Create experiment session' }));
   expect(mocks.start.mock.calls[0][0]).toEqual({ candidateId: 'drug-a', mode: 'attack', budget: 2 });
   expect(mocks.run).not.toHaveBeenCalled();
@@ -54,6 +57,7 @@ it('restores continuity and reveals only the committed server result', () => {
   expect(screen.queryByText(/Observed/)).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: /Held-out cohort B/ }));
   expect(mocks.run).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: /Held-out cohort B/ }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.getByText(/Next experiment:/).textContent).toContain('Held-out cohort B');
   fireEvent.click(screen.getByRole('button', { name: 'Commit & run experiment' }));
   expect(mocks.run.mock.calls[0][0]).toEqual({ contextId: 'ctx-b', mode: 'attack' });
