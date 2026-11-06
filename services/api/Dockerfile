@@ -2,6 +2,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 WORKDIR /srv
 COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
+COPY contracts ./contracts
 COPY pipelines ./pipelines
 COPY services/api ./services/api
 ENV PYTHONPATH=/srv:/srv/services/api TS_DATA_DIR=/data
