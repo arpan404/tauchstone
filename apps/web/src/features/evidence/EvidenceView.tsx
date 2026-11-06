@@ -32,7 +32,7 @@ function BrainBars({
 }
 
 export function EvidenceView() {
-  const { selectedCandidateId, setStep, setSessionId } = useUi();
+  const { selectedCandidateId, setStep } = useUi();
   const { data, isLoading, isError } = useEvidence(selectedCandidateId);
   const mockData = useMockStatus(data?.provenance);
 
@@ -41,11 +41,14 @@ export function EvidenceView() {
       <BoundaryBanner />
       <MockRibbon show={mockData} />
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        <h2 className="text-xl font-semibold">Evidence card</h2>
+        <h2 className="text-xl font-semibold">Candidate evidence</h2>
         {!selectedCandidateId && (
-          <p className="text-sm text-neutral-500">
-            Select a candidate from the leaderboard first — click any row in step 2.
-          </p>
+          <div className="space-y-3">
+            <p className="text-sm text-neutral-500">
+              Select a candidate to inspect its targets, brain expression and evidence sources.
+            </p>
+            <Button onClick={() => setStep('candidates')}>Explore candidates</Button>
+          </div>
         )}
         {isLoading && selectedCandidateId && <Skeleton className="h-[300px] w-full" />}
         {isError && (
@@ -162,11 +165,10 @@ export function EvidenceView() {
               <Button
                 size="lg"
                 onClick={() => {
-                  setSessionId(null);
                   setStep('attack');
                 }}
               >
-                Attack this candidate
+                Open experiments
               </Button>
             </div>
           </>
