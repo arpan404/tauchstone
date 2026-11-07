@@ -1,10 +1,16 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy } from "react";
 
 const MolstarViewerInner = lazy(() =>
-  import('./MolstarViewer').then((m) => ({ default: m.MolstarViewer })),
+  import("./MolstarViewer").then((m) => ({ default: m.MolstarViewer })),
 );
 
-export function ProteinPanel({ url, note }: { url: string | null; note: string | null }) {
+export function ProteinPanel({
+  url,
+  note,
+}: {
+  url: string | null;
+  note: string | null;
+}) {
   if (!url) {
     return <p className="text-sm text-neutral-500">No structure available</p>;
   }

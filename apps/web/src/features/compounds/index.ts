@@ -1,1 +1,1 @@
-export { CompoundsView, MyCompoundsView } from './CompoundsView';
+export { CompoundsView, MyCompoundsView } from "./CompoundsView";
