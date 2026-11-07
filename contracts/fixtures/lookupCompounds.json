@@ -1,0 +1,86 @@
+[
+ {
+  "query": "donepezil",
+  "status": "ranked",
+  "drug_id": "BRD-A49160188",
+  "name": "Donepezil",
+  "pool_rank": 684,
+  "rank_total": 1816,
+  "consensus": -0.24441256646429887,
+  "n_contexts": 6,
+  "attack_ready": false,
+  "preregistered": false
+ },
+ {
+  "query": "memantine",
+  "status": "ranked",
+  "drug_id": "BRD-A79803969",
+  "name": "Memantine",
+  "pool_rank": 502,
+  "rank_total": 1816,
+  "consensus": -0.359490400138389,
+  "n_contexts": 4,
+  "attack_ready": false,
+  "preregistered": false
+ },
+ {
+  "query": "galantamine",
+  "status": "ranked",
+  "drug_id": "BRD-A49148672",
+  "name": "Galantamine",
+  "pool_rank": 1214,
+  "rank_total": 1816,
+  "consensus": 0.20701530768438584,
+  "n_contexts": 4,
+  "attack_ready": false,
+  "preregistered": false
+ },
+ {
+  "query": "rivastigmine",
+  "status": "not_rankable",
+  "drug_id": "BRD-K10706131",
+  "name": "rivastigmine",
+  "pool_rank": null,
+  "rank_total": null,
+  "consensus": null,
+  "n_contexts": null,
+  "attack_ready": false,
+  "preregistered": false
+ },
+ {
+  "query": "nepafenac",
+  "status": "ranked",
+  "drug_id": "BRD-K04112579",
+  "name": "Nepafenac",
+  "pool_rank": 2,
+  "rank_total": 1816,
+  "consensus": -2.030277404108228,
+  "n_contexts": 3,
+  "attack_ready": true,
+  "preregistered": true
+ },
+ {
+  "query": "lithium",
+  "status": "not_in_lincs",
+  "drug_id": null,
+  "name": null,
+  "pool_rank": null,
+  "rank_total": null,
+  "consensus": null,
+  "n_contexts": null,
+  "attack_ready": false,
+  "preregistered": false
+ },
+ {
+  "query": "piperacillin",
+  "status": "ranked",
+  "drug_id": "BRD-K86873305",
+  "name": "Piperacillin",
+  "pool_rank": 5,
+  "rank_total": 1816,
+  "consensus": -1.7945780655381212,
+  "n_contexts": 3,
+  "attack_ready": true,
+  "preregistered": true
+ }
+]
