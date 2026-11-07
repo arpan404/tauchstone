@@ -201,7 +201,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
   };
   const onPointerDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     if (!mol) return;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* pointer already released */ }
     view.current.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     view.current.pinch = pinchDistance();
     view.current.idle = 0;
