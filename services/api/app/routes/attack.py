@@ -22,7 +22,7 @@ router = APIRouter()
 SEED = 20261105
 
 
-def _to_session_payload(session_id: str, state: dict) -> dict:
+def _to_session_payload(session_id: str, state: dict, preregistered: bool = True) -> dict:
     return {
         "session_id": session_id,
         "candidate_id": state["candidate_id"],
@@ -36,6 +36,7 @@ def _to_session_payload(session_id: str, state: dict) -> dict:
         "contexts": state["contexts"],
         "recommended_context_id": state["recommended_context_id"],
         "rationale": state["rationale"],
+        "preregistered": preregistered,
         "history": state.get("history", []),
     }
 
@@ -58,8 +59,9 @@ def start_attack(
         budget=body.budget, mode=body.mode, seed=SEED,
         candidate_name=world.candidate_name, engine_cfg=world.engine_cfg,
     )
-    rec = store.create(engine, world.candidate_id)
-    return public(_to_session_payload(rec.session_id, engine.state()))
+    preregistered = bool(getattr(world, "preregistered", True))
+    rec = store.create(engine, world.candidate_id, preregistered=preregistered)
+    return public(_to_session_payload(rec.session_id, engine.state(), preregistered))
 
 
 @router.post("/attack/{session_id}/run", response_model=RunResult, response_model_exclude_unset=True)
@@ -77,7 +79,7 @@ def run_experiment(
         raise HTTPException(status_code=409, detail=str(e)) from e
     revealed = out["revealed"]
     store.note_revealed_cohort(session_id, revealed.get("cohort"))
-    payload = _to_session_payload(session_id, out)
+    payload = _to_session_payload(session_id, out, rec.preregistered)
     payload["revealed"] = {k: v for k, v in revealed.items() if k != "cohort"}
     payload["done"] = out.get("done", False)
     return public(payload)

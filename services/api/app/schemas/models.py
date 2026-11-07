@@ -230,6 +230,7 @@ class AttackSessionState(BaseModel):
     contexts: list[ContextState]
     recommended_context_id: str | None = None
     rationale: str
+    preregistered: bool | None = None
     history: list[RevealedOutcome] | None = None
 
 

@@ -19,6 +19,7 @@ class SessionRecord:
     created_at: float = field(default_factory=time.time)
     last_access: float = field(default_factory=time.time)
     revealed_cohorts: set[str] = field(default_factory=set)
+    preregistered: bool = True  # False for hidden tests built on the fly
 
 
 class SessionStore:
@@ -28,14 +29,14 @@ class SessionStore:
         self._lock = threading.Lock()
         self._sessions: dict[str, SessionRecord] = {}
 
-    def create(self, engine, candidate_id: str) -> SessionRecord:
+    def create(self, engine, candidate_id: str, preregistered: bool = True) -> SessionRecord:
         with self._lock:
             now = time.time()
             self._evict_locked(now)
             sid = uuid.uuid4().hex
             rec = SessionRecord(
                 session_id=sid, engine=engine, candidate_id=candidate_id, created_at=now,
-                last_access=now,
+                last_access=now, preregistered=preregistered,
             )
             self._sessions[sid] = rec
             return rec
