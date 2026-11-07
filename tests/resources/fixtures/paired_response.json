@@ -1,0 +1,81 @@
+{
+  "data": {
+    "currentBackground": {
+      "pairedEnrich": {
+        "totalCount": 79,
+        "consensusCount": 73,
+        "nodes": [
+          {
+            "pvalueMimic": 0.9999999999209641,
+            "pvalueReverse": 7.786696739033033e-06,
+            "adjPvalueReverse": 0.01416422328699039,
+            "oddsRatioReverse": 23.411458333333336,
+            "reverserOverlap": 5,
+            "geneSet": {
+              "nodes": [
+                {
+                  "term": "etoposide::::::::::mouse::GSE67266::2::3 up",
+                  "library": {
+                    "name": "RummaGEO Chem"
+                  }
+                },
+                {
+                  "term": "etoposide::::::::::mouse::GSE67266::2::3 down",
+                  "library": {
+                    "name": "RummaGEO Chem"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "pvalueMimic": 0.8347858361796219,
+            "pvalueReverse": 1.0075500185918252e-05,
+            "adjPvalueReverse": 0.014606576338428726,
+            "oddsRatioReverse": 2.9107540895747817,
+            "reverserOverlap": 23,
+            "geneSet": {
+              "nodes": [
+                {
+                  "term": "ABL1::::::::::Mut::::homo sapiens::GSE45452.1950 up",
+                  "library": {
+                    "name": "CREEDS Gene"
+                  }
+                },
+                {
+                  "term": "ABL1::::::::::Mut::::homo sapiens::GSE45452.1950 down",
+                  "library": {
+                    "name": "CREEDS Gene"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "pvalueMimic": 0.9999999998991403,
+            "pvalueReverse": 1.102274185758007e-05,
+            "adjPvalueReverse": 0.01416422328699039,
+            "oddsRatioReverse": 1.683863211529185,
+            "reverserOverlap": 71,
+            "geneSet": {
+              "nodes": [
+                {
+                  "term": "fentanyl::::::::::mouse::GSE218580::1::5 up",
+                  "library": {
+                    "name": "RummaGEO Chem"
+                  }
+                },
+                {
+                  "term": "fentanyl::::::::::mouse::GSE218580::1::5 down",
+                  "library": {
+                    "name": "RummaGEO Chem"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
