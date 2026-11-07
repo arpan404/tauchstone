@@ -1,0 +1,3221 @@
+{
+  "project_id": "GSE132903",
+  "screen_id": "frozen-GSE132903",
+  "n_ranked": 50,
+  "n_total_eligible": 50,
+  "preregistered": true,
+  "candidates": [
+    {
+      "id": "MOCK-0002",
+      "rank": 1,
+      "name": "Mock compound 02",
+      "consensus": -2.607,
+      "consensus_iqr": [
+        -2.857,
+        -2.357
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -2.501,
+        "ks": -2.652,
+        "cosine": -2.584
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.578,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.702,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.55,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.543,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.758,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.729,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.519,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.728,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -3.004,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": true,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0003",
+      "rank": 2,
+      "name": "Mock compound 03",
+      "consensus": -2.597,
+      "consensus_iqr": [
+        -2.847,
+        -2.347
+      ],
+      "n_ranking_contexts": 6,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.501,
+        "ks": -2.539,
+        "cosine": -2.664
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.713,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.514,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.669,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.385,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.668,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.347,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.75,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0001",
+      "rank": 3,
+      "name": "Mock compound 01",
+      "consensus": -2.588,
+      "consensus_iqr": [
+        -2.838,
+        -2.338
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -2.61,
+        "ks": -2.68,
+        "cosine": -2.487
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.74,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.506,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.414,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.694,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.843,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.583,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.182,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0004",
+      "rank": 4,
+      "name": "Mock compound 04",
+      "consensus": -2.451,
+      "consensus_iqr": [
+        -2.701,
+        -2.201
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.4,
+        "ks": -2.409,
+        "cosine": -2.42
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.441,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.551,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.259,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.148,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.629,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.317,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.356,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0006",
+      "rank": 5,
+      "name": "Mock compound 06",
+      "consensus": -2.392,
+      "consensus_iqr": [
+        -2.642,
+        -2.142
+      ],
+      "n_ranking_contexts": 7,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.35,
+        "ks": -2.525,
+        "cosine": -2.413
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -2.612,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.424,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.356,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.454,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.545,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": true,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0005",
+      "rank": 6,
+      "name": "Mock compound 05",
+      "consensus": -2.39,
+      "consensus_iqr": [
+        -2.64,
+        -2.14
+      ],
+      "n_ranking_contexts": 12,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -2.462,
+        "ks": -2.311,
+        "cosine": -2.347
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.202,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.526,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.579,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.245,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.347,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.355,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.183,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0007",
+      "rank": 7,
+      "name": "Mock compound 07",
+      "consensus": -2.347,
+      "consensus_iqr": [
+        -2.597,
+        -2.097
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -2.359,
+        "ks": -2.356,
+        "cosine": -2.36
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.455,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.32,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.386,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.462,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.34,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.331,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.076,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0008",
+      "rank": 8,
+      "name": "Mock compound 08",
+      "consensus": -2.299,
+      "consensus_iqr": [
+        -2.549,
+        -2.049
+      ],
+      "n_ranking_contexts": 4,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -2.236,
+        "ks": -2.171,
+        "cosine": -2.297
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.31,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.155,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.333,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.42,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.44,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0010",
+      "rank": 9,
+      "name": "Mock compound 10",
+      "consensus": -2.168,
+      "consensus_iqr": [
+        -2.418,
+        -1.918
+      ],
+      "n_ranking_contexts": 9,
+      "n_held_out_contexts": 4,
+      "scores": {
+        "wtcs": -2.158,
+        "ks": -2.077,
+        "cosine": -2.099
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -2.303,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.049,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.323,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.289,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.341,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.182,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0009",
+      "rank": 10,
+      "name": "Mock compound 09",
+      "consensus": -2.162,
+      "consensus_iqr": [
+        -2.412,
+        -1.912
+      ],
+      "n_ranking_contexts": 9,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -2.051,
+        "ks": -2.04,
+        "cosine": -2.057
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.224,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.549,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.21,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -2.115,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -2.432,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.339,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.431,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0011",
+      "rank": 11,
+      "name": "Mock compound 11",
+      "consensus": -2.107,
+      "consensus_iqr": [
+        -2.357,
+        -1.857
+      ],
+      "n_ranking_contexts": 8,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -2.011,
+        "ks": -2.025,
+        "cosine": -2.067
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.216,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -2.001,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.965,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.845,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -2.216,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0013",
+      "rank": 12,
+      "name": "Mock compound 13",
+      "consensus": -2.025,
+      "consensus_iqr": [
+        -2.275,
+        -1.775
+      ],
+      "n_ranking_contexts": 6,
+      "n_held_out_contexts": 5,
+      "scores": {
+        "wtcs": -2.058,
+        "ks": -2.035,
+        "cosine": -2.05
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.928,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.221,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.838,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.958,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": true,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0012",
+      "rank": 13,
+      "name": "Mock compound 12",
+      "consensus": -2.009,
+      "consensus_iqr": [
+        -2.259,
+        -1.759
+      ],
+      "n_ranking_contexts": 12,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -2.067,
+        "ks": -1.872,
+        "cosine": -2.114
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.956,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.001,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.632,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.912,
+          "n_contexts": 3
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0014",
+      "rank": 14,
+      "name": "Mock compound 14",
+      "consensus": -1.988,
+      "consensus_iqr": [
+        -2.238,
+        -1.738
+      ],
+      "n_ranking_contexts": 10,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -2.065,
+        "ks": -1.959,
+        "cosine": -1.998
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -2.203,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -2.422,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -2.024,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.794,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0015",
+      "rank": 15,
+      "name": "Mock compound 15",
+      "consensus": -1.94,
+      "consensus_iqr": [
+        -2.19,
+        -1.69
+      ],
+      "n_ranking_contexts": 3,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -2.003,
+        "ks": -1.961,
+        "cosine": -1.81
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.934,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -2.096,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.964,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.95,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.828,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.829,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.911,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0019",
+      "rank": 16,
+      "name": "Mock compound 19",
+      "consensus": -1.881,
+      "consensus_iqr": [
+        -2.131,
+        -1.631
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -1.932,
+        "ks": -1.81,
+        "cosine": -1.771
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.997,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.704,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.867,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -2.128,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0018",
+      "rank": 17,
+      "name": "Mock compound 18",
+      "consensus": -1.865,
+      "consensus_iqr": [
+        -2.115,
+        -1.615
+      ],
+      "n_ranking_contexts": 13,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -1.973,
+        "ks": -1.909,
+        "cosine": -1.91
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.789,
+          "n_contexts": 5
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.571,
+          "n_contexts": 4
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.865,
+          "n_contexts": 4
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0020",
+      "rank": 18,
+      "name": "Mock compound 20",
+      "consensus": -1.864,
+      "consensus_iqr": [
+        -2.114,
+        -1.614
+      ],
+      "n_ranking_contexts": 3,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -1.841,
+        "ks": -1.887,
+        "cosine": -1.948
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.867,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.951,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.994,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.656,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.917,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0016",
+      "rank": 19,
+      "name": "Mock compound 16",
+      "consensus": -1.835,
+      "consensus_iqr": [
+        -2.085,
+        -1.585
+      ],
+      "n_ranking_contexts": 4,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -1.837,
+        "ks": -1.858,
+        "cosine": -1.813
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.993,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.676,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.859,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.616,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.845,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0017",
+      "rank": 20,
+      "name": "Mock compound 17",
+      "consensus": -1.773,
+      "consensus_iqr": [
+        -2.023,
+        -1.523
+      ],
+      "n_ranking_contexts": 13,
+      "n_held_out_contexts": 5,
+      "scores": {
+        "wtcs": -1.763,
+        "ks": -1.739,
+        "cosine": -1.566
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.82,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.855,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.656,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.82,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.762,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0022",
+      "rank": 21,
+      "name": "Mock compound 22",
+      "consensus": -1.638,
+      "consensus_iqr": [
+        -1.888,
+        -1.388
+      ],
+      "n_ranking_contexts": 12,
+      "n_held_out_contexts": 5,
+      "scores": {
+        "wtcs": -1.596,
+        "ks": -1.623,
+        "cosine": -1.859
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.781,
+          "n_contexts": 4
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.415,
+          "n_contexts": 4
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.437,
+          "n_contexts": 4
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0024",
+      "rank": 22,
+      "name": "Mock compound 24",
+      "consensus": -1.627,
+      "consensus_iqr": [
+        -1.877,
+        -1.377
+      ],
+      "n_ranking_contexts": 8,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -1.56,
+        "ks": -1.609,
+        "cosine": -1.566
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.563,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.782,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.543,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.695,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0023",
+      "rank": 23,
+      "name": "Mock compound 23",
+      "consensus": -1.617,
+      "consensus_iqr": [
+        -1.867,
+        -1.367
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -1.714,
+        "ks": -1.591,
+        "cosine": -1.452
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.572,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.705,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.66,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.536,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.792,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.657,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.659,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.653,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0021",
+      "rank": 24,
+      "name": "Mock compound 21",
+      "consensus": -1.577,
+      "consensus_iqr": [
+        -1.827,
+        -1.327
+      ],
+      "n_ranking_contexts": 7,
+      "n_held_out_contexts": 4,
+      "scores": {
+        "wtcs": -1.526,
+        "ks": -1.571,
+        "cosine": -1.631
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.707,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.594,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.658,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.671,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.552,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.885,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0026",
+      "rank": 25,
+      "name": "Mock compound 26",
+      "consensus": -1.449,
+      "consensus_iqr": [
+        -1.699,
+        -1.199
+      ],
+      "n_ranking_contexts": 10,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -1.319,
+        "ks": -1.48,
+        "cosine": -1.416
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.485,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.37,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.238,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.279,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.527,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0027",
+      "rank": 26,
+      "name": "Mock compound 27",
+      "consensus": -1.413,
+      "consensus_iqr": [
+        -1.663,
+        -1.163
+      ],
+      "n_ranking_contexts": 9,
+      "n_held_out_contexts": 5,
+      "scores": {
+        "wtcs": -1.366,
+        "ks": -1.419,
+        "cosine": -1.219
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.478,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.203,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.512,
+          "n_contexts": 3
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0025",
+      "rank": 27,
+      "name": "Mock compound 25",
+      "consensus": -1.407,
+      "consensus_iqr": [
+        -1.657,
+        -1.157
+      ],
+      "n_ranking_contexts": 3,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -1.341,
+        "ks": -1.317,
+        "cosine": -1.474
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.771,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.36,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.699,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.562,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.497,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.6,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.453,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.319,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts",
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0028",
+      "rank": 28,
+      "name": "Mock compound 28",
+      "consensus": -1.367,
+      "consensus_iqr": [
+        -1.617,
+        -1.117
+      ],
+      "n_ranking_contexts": 3,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -1.313,
+        "ks": -1.408,
+        "cosine": -1.276
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.506,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.365,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.304,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.25,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.482,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.459,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0030",
+      "rank": 29,
+      "name": "Mock compound 30",
+      "consensus": -1.295,
+      "consensus_iqr": [
+        -1.545,
+        -1.045
+      ],
+      "n_ranking_contexts": 13,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -1.267,
+        "ks": -1.394,
+        "cosine": -1.163
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.498,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.201,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.264,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.331,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.29,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.396,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.418,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.478,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.1,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0031",
+      "rank": 30,
+      "name": "Mock compound 31",
+      "consensus": -1.289,
+      "consensus_iqr": [
+        -1.539,
+        -1.039
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -1.368,
+        "ks": -1.197,
+        "cosine": -1.08
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.379,
+          "n_contexts": 5
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.299,
+          "n_contexts": 5
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.33,
+          "n_contexts": 4
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0029",
+      "rank": 31,
+      "name": "Mock compound 29",
+      "consensus": -1.262,
+      "consensus_iqr": [
+        -1.512,
+        -1.012
+      ],
+      "n_ranking_contexts": 8,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -1.233,
+        "ks": -1.241,
+        "cosine": -1.243
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.422,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.163,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.284,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.175,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.292,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.697,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0032",
+      "rank": 32,
+      "name": "Mock compound 32",
+      "consensus": -1.177,
+      "consensus_iqr": [
+        -1.427,
+        -0.927
+      ],
+      "n_ranking_contexts": 13,
+      "n_held_out_contexts": 3,
+      "scores": {
+        "wtcs": -1.168,
+        "ks": -1.085,
+        "cosine": -1.132
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.11,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.195,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.869,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.191,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.091,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0033",
+      "rank": 33,
+      "name": "Mock compound 33",
+      "consensus": -1.109,
+      "consensus_iqr": [
+        -1.359,
+        -0.859
+      ],
+      "n_ranking_contexts": 12,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -1.167,
+        "ks": -1.069,
+        "cosine": -1.037
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.196,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.122,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.039,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.867,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.097,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.845,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.123,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0034",
+      "rank": 34,
+      "name": "Mock compound 34",
+      "consensus": -1.086,
+      "consensus_iqr": [
+        -1.336,
+        -0.836
+      ],
+      "n_ranking_contexts": 11,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -1.183,
+        "ks": -1.164,
+        "cosine": -0.966
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -1.051,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.95,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.366,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.857,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.924,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.246,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0035",
+      "rank": 35,
+      "name": "Mock compound 35",
+      "consensus": -1.085,
+      "consensus_iqr": [
+        -1.335,
+        -0.835
+      ],
+      "n_ranking_contexts": 9,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -1.07,
+        "ks": -1.15,
+        "cosine": -1.092
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -0.798,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.956,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -1.277,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -1.018,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.947,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.884,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -1.308,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0036",
+      "rank": 36,
+      "name": "Mock compound 36",
+      "consensus": -1.004,
+      "consensus_iqr": [
+        -1.254,
+        -0.754
+      ],
+      "n_ranking_contexts": 5,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -1.101,
+        "ks": -1.07,
+        "cosine": -1.178
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.868,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.971,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.794,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0039",
+      "rank": 37,
+      "name": "Mock compound 39",
+      "consensus": -0.923,
+      "consensus_iqr": [
+        -1.173,
+        -0.673
+      ],
+      "n_ranking_contexts": 6,
+      "n_held_out_contexts": 4,
+      "scores": {
+        "wtcs": -0.807,
+        "ks": -1.006,
+        "cosine": -0.867
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.807,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.004,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.961,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.893,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.906,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0037",
+      "rank": 38,
+      "name": "Mock compound 37",
+      "consensus": -0.921,
+      "consensus_iqr": [
+        -1.171,
+        -0.671
+      ],
+      "n_ranking_contexts": 10,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -0.895,
+        "ks": -0.921,
+        "cosine": -1.009
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.873,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -1.123,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -1.161,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.912,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.999,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.909,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.918,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.91,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.784,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0040",
+      "rank": 39,
+      "name": "Mock compound 40",
+      "consensus": -0.883,
+      "consensus_iqr": [
+        -1.133,
+        -0.633
+      ],
+      "n_ranking_contexts": 3,
+      "n_held_out_contexts": 4,
+      "scores": {
+        "wtcs": -1.017,
+        "ks": -0.672,
+        "cosine": -0.927
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -0.836,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.657,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.905,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.808,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.779,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -1.195,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.913,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0038",
+      "rank": 40,
+      "name": "Mock compound 38",
+      "consensus": -0.882,
+      "consensus_iqr": [
+        -1.132,
+        -0.632
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -0.822,
+        "ks": -0.91,
+        "cosine": -0.889
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -1.348,
+          "n_contexts": 5
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -1.013,
+          "n_contexts": 5
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.974,
+          "n_contexts": 4
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0041",
+      "rank": 41,
+      "name": "Mock compound 41",
+      "consensus": -0.764,
+      "consensus_iqr": [
+        -1.014,
+        -0.514
+      ],
+      "n_ranking_contexts": 8,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -0.87,
+        "ks": -0.79,
+        "cosine": -0.627
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -0.73,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.908,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.535,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.54,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -1.058,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0042",
+      "rank": 42,
+      "name": "Mock compound 42",
+      "consensus": -0.734,
+      "consensus_iqr": [
+        -0.984,
+        -0.484
+      ],
+      "n_ranking_contexts": 4,
+      "n_held_out_contexts": 6,
+      "scores": {
+        "wtcs": -0.766,
+        "ks": -0.916,
+        "cosine": -0.718
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.52,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.793,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.528,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.679,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.9,
+          "n_contexts": 0
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.976,
+          "n_contexts": 0
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "few_contexts"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0044",
+      "rank": 43,
+      "name": "Mock compound 44",
+      "consensus": -0.617,
+      "consensus_iqr": [
+        -0.867,
+        -0.367
+      ],
+      "n_ranking_contexts": 11,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -0.657,
+        "ks": -0.57,
+        "cosine": -0.561
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.449,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -0.636,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.531,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.83,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.578,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0043",
+      "rank": 44,
+      "name": "Mock compound 43",
+      "consensus": -0.612,
+      "consensus_iqr": [
+        -0.862,
+        -0.362
+      ],
+      "n_ranking_contexts": 9,
+      "n_held_out_contexts": 5,
+      "scores": {
+        "wtcs": -0.655,
+        "ks": -0.635,
+        "cosine": -0.577
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.471,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.586,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.613,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.775,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.733,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.767,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.485,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0045",
+      "rank": 45,
+      "name": "Mock compound 45",
+      "consensus": -0.598,
+      "consensus_iqr": [
+        -0.848,
+        -0.348
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -0.594,
+        "ks": -0.651,
+        "cosine": -0.67
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A549",
+          "consensus": -0.508,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.528,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.434,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.438,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.301,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.621,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.581,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0046",
+      "rank": 46,
+      "name": "Mock compound 46",
+      "consensus": -0.511,
+      "consensus_iqr": [
+        -0.761,
+        -0.261
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -0.566,
+        "ks": -0.578,
+        "cosine": -0.772
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.429,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -0.888,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.638,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.37,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.487,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.711,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.408,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.423,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0049",
+      "rank": 47,
+      "name": "Mock compound 49",
+      "consensus": -0.49,
+      "consensus_iqr": [
+        -0.74,
+        -0.24
+      ],
+      "n_ranking_contexts": 8,
+      "n_held_out_contexts": 2,
+      "scores": {
+        "wtcs": -0.569,
+        "ks": -0.586,
+        "cosine": -0.498
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.583,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.297,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.138,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.399,
+          "n_contexts": 1
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.402,
+          "n_contexts": 1
+        }
+      ],
+      "approval_status": {
+        "status": "approved",
+        "max_phase": 4.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [
+        "composition_sensitive"
+      ],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0047",
+      "rank": 48,
+      "name": "Mock compound 47",
+      "consensus": -0.473,
+      "consensus_iqr": [
+        -0.723,
+        -0.223
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 1,
+      "scores": {
+        "wtcs": -0.465,
+        "ks": -0.447,
+        "cosine": -0.593
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.576,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -0.587,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.704,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.668,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.503,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "HT29",
+          "consensus": -0.232,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.48,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "preclinical",
+        "max_phase": 0.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0050",
+      "rank": 49,
+      "name": "Mock compound 50",
+      "consensus": -0.35,
+      "consensus_iqr": [
+        -0.6,
+        -0.1
+      ],
+      "n_ranking_contexts": 14,
+      "n_held_out_contexts": 8,
+      "scores": {
+        "wtcs": -0.405,
+        "ks": -0.328,
+        "cosine": -0.362
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "A375",
+          "consensus": -0.448,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "A549",
+          "consensus": -0.186,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.403,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "MCF7",
+          "consensus": -0.196,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "PC3",
+          "consensus": -0.758,
+          "n_contexts": 2
+        },
+        {
+          "cell_id": "VCAP",
+          "consensus": -0.486,
+          "n_contexts": 2
+        }
+      ],
+      "approval_status": {
+        "status": "investigational",
+        "max_phase": 2.0,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    },
+    {
+      "id": "MOCK-0048",
+      "rank": 50,
+      "name": "Mock compound 48",
+      "consensus": -0.331,
+      "consensus_iqr": [
+        -0.581,
+        -0.081
+      ],
+      "n_ranking_contexts": 10,
+      "n_held_out_contexts": 7,
+      "scores": {
+        "wtcs": -0.272,
+        "ks": -0.334,
+        "cosine": -0.332
+      },
+      "by_cell_line": [
+        {
+          "cell_id": "HA1E",
+          "consensus": -0.186,
+          "n_contexts": 4
+        },
+        {
+          "cell_id": "HCC515",
+          "consensus": -0.316,
+          "n_contexts": 3
+        },
+        {
+          "cell_id": "HEPG2",
+          "consensus": -0.198,
+          "n_contexts": 3
+        }
+      ],
+      "approval_status": {
+        "status": "unknown",
+        "max_phase": null,
+        "source": {
+          "label": "ChEMBL MOCK",
+          "url": "https://example.com/chembl/mock"
+        }
+      },
+      "flags": [],
+      "is_demo_candidate": false,
+      "brain_cells": false,
+      "penetrant": null,
+      "exposure_label": "unspecified",
+      "cancer_lines_only": false,
+      "attack_ready": true,
+      "preregistered": true
+    }
+  ]
+}

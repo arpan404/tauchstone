@@ -1,0 +1,12 @@
+{
+  "id": "example-screen",
+  "project_id": "GSE132903",
+  "signature_id": "GSE132903",
+  "status": "queued",
+  "n_signatures": 0,
+  "n_scored": 0,
+  "elapsed_s": 0,
+  "n_ranked": 50,
+  "preregistered": true,
+  "top": []
+}
