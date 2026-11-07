@@ -8,7 +8,9 @@ with their reason) with a provenance sidecar.
 
 Method: RDKit MolFromSmiles, keep the largest fragment (strips salts and counter-ions), AddHs,
 ETKDGv3 embedding with a fixed seed, MMFF94 optimisation (UFF fallback), then RemoveHs. Atoms are
-centred at the origin. Bond orders are 1, 2, 3, and 4 for aromatic.
+centred at the origin. Bond orders are 1, 2, 3, and 4 for aromatic. When ETKDG cannot satisfy the
+SMILES stereo (strained bridged rings) the last attempt embeds without enforcing chirality and the
+``method`` string says whether the resulting stereoisomer still matches the SMILES.
 
 These are computed conformers for display; they are not experimental structures and say nothing
 about target binding.
@@ -86,6 +88,13 @@ def molecule_from_smiles(smiles: str, seed: int = SEED) -> dict:
         params.useRandomCoords = True
         status = AllChem.EmbedMolecule(molh, params)
         embed_note = " (random-coordinate start)"
+    stereo_relaxed = False
+    if status != 0:
+        # Last resort for strained bridged systems whose SMILES stereo ETKDG cannot satisfy
+        # (e.g. quinine, ipratropium): embed without enforcing chirality, then say so.
+        params.enforceChirality = False
+        status = AllChem.EmbedMolecule(molh, params)
+        stereo_relaxed = True
     if status != 0:
         raise ValueError("ETKDGv3 embedding failed")
 
@@ -101,6 +110,12 @@ def molecule_from_smiles(smiles: str, seed: int = SEED) -> dict:
         ff = "no force-field optimisation"
 
     heavy = Chem.RemoveHs(molh)
+    if stereo_relaxed:
+        check = Chem.Mol(heavy)
+        Chem.AssignStereochemistryFrom3D(check)
+        same = Chem.MolToSmiles(check) == parent_smiles
+        embed_note += (" (chirality not enforced; stereo matches SMILES)" if same
+                       else " (chirality not enforced; stereoisomer may differ from SMILES)")
     pos = np.asarray(heavy.GetConformer().GetPositions(), dtype=float)
     pos = pos - pos.mean(axis=0)
     atoms = [
