@@ -1,21 +1,81 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRunExperiment, useStartAttack, useMockStatus, useAttackSessionSnapshot, useCandidates } from '@/api/hooks';
 import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
-import { VerdictBadge } from '@/components/labels';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, Circle, FlaskConical, LockKeyhole, Play, RotateCcw } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
 import { useUi } from '@/store/ui';
-import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { beliefPoints, buildBeliefOption } from './beliefOption';
-import { fmt2, hasIntervalWidth, observedText, testsLeftText } from './format';
+import { fmt2, observedText, testsLeftText } from './format';
 import { RecommendationRationale } from './RecommendationRationale';
+import { useDrugGaps } from './useDrugGaps';
+import './attack.css';
 
 type Session = Schema<'AttackSession'>;
+type Verdict = Schema<'Verdict'>;
+type GlyphState = 'pending' | 'next' | 'running' | 'survive' | 'fail';
+
+/**
+ * Inline stand-in for '@/features/simulation/TestCellGlyph' (lands separately).
+ * Same `state` contract; swap the import when it exists.
+ */
+function TestCellGlyph({ state }: { state: GlyphState }) {
+  return <span className="cell" data-state={state} aria-hidden="true" />;
+}
+
+const VERDICT_PILL: Record<Verdict, { text: string; cls: string }> = {
+  INSUFFICIENT_EVIDENCE: { text: 'Insufficient evidence', cls: '' },
+  FRAGILE_CONTEXT_DEPENDENT: { text: 'Fragile', cls: 'bad' },
+  SUPPORTED_SO_FAR: { text: 'Supported', cls: 'ok' },
+};
+
+const TYPE_LABEL: Record<string, string> = {
+  held_out_cohort: 'Held-out cohort',
+  composition_adjusted: 'Composition-adjusted',
+  lincs_context: 'LINCS held-out',
+  brain_exposure: 'Brain exposure',
+  cell_type: 'Cell type',
+};
+
+const RING_C = 2 * Math.PI * 52;
+
+function mmss(ms: number): string {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
+function reducedMotion(): boolean {
+  return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** Animated P(claim) readout; jumps when reduced motion is requested. */
+function useAnimatedNumber(target: number, ms = 900): number {
+  const [value, setValue] = useState(target);
+  const from = useRef(target);
+  useEffect(() => {
+    const start = from.current;
+    if (start === target || reducedMotion()) {
+      setValue(target);
+      from.current = target;
+      return;
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (t: number) => {
+      const k = Math.min(1, (t - t0) / ms);
+      const eased = 1 - Math.pow(1 - k, 3);
+      setValue(start + (target - start) * eased);
+      if (k < 1) raf = requestAnimationFrame(tick);
+      else from.current = target;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      from.current = target;
+    };
+  }, [target, ms]);
+  return value;
+}
 
 export function AttackView() {
   const { selectedCandidateId, mode, setMode, sessionId, setSessionId, setStep } = useUi();
@@ -28,42 +88,88 @@ export function AttackView() {
   const [budget, setBudget] = useState(5);
   const mockData = useMockStatus(session?.history?.[session.history.length - 1]?.provenance ?? null);
   const [picked, setPicked] = useState<string | null>(null);
-  const [recommendationNote, setRecommendationNote] = useState<string | null>(null);
-  const prevRecommended = useRef<string | null>(null);
+  const [runningId, setRunningId] = useState<string | null>(null);
+  const timer = useRef<number | null>(null);
   const start = useStartAttack();
   const run = useRunExperiment(session?.session_id ?? null);
+  const gaps = useDrugGaps(session ? selectedCandidateId : null);
+  const animatedP = useAnimatedNumber(session?.belief.p_claim_holds ?? 0);
 
   const effectivePicked = picked ?? session?.recommended_context_id ?? null;
   const selectedContext = session?.contexts.find((c) => c.context_id === effectivePicked && c.status === 'hidden');
+  const nextId = runningId ?? effectivePicked;
   const hiddenCount = session ? session.contexts.filter((c) => c.status === 'hidden').length : 0;
-  const beliefChart = useMemo(
-    () => buildBeliefOption(
-      session && !session.history?.length
-        ? [{ step: 0, p: session.belief.p_claim_holds }]
-        : beliefPoints(session?.history ?? []),
-    ),
-    [session],
-  );
+  const pill = session ? VERDICT_PILL[session.verdict] : null;
 
-  // Track recommendation changes caused by what was learned.
+  // Event-log clock: session start + one stamp per reveal.
+  const [t0, setT0] = useState<number | null>(null);
+  const [revealAt, setRevealAt] = useState<Record<string, number>>({});
+  const seenSession = useRef<string | null>(null);
   useEffect(() => {
-    const rec = session?.recommended_context_id ?? null;
-    if (session && (session.history?.length ?? 0) > 0 && prevRecommended.current && rec !== prevRecommended.current) {
-      const before = session.contexts.find((c) => c.context_id === prevRecommended.current);
-      const after = session.contexts.find((c) => c.context_id === rec);
-      setRecommendationNote(
-        `Next recommendation changed: ${before?.label ?? prevRecommended.current} → ${after?.label ?? rec ?? 'none'} (belief now ${session.belief.p_claim_holds.toFixed(2)}).`,
-      );
+    if (session && session.session_id !== seenSession.current) {
+      seenSession.current = session.session_id;
+      setT0(Date.now());
+      setRevealAt({});
     }
-    prevRecommended.current = rec;
+    return () => {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+    };
+  }, [session]);
+  useEffect(() => {
+    if (!session) return;
+    setRevealAt((prev) => {
+      const missing = session.history?.filter((h) => !(h.context_id in prev)) ?? [];
+      if (!missing.length) return prev;
+      const now = Date.now();
+      const next = { ...prev };
+      for (const h of missing) next[h.context_id] = now;
+      return next;
+    });
   }, [session]);
 
   const lastRevealed = session?.history?.[session.history.length - 1] ?? null;
 
+  const log = useMemo(() => {
+    if (!session) return [];
+    const lines: string[] = [`session start · ${session.contexts.length} hidden tests sealed`];
+    for (const h of session.history ?? []) {
+      lines.push(`${h.label} · consensus ${fmt2(h.value)} · ${h.outcome}`);
+      lines.push(`P(claim) ${h.belief_before.toFixed(2)} → ${h.belief_after.toFixed(2)}`);
+    }
+    const stamps: (number | null)[] = [t0];
+    for (const h of session.history ?? []) {
+      const at = revealAt[h.context_id] ?? null;
+      stamps.push(at, at);
+    }
+    return lines.map((text, i) => ({ text, at: stamps[i] ?? null }));
+  }, [session, t0, revealAt]);
+
+  function clearTimer() {
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+  }
+
+  function commitNow(contextId: string) {
+    if (!session || run.isPending || start.isPending) return;
+    run.mutate(
+      { contextId, mode },
+      {
+        onSuccess: (s) => {
+          setRunningId(null);
+          setSession(s);
+          setPicked(null);
+        },
+        onError: () => setRunningId(null),
+      },
+    );
+  }
+
   function handleStart() {
     if (!selectedCandidateId || start.isPending || run.isPending) return;
-    setRecommendationNote(null);
-    prevRecommended.current = null;
+    clearTimer();
+    setRunningId(null);
     setPicked(null);
     start.mutate(
       { candidateId: selectedCandidateId, mode, budget },
@@ -71,28 +177,27 @@ export function AttackView() {
         onSuccess: (s) => {
           setSession(s);
           setSessionId(s.session_id);
-          prevRecommended.current = s.recommended_context_id ?? null;
         },
       },
     );
   }
 
   function handleRun() {
-    if (!session || !selectedContext || run.isPending || start.isPending || session.budget_remaining < 1) return;
-    run.mutate(
-      { contextId: selectedContext.context_id, mode },
-      {
-        onSuccess: (s) => {
-          setSession(s);
-          setPicked(null);
-        },
-      },
-    );
+    if (!session || !selectedContext || run.isPending || start.isPending || runningId || session.budget_remaining < 1) return;
+    commitNow(selectedContext.context_id);
   }
 
-  const busy = run.isPending || start.isPending;
-  const budgetControl = <div className="flex items-center gap-3">
-    <label id="session-budget-label" className="text-muted-foreground">Session budget</label>
+  /** Recommended path: ~1 s in `running` before the reveal commits. */
+  function handleRunNext() {
+    if (!session || !selectedContext || run.isPending || start.isPending || runningId || session.budget_remaining < 1) return;
+    const id = selectedContext.context_id;
+    setRunningId(id);
+    timer.current = window.setTimeout(() => commitNow(id), reducedMotion() ? 0 : 1000);
+  }
+
+  const busy = run.isPending || start.isPending || runningId !== null;
+  const budgetControl = <div className="attack-row">
+    <label id="session-budget-label">Session budget</label>
     <Select value={budget} onValueChange={(value) => value !== null && setBudget(value)} disabled={busy}>
       <SelectTrigger aria-labelledby="session-budget-label"><SelectValue>{budget} experiment{budget === 1 ? '' : 's'}</SelectValue></SelectTrigger>
       <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
@@ -100,101 +205,127 @@ export function AttackView() {
   </div>;
 
   return (
-    <div className="flex h-full flex-col bg-background text-foreground">
+    <div className="attack flex h-full flex-col">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-5">
-          <div>
-            <p className="mb-1 text-sm text-muted-foreground">Experiment workspace</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-xl font-semibold">{candidateName ?? 'Choose a candidate'}</h2>
-              <Button variant="ghost" size="sm" onClick={() => setStep('candidates')} disabled={busy}>Change candidate</Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <label className="flex items-center justify-end gap-3 text-sm">
-              <span className={mode === 'attack' ? 'font-medium' : 'text-muted-foreground'}>Attack</span>
-              <Switch checked={mode === 'learn'} onCheckedChange={v => setMode(v ? 'learn' : 'attack')} disabled={busy} aria-label="Toggle attack or learn mode" />
-              <span className={mode === 'learn' ? 'font-medium' : 'text-muted-foreground'}>Learn</span>
-            </label>
-            <p className="max-w-sm text-xs text-muted-foreground">{mode === 'attack' ? 'Test the context most likely to break the claim.' : 'Test the context expected to change belief the most.'}</p>
-          </div>
-        </header>
-
-        {!session && <section className="max-w-2xl rounded-[10px] border border-border bg-card p-6 text-sm">
-          <FlaskConical className="mb-4 size-5 text-primary" />
-          <h3 className="mb-2 text-base font-semibold">Plan a bounded experiment session</h3>
-          {!selectedCandidateId ? <><p className="mb-4 text-muted-foreground">Select a ranked candidate to plan an experiment.</p><Button onClick={() => setStep('candidates')}>Choose candidate</Button></> : <>
-            <p className="mb-5 text-muted-foreground">Each experiment costs 1 budget unit. Results stay hidden until you commit.</p>
-            <div className="flex flex-wrap items-center gap-4">{budgetControl}<Button onClick={handleStart} disabled={busy}><Play />{start.isPending ? 'Starting…' : 'Create experiment session'}</Button></div>
-            {start.isError && <p role="alert" className="mt-3 text-destructive">Could not create the session. Try again.</p>}
+      <div className="attack-body flex-1 overflow-auto p-4 md:p-6">
+        {!session && <section className="attack-card attack-empty">
+          <p className="attack-kicker">Experiment workspace</p>
+          <h2 className="text-xl font-semibold">{candidateName ?? 'Choose a candidate'}</h2>
+          {!selectedCandidateId ? <div className="attack-row"><button type="button" className="btn2" onClick={() => setStep('candidates')}>Choose candidate</button></div> : <>
+            {budgetControl}
+            <div className="attack-row"><button type="button" className="btn" onClick={handleStart} disabled={busy}>{start.isPending ? 'Starting…' : 'Create experiment session'}</button></div>
+            {start.isError && <p role="alert">Could not create the session.</p>}
           </>}
         </section>}
 
-        {session && <div className="space-y-5">
-          <section className="rounded-[10px] border border-border bg-card p-4">
-            <p className="mb-4 text-sm" aria-label="Claim under test">Claim under test: {session.claim.text}</p>
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm">
-              <VerdictBadge verdict={session.verdict} />
-              <p aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden contexts; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}><span className="font-mono">{session.budget_remaining} / {session.budget}</span> <span className="text-muted-foreground">budget remaining</span></p>
-              <p aria-live="polite"><span className="text-muted-foreground">P(claim holds)</span> <span className="font-mono">{session.belief.p_claim_holds.toFixed(2)}</span>
-                {hasIntervalWidth(session.belief.interval) && <span className="ml-2 text-xs text-muted-foreground">90% interval [{fmt2(session.belief.interval?.[0])}, {fmt2(session.belief.interval?.[1])}]</span>}
-              </p>
+        {session && <div className="attack-grid">
+          <section className="attack-card" aria-label="Claim and belief">
+            <p className="attack-kicker">{session.candidate_name ?? candidateName}</p>
+            <p className="mb-4 mt-1 text-sm" aria-label="Claim under test">Claim under test: {session.claim.text}</p>
+            <div className="gauge" role="img" aria-label={`P(claim holds) ${session.belief.p_claim_holds.toFixed(2)}`}>
+              <svg viewBox="0 0 120 120">
+                <circle className="ring-bg" cx="60" cy="60" r="52" />
+                <circle className="ring-fg" cx="60" cy="60" r="52" strokeDasharray={RING_C} strokeDashoffset={RING_C * (1 - session.belief.p_claim_holds)} />
+              </svg>
+              <div className="c"><div className="v num">{animatedP.toFixed(2)}</div><div className="k">P(claim holds)</div></div>
             </div>
+            <div className="attack-row">
+              {pill && <span className={`verd ${pill.cls}`} role="status" aria-label={`Verdict: ${pill.text}`}>{pill.text}</span>}
+              {session.preregistered === false && <span className="chip">not preregistered</span>}
+            </div>
+            <div className="attack-stats mt-3">
+              <span aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden contexts; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}><span className="num">{session.budget_remaining} / {session.budget}</span> budget</span>
+              <span><span className="num">{hiddenCount}</span> hidden</span>
+            </div>
+            <div className="attack-actions">
+              <button type="button" className="btn" onClick={handleRunNext} disabled={!selectedContext || busy || session.budget_remaining <= 0}>{runningId ? 'Running…' : 'Run next test'}</button>
+              <button type="button" className="btn2" onClick={handleStart} disabled={busy}>{start.isPending ? 'Starting…' : 'Reset'}</button>
+              <div role="group" aria-label="Attack or learn mode" className="attack-row">
+                {(['attack', 'learn'] as const).map((m) => (
+                  <button key={m} type="button" className="btn2" aria-pressed={mode === m} onClick={() => setMode(m)} disabled={busy}>{m === 'attack' ? 'Attack' : 'Learn'}</button>
+                ))}
+              </div>
+            </div>
+            {run.isError && <p role="alert" className="mt-3 text-sm">No result was returned.</p>}
+            {session.budget_remaining <= 0 && <p className="muted mt-2 text-sm">Budget exhausted.</p>}
+            <ol className="attack-log" aria-live="polite" aria-label="Session event log">
+              {log.map((line, i) => (
+                <li key={i}><span className="mono">{line.at ? mmss(line.at - (t0 ?? line.at)) : '00:00'}</span>{line.text}</li>
+              ))}
+            </ol>
           </section>
-          {recommendationNote && <p role="status" className="text-sm text-muted-foreground">{recommendationNote}</p>}
-          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-            <section className="min-w-0">
-              <div className="mb-3 flex items-center justify-between"><h3 className="text-sm font-semibold">Choose a hidden experiment</h3><span className="text-xs text-muted-foreground">{hiddenCount} available</span></div>
-              <div className="space-y-2">
-                {session.contexts.map(c => {
+
+          <div className="min-w-0">
+            <section aria-label="Hidden tests">
+              <h3 className="attack-h">Hidden tests</h3>
+              <div>
+                {session.contexts.map((c) => {
+                  const revealed = c.status === 'revealed';
+                  const state: GlyphState = revealed
+                    ? (c.outcome === 'fail' ? 'fail' : 'survive')
+                    : c.context_id === runningId
+                      ? 'running'
+                      : c.context_id === nextId
+                        ? 'next'
+                        : 'pending';
                   const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
                   const isPicked = c.context_id === effectivePicked && c.status === 'hidden';
-                  return <Button key={c.context_id} variant="outline" data-recommended={isRec} data-outcome={c.status === 'revealed' ? c.outcome : undefined}
-                    disabled={c.status !== 'hidden' || busy || session.budget_remaining < 1} onClick={() => setPicked(c.context_id)} aria-pressed={isPicked}
-                    className={`h-auto w-full justify-start gap-3 whitespace-normal rounded-[10px] p-4 text-left ${isPicked ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'bg-card'}`}>
-                    {c.status === 'revealed' ? <CheckCircle2 className="text-muted-foreground" /> : isPicked ? <CheckCircle2 className="text-primary" /> : <Circle className="text-muted-foreground" />}
-                    <span className="min-w-0 flex-1"><span className="block font-medium">{c.label}</span>
-                      <span className="mt-1 block text-xs font-normal text-muted-foreground">{c.status === 'revealed' ? `Revealed: ${c.outcome}` : `Hidden · cost 1 · predicted survival ${(c.p_survive ?? 0).toFixed(2)} · acquisition ${(c.acquisition ?? 0).toFixed(2)}`}</span>
-                    </span>
-                    {isRec && <span className="text-xs text-primary">Recommended</span>}
-                  </Button>;
+                  const failPct = Math.round((1 - (c.p_survive ?? 0)) * 100);
+                  return (
+                    <button key={c.context_id} type="button"
+                      data-recommended={isRec} data-outcome={revealed ? c.outcome : undefined}
+                      disabled={c.status !== 'hidden' || busy || session.budget_remaining < 1}
+                      onClick={() => setPicked(c.context_id)} aria-pressed={isPicked}
+                      className={`attack-test ${state === 'next' ? 'next' : ''}`}>
+                      <TestCellGlyph state={state} />
+                      <span className="min-w-0 flex-1"><span className="t">{c.label}</span>
+                        <span className="s">{revealed ? `Revealed: ${c.outcome}` : `Hidden · ${TYPE_LABEL[c.type] ?? c.type} · ${failPct}% break`}</span>
+                        {isRec && <span className="tag">Recommended</span>}
+                      </span>
+                      <span className="pc num">{revealed ? (c.outcome === 'fail' ? 'Fail' : 'Survive') : runningId === c.context_id ? '…' : `${failPct}% break`}</span>
+                    </button>
+                  );
                 })}
               </div>
-              {session.recommended_context_id && <div className="mt-3"><RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} /></div>}
-              <footer className="mt-4 space-y-3 border-t border-border pt-4">
-                <div className="text-sm" aria-live="polite">{selectedContext ? <><p className="font-medium">Next experiment: {selectedContext.label}</p><p className="mt-1 text-xs text-muted-foreground">Cost 1 · Budget {session.budget_remaining} → {session.budget_remaining - 1}. Commit to reveal one result.</p></> : <p className="text-muted-foreground">No hidden experiment selected.</p>}</div>
-                <Button onClick={handleRun} disabled={!selectedContext || busy || session.budget_remaining <= 0}><Play />{run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}</Button>
-                {run.isError && <p role="alert" className="text-sm text-destructive">No result was returned. Retry this experiment; the server enforces budget and prevents duplicate reveals.</p>}
-                {session.budget_remaining <= 0 && <p className="text-sm text-muted-foreground">Budget exhausted. Review the decision or start a new session.</p>}
-              </footer>
+              {session.recommended_context_id && (
+                <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
+              )}
+              <div className="attack-foot">
+                <button type="button" className="btn2" onClick={handleRun} disabled={!selectedContext || busy || session.budget_remaining <= 0}>
+                  {run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}
+                </button>
+              </div>
+              <div className="attack-foot text-sm" aria-live="polite">
+                {selectedContext ? <p>Next experiment: {selectedContext.label}</p> : <p>No hidden experiment selected.</p>}
+              </div>
             </section>
-            <aside className="min-w-0 space-y-5">
-              <section className="rounded-[10px] border border-border bg-card p-4" aria-live="polite">
-                <h3 className="mb-3 text-sm font-semibold">Latest result</h3>
-                {lastRevealed ? <div className="space-y-2 text-sm">
-                  <p className="font-medium">{lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'} · {lastRevealed.label}</p>
-                  <p>{observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}</p>
-                  <p className="text-muted-foreground">Decision update · belief <span className="font-mono">{lastRevealed.belief_before.toFixed(3)} → {lastRevealed.belief_after.toFixed(3)}</span></p>
-                </div> : <div className="flex items-start gap-3 text-sm text-muted-foreground"><LockKeyhole className="mt-0.5 size-4 shrink-0" /><p>Results are hidden. Commit one experiment to reveal its server result.</p></div>}
+
+            {gaps && gaps.length > 0 && (
+              <section aria-label="Open gaps" className="mt-4">
+                <h3 className="attack-h">Open gaps</h3>
+                <div className="chips">
+                  {gaps.map((g) => <span key={g.text} className={`chip ${g.tone === 'neutral' ? '' : g.tone}`}>{g.text}</span>)}
+                </div>
               </section>
-              <section><h3 className="mb-2 text-sm font-semibold">Belief across reveals</h3><div role="img" aria-label="P(claim holds) across reveals"><ReactECharts option={beliefChart} style={{ height: 160 }} /></div></section>
-              <section>
-                <h3 className="mb-3 text-sm font-semibold">Experiment history</h3>
-                {!session.history?.length ? <p className="text-sm text-muted-foreground">No experiments committed in this session.</p> : <ol className="divide-y divide-border">{session.history.map(h => <li key={h.context_id} className="space-y-1 py-3 text-sm">
-                  <p className="font-medium">{h.label} <span className="font-normal text-muted-foreground">· {h.outcome}</span></p>
-                  <p className="text-xs text-muted-foreground">{observedText(h.value, h.threshold)} · {h.belief_before.toFixed(2)} → {h.belief_after.toFixed(2)} · mode {h.mode_used ?? session.mode} · cost 1</p>
-                  <p className="text-xs text-muted-foreground">{h.rule}</p>{h.detail && <p className="text-xs text-muted-foreground">{h.detail}</p>}
-                </li>)}</ol>}
-              </section>
-            </aside>
+            )}
+
+            <section className="attack-latest" aria-label="Latest result" aria-live="polite">
+              <h3 className="attack-h">Latest result</h3>
+              {lastRevealed ? <>
+                <p className="font-medium">{lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'} · {lastRevealed.label}</p>
+                <p className="muted">{observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}</p>
+                <p className="muted num">P(claim) {lastRevealed.belief_before.toFixed(3)} → {lastRevealed.belief_after.toFixed(3)}</p>
+              </> : <p className="muted">No reveals yet.</p>}
+            </section>
           </div>
-          <div className="flex flex-wrap items-center gap-4 border-t border-border pt-5 text-sm">
-            {budgetControl}<Button variant="outline" onClick={handleStart} disabled={busy}><RotateCcw />{start.isPending ? 'Creating session…' : 'Start new session'}</Button>
-            <p className="text-xs text-muted-foreground">Starts a fresh budget of {budget}. The current history is replaced in this workspace.</p>
-            {start.isError && <p role="alert">Could not create a new session. Your current results are retained.</p>}
-          </div>
+        </div>}
+
+        {session && <div className="attack-foot">
+          {budgetControl}
+          <button type="button" className="btn2" onClick={handleStart} disabled={busy}>{start.isPending ? 'Creating session…' : 'Start new session'}</button>
+          <button type="button" className="btn2" onClick={() => setStep('candidates')} disabled={busy}>Change candidate</button>
+          {start.isError && <p role="alert">Could not create a new session.</p>}
         </div>}
       </div>
       <ProvenanceStrip provenance={lastRevealed?.provenance} />

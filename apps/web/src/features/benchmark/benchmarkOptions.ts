@@ -2,6 +2,19 @@ import type { Schema } from '@/api/types';
 
 type Policy = Schema<'PolicyResult'>;
 
+/** Holm p for a policy pair, either direction; decision_accuracy first. */
+export function pairHolmP(
+  tests: Pick<Schema<'Benchmark'>, 'tests'>['tests'],
+  a: string,
+  b: string,
+): number | null {
+  const pair = tests.filter(
+    (t) => (t.policy_a === a && t.policy_b === b) || (t.policy_a === b && t.policy_b === a),
+  );
+  const pick = pair.find((t) => t.metric === 'decision_accuracy') ?? pair[0];
+  return pick ? pick.p_holm : null;
+}
+
 /** Median experiments-to-correct-verdict with 95% CI whiskers; hybrid emphasised. */
 export function buildPolicyOption(policies: Policy[]): Record<string, unknown> {
   const labels = policies.map((p) => p.label);
