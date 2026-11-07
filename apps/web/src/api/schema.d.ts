@@ -145,6 +145,184 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listProjects"];
+        put?: never;
+        post: operations["createProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start a live screen. JSON body for a built-in signature, multipart with a CSV file for an upload. */
+        post: operations["startScreen"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screens/{screen_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getScreen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/screens/{screen_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Server-sent events. Each event `data:` is a ScreenEvent JSON object; the stream ends after status done or failed. */
+        get: operations["streamScreen"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listProjectCandidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/drugs/{drug_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDrug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/drugs/{drug_id}/resources": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDrugResources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["lookupCompounds"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/{drug_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReportHtml"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/{drug_id}.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReportPdf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/candidates.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportCandidatesCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -393,6 +571,8 @@ export interface components {
             recommended_context_id: string | null;
             /** @description one plain-language sentence on why this test is recommended */
             rationale: string;
+            /** @description false when hidden tests were built on the fly for a drug outside the sealed set */
+            preregistered?: boolean;
             history?: components["schemas"]["RevealedOutcome"][];
         };
         RevealedOutcome: {
@@ -508,6 +688,161 @@ export interface components {
             signatures: components["schemas"]["SingleCellSignature"][];
             drugs: components["schemas"]["SingleCellDrug"][];
             provenance: components["schemas"]["Provenance"];
+        };
+        Project: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "builtin" | "upload";
+            signature_id?: string | null;
+            /** @example 97 AD · 98 control · limma · 16,437 genes */
+            description?: string;
+            n_ranked?: number | null;
+            /** @description candidates with hidden tests prepared */
+            n_attack_ready?: number | null;
+            last_screen_id?: string | null;
+            /** @description true only for the built-in GSE132903 project */
+            preregistered: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
+        ScreenHit: {
+            rank: number;
+            drug_id: string;
+            name: string;
+            consensus: number;
+        };
+        Screen: {
+            id: string;
+            project_id: string;
+            signature_id?: string | null;
+            /** @enum {string} */
+            status: "queued" | "mapping" | "scoring" | "aggregating" | "done" | "failed";
+            /** @example 113310 */
+            n_signatures: number;
+            n_scored: number;
+            elapsed_s: number;
+            n_genes_mapped?: number | null;
+            n_ranked?: number | null;
+            top?: components["schemas"]["ScreenHit"][];
+            error?: string | null;
+            preregistered: boolean;
+        };
+        ScreenEvent: components["schemas"]["Screen"];
+        /** @description Per-drug gaps, shown as chips. Derived from ranking contexts only (never held-out data). */
+        EvidenceGaps: {
+            /** @description ranking contexts in neural lines (SHSY5Y, NEU, NEU.KCL, MNEU.E, NPC, NPC.CAS9, NPC.TAK, FIBRNPC) */
+            brain_cells: {
+                cell_id: string;
+                consensus: number;
+                below_theta: boolean;
+            }[];
+            cancer_lines_only: boolean;
+            doses_um: number[];
+            times_h: number[];
+            exposure: {
+                level: components["schemas"]["ExposureLevel"];
+                /**
+                 * @example predicted low
+                 * @example predicted penetrant
+                 * @example measured
+                 */
+                label: string;
+                /** @description true if a measured value exists; the value itself stays hidden until an attack reveals it */
+                measured_available?: boolean;
+            };
+            has_targets: boolean;
+        };
+        ContextCell: {
+            cell_id: string;
+            /** @example 10 uM */
+            dose: string;
+            /** @example 6 h */
+            time: string;
+            consensus: number;
+            neural?: boolean;
+        };
+        Molecule3D: {
+            /** @example C23H27N5O7S */
+            formula: string;
+            smiles?: string;
+            atoms: {
+                el: string;
+                x: number;
+                y: number;
+                z: number;
+            }[];
+            bonds: number[][];
+            /** @example RDKit ETKDGv3 + MMFF94, seed 20261105 */
+            method?: string;
+        };
+        DrugDetail: {
+            drug_id: string;
+            name: string;
+            pool_rank?: number | null;
+            /** @example 1816 */
+            rank_total?: number | null;
+            consensus: number;
+            n_contexts: number;
+            scores?: components["schemas"]["MethodScores"];
+            approval_status?: components["schemas"]["ApprovalStatus"];
+            mechanism?: string | null;
+            targets?: components["schemas"]["Target"][];
+            structure?: components["schemas"]["Structure"] | null;
+            gaps: components["schemas"]["EvidenceGaps"];
+            /** @description ranking contexts only */
+            contexts: components["schemas"]["ContextCell"][];
+            molecule?: components["schemas"]["Molecule3D"] | null;
+            n_hidden_tests?: number | null;
+            attack_ready: boolean;
+            /** @description true if the drug is in the sealed benchmark or development pool of the built-in project */
+            preregistered: boolean;
+            provenance?: components["schemas"]["Provenance"];
+        };
+        LookupResult: {
+            query: string;
+            /** @enum {string} */
+            status: "ranked" | "not_rankable" | "not_in_lincs";
+            drug_id?: string | null;
+            name?: string | null;
+            pool_rank?: number | null;
+            rank_total?: number | null;
+            consensus?: number | null;
+            n_contexts?: number | null;
+            attack_ready?: boolean;
+            preregistered?: boolean;
+        };
+        ResourceAgreement: {
+            /** @enum {string} */
+            resource: "tauchstone_lincs_gold" | "clue" | "perturb_seqr";
+            /** @enum {string} */
+            status: "available" | "not_fetched" | "needs_key" | "not_available" | "not_found";
+            rank?: number | null;
+            n_ranked?: number | null;
+            score?: number | null;
+            fetched_at?: string | null;
+            source_url?: string | null;
+            note?: string | null;
+        };
+        ProjectCandidate: components["schemas"]["Candidate"] & {
+            /** @description has >= 1 ranking context in a neural line */
+            brain_cells?: boolean;
+            /** @description predicted or measured brain-penetrant; null if unknown */
+            penetrant?: boolean | null;
+            /** @example predicted low */
+            exposure_label?: string;
+            cancer_lines_only?: boolean;
+            attack_ready?: boolean;
+            preregistered?: boolean;
+        };
+        ProjectCandidates: {
+            project_id: string;
+            screen_id?: string | null;
+            n_ranked: number;
+            /** @description rows matching the filters before limit */
+            n_total_eligible?: number;
+            preregistered: boolean;
+            candidates: components["schemas"]["ProjectCandidate"][];
         };
     };
     responses: {
@@ -763,6 +1098,319 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description projects */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"][];
+                };
+            };
+        };
+    };
+    createProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    /** @description built-in signature id (GSE132903, GSE173955) or null for an upload project */
+                    signature_id?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    startScreen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    project_id: string;
+                    signature_id: string;
+                };
+                "multipart/form-data": {
+                    project_id: string;
+                    name?: string;
+                    /**
+                     * Format: binary
+                     * @description CSV with columns gene (symbol or Entrez), log2fc, stat, fdr
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description screen queued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Screen"];
+                };
+            };
+            /** @description invalid upload (missing columns, too few mapped genes) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getScreen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screen_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description screen state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Screen"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    streamScreen: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                screen_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description text/event-stream of ScreenEvent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": components["schemas"]["ScreenEvent"];
+                };
+            };
+        };
+    };
+    listProjectCandidates: {
+        parameters: {
+            query?: {
+                approved?: boolean;
+                brain_cells?: boolean;
+                penetrant?: boolean;
+                min_contexts?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ranked candidates for the project's latest screen */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectCandidates"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getDrug: {
+        parameters: {
+            query?: {
+                project_id?: string;
+            };
+            header?: never;
+            path: {
+                drug_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description drug detail with evidence gaps, contexts and 3D molecule */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DrugDetail"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getDrugResources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                drug_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description cached cross-resource agreement (report-only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceAgreement"][];
+                };
+            };
+        };
+    };
+    lookupCompounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    names: string[];
+                    project_id?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description one result per input name, same order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupResult"][];
+                };
+            };
+        };
+    };
+    getReportHtml: {
+        parameters: {
+            query?: {
+                project_id?: string;
+            };
+            header?: never;
+            path: {
+                drug_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description one-page report */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getReportPdf: {
+        parameters: {
+            query?: {
+                project_id?: string;
+            };
+            header?: never;
+            path: {
+                drug_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description report PDF */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    exportCandidatesCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV export */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
         };

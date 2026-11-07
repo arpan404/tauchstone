@@ -184,6 +184,188 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
 
+  # ---------------- MVP (Nov 7): projects, live screens, drugs, lookup, resources, reports ----------------
+  /projects:
+    get:
+      operationId: listProjects
+      responses:
+        "200":
+          description: projects
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/Project" } }
+    post:
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                signature_id: { type: [string, "null"], description: "built-in signature id (GSE132903, GSE173955) or null for an upload project" }
+      responses:
+        "200":
+          description: created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+
+  /screens:
+    post:
+      operationId: startScreen
+      summary: Start a live screen. JSON body for a built-in signature, multipart with a CSV file for an upload.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, signature_id]
+              properties:
+                project_id: { type: string }
+                signature_id: { type: string }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [project_id, file]
+              properties:
+                project_id: { type: string }
+                name: { type: string }
+                file: { type: string, format: binary, description: "CSV with columns gene (symbol or Entrez), log2fc, stat, fdr" }
+      responses:
+        "200":
+          description: screen queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Screen" }
+        "422":
+          description: invalid upload (missing columns, too few mapped genes)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /screens/{screen_id}:
+    get:
+      operationId: getScreen
+      parameters:
+        - { name: screen_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: screen state
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Screen" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /screens/{screen_id}/events:
+    get:
+      operationId: streamScreen
+      summary: Server-sent events. Each event `data:` is a ScreenEvent JSON object; the stream ends after status done or failed.
+      parameters:
+        - { name: screen_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: text/event-stream of ScreenEvent
+          content:
+            text/event-stream:
+              schema: { $ref: "#/components/schemas/ScreenEvent" }
+
+  /projects/{project_id}/candidates:
+    get:
+      operationId: listProjectCandidates
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+        - { name: approved, in: query, schema: { type: boolean } }
+        - { name: brain_cells, in: query, schema: { type: boolean } }
+        - { name: penetrant, in: query, schema: { type: boolean } }
+        - { name: min_contexts, in: query, schema: { type: integer } }
+        - { name: limit, in: query, schema: { type: integer, default: 100, maximum: 500 } }
+      responses:
+        "200":
+          description: ranked candidates for the project's latest screen
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProjectCandidates" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /drugs/{drug_id}:
+    get:
+      operationId: getDrug
+      parameters:
+        - { name: drug_id, in: path, required: true, schema: { type: string } }
+        - { name: project_id, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: drug detail with evidence gaps, contexts and 3D molecule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DrugDetail" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /drugs/{drug_id}/resources:
+    get:
+      operationId: getDrugResources
+      parameters:
+        - { name: drug_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: cached cross-resource agreement (report-only)
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ResourceAgreement" } }
+
+  /lookup:
+    post:
+      operationId: lookupCompounds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names: { type: array, items: { type: string }, maxItems: 200 }
+                project_id: { type: string }
+      responses:
+        "200":
+          description: one result per input name, same order
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LookupResult" } }
+
+  /reports/{drug_id}:
+    get:
+      operationId: getReportHtml
+      parameters:
+        - { name: drug_id, in: path, required: true, schema: { type: string } }
+        - { name: project_id, in: query, schema: { type: string } }
+      responses:
+        "200": { description: one-page report, content: { text/html: { schema: { type: string } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /reports/{drug_id}.pdf:
+    get:
+      operationId: getReportPdf
+      parameters:
+        - { name: drug_id, in: path, required: true, schema: { type: string } }
+        - { name: project_id, in: query, schema: { type: string } }
+      responses:
+        "200": { description: report PDF, content: { application/pdf: { schema: { type: string, format: binary } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /projects/{project_id}/candidates.csv:
+    get:
+      operationId: exportCandidatesCsv
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: CSV export, content: { text/csv: { schema: { type: string } } } }
+
+
 components:
   responses:
     NotFound:
@@ -458,6 +640,7 @@ components:
         contexts: { type: array, items: { $ref: "#/components/schemas/ContextState" } }
         recommended_context_id: { type: [string, "null"] }
         rationale: { type: string, description: one plain-language sentence on why this test is recommended }
+        preregistered: { type: boolean, description: "false when hidden tests were built on the fly for a drug outside the sealed set" }
         history:
           type: array
           items: { $ref: "#/components/schemas/RevealedOutcome" }
@@ -599,3 +782,186 @@ components:
         signatures: { type: array, items: { $ref: "#/components/schemas/SingleCellSignature" } }
         drugs: { type: array, items: { $ref: "#/components/schemas/SingleCellDrug" } }
         provenance: { $ref: "#/components/schemas/Provenance" }
+
+    # ---------------- MVP schemas ----------------
+    Project:
+      type: object
+      required: [id, name, kind, created_at, preregistered]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        kind: { type: string, enum: [builtin, upload] }
+        signature_id: { type: [string, "null"] }
+        description: { type: string, examples: ["97 AD · 98 control · limma · 16,437 genes"] }
+        n_ranked: { type: [integer, "null"] }
+        n_attack_ready: { type: [integer, "null"], description: candidates with hidden tests prepared }
+        last_screen_id: { type: [string, "null"] }
+        preregistered: { type: boolean, description: "true only for the built-in GSE132903 project" }
+        created_at: { type: string, format: date-time }
+
+    ScreenHit:
+      type: object
+      required: [rank, drug_id, name, consensus]
+      properties:
+        rank: { type: integer }
+        drug_id: { type: string }
+        name: { type: string }
+        consensus: { type: number }
+
+    Screen:
+      type: object
+      required: [id, project_id, status, n_signatures, n_scored, elapsed_s, preregistered]
+      properties:
+        id: { type: string }
+        project_id: { type: string }
+        signature_id: { type: [string, "null"] }
+        status: { type: string, enum: [queued, mapping, scoring, aggregating, done, failed] }
+        n_signatures: { type: integer, examples: [113310] }
+        n_scored: { type: integer }
+        elapsed_s: { type: number }
+        n_genes_mapped: { type: [integer, "null"] }
+        n_ranked: { type: [integer, "null"] }
+        top: { type: array, items: { $ref: "#/components/schemas/ScreenHit" } }
+        error: { type: [string, "null"] }
+        preregistered: { type: boolean }
+
+    ScreenEvent:
+      allOf:
+        - $ref: "#/components/schemas/Screen"
+
+    EvidenceGaps:
+      type: object
+      description: Per-drug gaps, shown as chips. Derived from ranking contexts only (never held-out data).
+      required: [brain_cells, cancer_lines_only, doses_um, times_h, exposure, has_targets]
+      properties:
+        brain_cells:
+          type: array
+          description: ranking contexts in neural lines (SHSY5Y, NEU, NEU.KCL, MNEU.E, NPC, NPC.CAS9, NPC.TAK, FIBRNPC)
+          items:
+            type: object
+            required: [cell_id, consensus, below_theta]
+            properties:
+              cell_id: { type: string }
+              consensus: { type: number }
+              below_theta: { type: boolean }
+        cancer_lines_only: { type: boolean }
+        doses_um: { type: array, items: { type: number } }
+        times_h: { type: array, items: { type: number } }
+        exposure:
+          type: object
+          required: [level, label]
+          properties:
+            level: { $ref: "#/components/schemas/ExposureLevel" }
+            label: { type: string, examples: ["predicted low", "predicted penetrant", "measured"] }
+            measured_available: { type: boolean, description: "true if a measured value exists; the value itself stays hidden until an attack reveals it" }
+        has_targets: { type: boolean }
+
+    ContextCell:
+      type: object
+      required: [cell_id, dose, time, consensus]
+      properties:
+        cell_id: { type: string }
+        dose: { type: string, examples: ["10 uM"] }
+        time: { type: string, examples: ["6 h"] }
+        consensus: { type: number }
+        neural: { type: boolean }
+
+    Molecule3D:
+      type: object
+      required: [formula, atoms, bonds]
+      properties:
+        formula: { type: string, examples: ["C23H27N5O7S"] }
+        smiles: { type: string }
+        atoms:
+          type: array
+          items:
+            type: object
+            required: [el, x, y, z]
+            properties:
+              el: { type: string }
+              x: { type: number }
+              y: { type: number }
+              z: { type: number }
+        bonds:
+          type: array
+          items:
+            type: array
+            items: { type: integer }
+            minItems: 3
+            maxItems: 3
+            description: "[atom_i, atom_j, order]"
+        method: { type: string, examples: ["RDKit ETKDGv3 + MMFF94, seed 20261105"] }
+
+    DrugDetail:
+      type: object
+      required: [drug_id, name, consensus, n_contexts, gaps, contexts, preregistered, attack_ready]
+      properties:
+        drug_id: { type: string }
+        name: { type: string }
+        pool_rank: { type: [integer, "null"] }
+        rank_total: { type: [integer, "null"], examples: [1816] }
+        consensus: { type: number }
+        n_contexts: { type: integer }
+        scores: { $ref: "#/components/schemas/MethodScores" }
+        approval_status: { $ref: "#/components/schemas/ApprovalStatus" }
+        mechanism: { type: [string, "null"] }
+        targets: { type: array, items: { $ref: "#/components/schemas/Target" } }
+        structure: { oneOf: [{ $ref: "#/components/schemas/Structure" }, { type: "null" }] }
+        gaps: { $ref: "#/components/schemas/EvidenceGaps" }
+        contexts: { type: array, items: { $ref: "#/components/schemas/ContextCell" }, description: ranking contexts only }
+        molecule: { oneOf: [{ $ref: "#/components/schemas/Molecule3D" }, { type: "null" }] }
+        n_hidden_tests: { type: [integer, "null"] }
+        attack_ready: { type: boolean }
+        preregistered: { type: boolean, description: "true if the drug is in the sealed benchmark or development pool of the built-in project" }
+        provenance: { $ref: "#/components/schemas/Provenance" }
+
+    LookupResult:
+      type: object
+      required: [query, status]
+      properties:
+        query: { type: string }
+        status: { type: string, enum: [ranked, not_rankable, not_in_lincs] }
+        drug_id: { type: [string, "null"] }
+        name: { type: [string, "null"] }
+        pool_rank: { type: [integer, "null"] }
+        rank_total: { type: [integer, "null"] }
+        consensus: { type: [number, "null"] }
+        n_contexts: { type: [integer, "null"] }
+        attack_ready: { type: boolean }
+        preregistered: { type: boolean }
+
+    ResourceAgreement:
+      type: object
+      required: [resource, status]
+      properties:
+        resource: { type: string, enum: [tauchstone_lincs_gold, clue, perturb_seqr] }
+        status: { type: string, enum: [available, not_fetched, needs_key, not_available, not_found] }
+        rank: { type: [integer, "null"] }
+        n_ranked: { type: [integer, "null"] }
+        score: { type: [number, "null"] }
+        fetched_at: { type: [string, "null"] }
+        source_url: { type: [string, "null"] }
+        note: { type: [string, "null"] }
+
+    ProjectCandidate:
+      allOf:
+        - $ref: "#/components/schemas/Candidate"
+        - type: object
+          properties:
+            brain_cells: { type: boolean, description: "has >= 1 ranking context in a neural line" }
+            penetrant: { type: [boolean, "null"], description: "predicted or measured brain-penetrant; null if unknown" }
+            exposure_label: { type: string, examples: ["predicted low"] }
+            cancer_lines_only: { type: boolean }
+            attack_ready: { type: boolean }
+            preregistered: { type: boolean }
+
+    ProjectCandidates:
+      type: object
+      required: [project_id, n_ranked, preregistered, candidates]
+      properties:
+        project_id: { type: string }
+        screen_id: { type: [string, "null"] }
+        n_ranked: { type: integer }
+        n_total_eligible: { type: integer, description: "rows matching the filters before limit" }
+        preregistered: { type: boolean }
+        candidates: { type: array, items: { $ref: "#/components/schemas/ProjectCandidate" } }
