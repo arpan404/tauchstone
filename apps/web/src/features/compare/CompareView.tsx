@@ -29,7 +29,7 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
     }
     return () => controller.abort();
   }, [key, valid, projectId]);
-  if (!valid) return <section className="ts-compare-view"><h1>Compare</h1><p role="status">Select 2–4 compounds</p><Boundary /></section>;
+  if (!valid) return <section className="ts-compare-view"><p role="status">Select 2–4 compounds</p></section>;
   const visible = loadedKey === key ? entries : ids.map(id => ({ id } as Entry));
   const rows: { label: string; value: (d: Detail) => React.ReactNode }[] = [
     { label: 'Pool rank', value: d => <span className="ts-compare-number">{d.pool_rank ?? unspecified}</span> },
@@ -42,10 +42,9 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
     { label: 'Attack', value: d => <><span>{d.n_hidden_tests ?? unspecified} hidden tests</span><br /><span>{d.attack_ready ? 'Ready' : 'Not available'}</span></> },
   ];
   return <section className="ts-compare-view" aria-label="Compare compounds">
-    <div className="ts-report-toolbar"><h1>Compare</h1><span>{ids.length} compounds</span></div>
+    <div className="ts-report-toolbar"><span>{ids.length} compounds</span></div>
     <div className="ts-compare-scroll" tabIndex={0} aria-label="Scroll compound comparison"><table className="ts-compare-table"><caption className="ts-compare-caption">Compound evidence and gaps</caption><thead><tr><th scope="col">Evidence</th>{visible.map(entry => <th scope="col" key={entry.id}>{entry.detail?.name ?? entry.id}{entry.detail && !entry.detail.preregistered && <><br /><span className="ts-compare-chip ts-compare-gap">not preregistered</span></>}</th>)}</tr></thead>
-    <tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{visible.map(entry => <td key={entry.id}>{entry.error ? <span role="status">Unavailable</span> : entry.detail ? row.value(entry.detail) : <span role="status">Loading…</span>}</td>)}</tr>)}</tbody></table></div><Boundary />
+    <tbody>{rows.map(row => <tr key={row.label}><th scope="row">{row.label}</th>{visible.map(entry => <td key={entry.id}>{entry.error ? <span role="status">Unavailable</span> : entry.detail ? row.value(entry.detail) : <span role="status">Loading…</span>}</td>)}</tr>)}</tbody></table></div>
   </section>;
 }
-function Boundary() { return <footer className="ts-report-boundary">Research hypothesis only. Not a treatment recommendation. A structure is target context, never binding evidence.</footer>; }
 export default CompareView;

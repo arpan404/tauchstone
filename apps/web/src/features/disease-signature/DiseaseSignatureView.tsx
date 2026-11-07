@@ -18,7 +18,6 @@ export function DiseaseSignatureView() {
       <MockRibbon show={mockData} />
       <div className="flex-1 space-y-6 overflow-auto p-5 lg:p-7">
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          <h2 className="text-xl font-semibold">Disease signature</h2>
           {data && (
             <p className="text-sm text-muted-foreground" aria-label="Cohort summary">
               {data.cohort} · {data.tissue} · {data.method} ·{' '}

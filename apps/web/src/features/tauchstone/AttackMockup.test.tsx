@@ -50,7 +50,7 @@ it('runs the next test through a running state before the reveal', () => {
   try {
     mocks.snapshot = base;
     render(<AttackView />);
-    fireEvent.click(screen.getByRole('button', { name: 'Run next test' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commit & run test' }));
     expect(screen.getByRole('button', { name: 'Running…' })).toBeTruthy();
     expect(mocks.run).not.toHaveBeenCalled();
     vi.advanceTimersByTime(1000);

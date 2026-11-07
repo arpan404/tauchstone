@@ -38,7 +38,6 @@ export function CompoundsView({
       <BoundaryBanner />
       <MockRibbon show={mock} />
       <div className="mvp-body">
-        <h2>My compounds</h2>
         <div className="mvp-grid mvp-compounds-grid">
           <form
             onSubmit={(e) => {

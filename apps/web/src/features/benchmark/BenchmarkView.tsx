@@ -107,7 +107,6 @@ export function BenchmarkView() {
       <MockRibbon show={mockData} />
       <div className="flex-1 space-y-6 overflow-auto p-5 lg:p-7">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
-          <h2 className="text-xl font-semibold">Benchmark</h2>
           {data && analysis && (
             <p className="text-sm text-muted-foreground">
               {scope === 'all' && hasAll ? (

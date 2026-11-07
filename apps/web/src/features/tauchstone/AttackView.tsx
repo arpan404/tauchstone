@@ -175,12 +175,7 @@ export function AttackView() {
     );
   }
 
-  function handleRun() {
-    if (!session || !selectedContext || run.isPending || start.isPending || runningId || session.budget_remaining < 1) return;
-    commitNow(selectedContext.context_id);
-  }
-
-  /** Recommended path: ~1 s in `running` before the reveal commits. */
+  /** Locks in the selected test, shows ~1 s of `running`, then commits; the server reveals only after the commit. */
   function handleRunNext() {
     if (!session || !selectedContext || run.isPending || start.isPending || runningId || session.budget_remaining < 1) return;
     const id = selectedContext.context_id;
@@ -232,7 +227,7 @@ export function AttackView() {
               <span><span className="num">{hiddenCount}</span> hidden</span>
             </div>
             <div className="attack-actions">
-              <button type="button" className="btn" onClick={handleRunNext} disabled={!selectedContext || busy || session.budget_remaining <= 0}>{runningId ? 'Running…' : 'Run next test'}</button>
+              <button type="button" className="btn" onClick={handleRunNext} disabled={!selectedContext || busy || session.budget_remaining <= 0}>{run.isPending ? 'Committed · awaiting result…' : runningId ? 'Running…' : 'Commit & run test'}</button>
               <button type="button" className="btn2" onClick={handleStart} disabled={busy}>{start.isPending ? 'Starting…' : 'Reset'}</button>
               <div role="group" aria-label="Attack or learn mode" className="attack-row">
                 {(['attack', 'learn'] as const).map((m) => (
@@ -273,10 +268,10 @@ export function AttackView() {
                       className={`attack-test ${state === 'next' ? 'next' : ''}`}>
                       <TestCellGlyph state={state} />
                       <span className="min-w-0 flex-1"><span className="t">{c.label}</span>
-                        <span className="s">{revealed ? `Revealed: ${c.outcome}` : `Hidden · ${TYPE_LABEL[c.type] ?? c.type} · ${failPct}% break`}</span>
+                        <span className="s">{revealed ? `Revealed: ${c.outcome}` : `Hidden · ${TYPE_LABEL[c.type] ?? c.type} · ${failPct}% fail risk`}</span>
                         {isRec && <span className="tag">Recommended</span>}
                       </span>
-                      <span className="pc num">{revealed ? (c.outcome === 'fail' ? 'Fail' : 'Survive') : runningId === c.context_id ? '…' : `${failPct}% break`}</span>
+                      <span className="pc num">{revealed ? (c.outcome === 'fail' ? 'Fail' : 'Survive') : runningId === c.context_id ? '…' : `${failPct}% fail risk`}</span>
                     </button>
                   );
                 })}
@@ -284,11 +279,6 @@ export function AttackView() {
               {session.recommended_context_id && (
                 <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
               )}
-              <div className="attack-foot">
-                <button type="button" className="btn2" onClick={handleRun} disabled={!selectedContext || busy || session.budget_remaining <= 0}>
-                  {run.isPending ? 'Committed · awaiting result…' : 'Commit & run experiment'}
-                </button>
-              </div>
               <div className="attack-foot text-sm" aria-live="polite">
                 {selectedContext ? <p>Next experiment: {selectedContext.label}</p> : <p>No hidden experiment selected.</p>}
               </div>

@@ -31,7 +31,6 @@ export function RepurposingView({
       <BoundaryBanner />
       <MockRibbon show={mock} />
       <div className="mvp-body">
-        <h2>Candidates</h2>
         <div className="mvp-filters">
           {filters.map(([key, label]) => (
             <button

@@ -20,11 +20,10 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
     return () => controller.abort();
   }, [key]);
   return <section className="ts-report-view" aria-label="Drug report">
-    <div className="ts-report-toolbar"><h1>Evidence report</h1><a href={`${url}${query}`} target="_blank" rel="noreferrer">Print HTML</a><a className="ts-report-action" href={`${url}.pdf${query}`} target="_blank" rel="noreferrer">Download PDF</a></div>
+    <div className="ts-report-toolbar"><div className="ts-report-actions"><a className="ts-report-action ts-report-action-secondary" href={`${url}${query}`} target="_blank" rel="noreferrer">Print HTML</a><a className="ts-report-action" href={`${url}.pdf${query}`} target="_blank" rel="noreferrer">Download PDF</a></div></div>
     {loading && <p role="status">Loading report…</p>}
     {error && <p role="alert">Report unavailable</p>}
     {html && <iframe className="ts-report-frame" title="Drug evidence report" srcDoc={html} sandbox="allow-modals" />}
-    <footer className="ts-report-boundary">Research hypothesis only. Not a treatment recommendation. A structure is target context, never binding evidence.</footer>
   </section>;
 }
 export default ReportView;

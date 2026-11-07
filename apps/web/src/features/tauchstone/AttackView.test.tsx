@@ -59,7 +59,13 @@ it('restores continuity and reveals only the committed server result', () => {
   expect(mocks.run).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: /Held-out cohort B/ }).getAttribute('aria-pressed')).toBe('true');
   expect(screen.getByText(/Next experiment:/).textContent).toContain('Held-out cohort B');
-  fireEvent.click(screen.getByRole('button', { name: 'Commit & run experiment' }));
+  vi.useFakeTimers();
+  try {
+    fireEvent.click(screen.getByRole('button', { name: 'Commit & run test' }));
+    vi.advanceTimersByTime(1000);
+  } finally {
+    vi.useRealTimers();
+  }
   expect(mocks.run.mock.calls[0][0]).toEqual({ contextId: 'ctx-b', mode: 'attack' });
   const revealed: Schema<'RevealedOutcome'> = { context_id: 'ctx-b', type: 'held_out_cohort', label: 'Held-out cohort B', outcome: 'fail', value: 0.123, threshold: 0.05, rule: 'Server reveal rule', belief_before: 0.6, belief_after: 0.2 };
   const result = { ...initial, budget_remaining: 1, history: [revealed], belief: { p_claim_holds: 0.2 }, contexts: initial.contexts.map(c => c.context_id === 'ctx-b' ? { ...c, status: 'revealed', outcome: 'fail' } : c) };
@@ -80,7 +86,7 @@ it('never presents another candidate session as the current candidate', () => {
   cleanup(); render(<AttackView />);
   expect(screen.getByRole('heading', { name: 'Drug B' })).toBeTruthy();
   expect(screen.queryByText(/Drug A reverses/)).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Commit & run experiment' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Commit & run test' })).toBeNull();
 });
 it('starts a fresh session only when requested and retains history until success', () => {
   restore();
@@ -95,7 +101,8 @@ it('does not render an outcome attached to a hidden context', () => {
   render(<AttackView />);
   const hidden = screen.getByRole('button', { name: /Held-out cohort A/ });
   expect(hidden.getAttribute('data-outcome')).toBeNull();
-  expect(hidden.textContent).not.toContain('fail');
+  expect(hidden.textContent).not.toContain('Revealed');
+  expect(hidden.textContent).not.toMatch(/\bfail\b(?! risk)/i);
   expect(screen.queryByText(/Failed ·/)).toBeNull();
   expect(mocks.run).not.toHaveBeenCalled();
 });
@@ -103,7 +110,7 @@ it('cannot commit after budget is exhausted', () => {
   mocks.snapshot = { ...initial, budget_remaining: 0 };
   useUi.setState({ sessionId: 'session-a' });
   render(<AttackView />);
-  const commit = screen.getByRole('button', { name: 'Commit & run experiment' });
+  const commit = screen.getByRole('button', { name: 'Commit & run test' });
   expect(commit.hasAttribute('disabled')).toBe(true);
   fireEvent.click(commit);
   expect(mocks.run).not.toHaveBeenCalled();
