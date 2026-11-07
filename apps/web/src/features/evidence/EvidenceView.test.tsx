@@ -43,12 +43,13 @@ it("renders Piperacillin gaps, ranking contexts, resources, and hidden test coun
     "10 µM only",
     "6 h only",
     "Brain exposure · predicted low",
-    "C23H27N5O7S",
     "No neural-line ranking data",
     "rank 5 / 1,816",
     "not available",
   ])
     expect(screen.getByText(label)).toBeTruthy();
+  // The real molecule viewer loads lazily and renders the formula with subscripts.
+  expect((await screen.findByTestId("molecule-formula")).textContent).toBe("C23H27N5O7S");
   const context = screen.getByRole("region", { name: "Ranking context map" });
   for (const cell of ["HT29", "MCF7", "VCAP"])
     expect(within(context).getByText(cell)).toBeTruthy();

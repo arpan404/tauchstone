@@ -10,18 +10,11 @@ import { fmt2, observedText, testsLeftText } from './format';
 import { RecommendationRationale } from './RecommendationRationale';
 import { useDrugGaps } from './useDrugGaps';
 import './attack.css';
+import { TestCellGlyph } from '@/features/simulation/TestCellGlyph';
 
 type Session = Schema<'AttackSession'>;
 type Verdict = Schema<'Verdict'>;
 type GlyphState = 'pending' | 'next' | 'running' | 'survive' | 'fail';
-
-/**
- * Inline stand-in for '@/features/simulation/TestCellGlyph' (lands separately).
- * Same `state` contract; swap the import when it exists.
- */
-function TestCellGlyph({ state }: { state: GlyphState }) {
-  return <span className="cell" data-state={state} aria-hidden="true" />;
-}
 
 const VERDICT_PILL: Record<Verdict, { text: string; cls: string }> = {
   INSUFFICIENT_EVIDENCE: { text: 'Insufficient evidence', cls: '' },
