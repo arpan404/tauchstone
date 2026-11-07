@@ -10,7 +10,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import attack, benchmark, candidates, lab, projects, screens, signatures, single_cell, structures
+from app.routes import (
+    attack,
+    benchmark,
+    candidates,
+    drugs,
+    lab,
+    lookup,
+    projects,
+    screens,
+    signatures,
+    single_cell,
+    structures,
+)
 from app.schemas.models import Health
 from app.settings import settings
 
@@ -43,6 +55,8 @@ app.include_router(single_cell.router)
 app.include_router(lab.router)
 app.include_router(projects.router)
 app.include_router(screens.router)
+app.include_router(drugs.router)
+app.include_router(lookup.router)
 
 
 @app.get("/health", response_model=Health, response_model_exclude_unset=True)

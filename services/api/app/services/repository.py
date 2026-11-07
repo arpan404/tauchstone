@@ -88,6 +88,8 @@ class Repository(Protocol):
     def get_signature(self, cohort: str, variant: str) -> dict: ...
     def list_candidates(self, limit: int) -> dict: ...
     def get_evidence(self, candidate_id: str) -> dict: ...
+    def get_drug_detail(self, drug_id: str) -> dict: ...
+    def lookup_compounds(self, names: list[str]) -> list[dict]: ...
     def get_attack_world(self, candidate_id: str) -> AttackWorld: ...
     def get_single_cell(self) -> dict: ...
     def get_benchmark(self) -> dict: ...
@@ -226,6 +228,35 @@ class MockRepository:
 
     def get_structure_path(self, pdb_id: str) -> Path:
         raise NotFoundError(f"no structure files in mock mode: {pdb_id}")
+
+    def get_drug_detail(self, drug_id: str) -> dict:
+        import copy
+
+        path = REPO_ROOT / "contracts" / "fixtures" / "getDrug.json"
+        payload = json.loads(path.read_text())
+        if payload.get("drug_id") != drug_id:
+            raise NotFoundError(drug_id)
+        return copy.deepcopy(payload)
+
+    def lookup_compounds(self, names: list[str]) -> list[dict]:
+        import copy
+        import re
+
+        def normalize(name: object) -> str:
+            return re.sub(r"[^a-z0-9]", "", str(name).lower()) if isinstance(name, str) else ""
+
+        path = REPO_ROOT / "contracts" / "fixtures" / "lookupCompounds.json"
+        fixture = {normalize(r["query"]): r for r in json.loads(path.read_text())}
+        out = []
+        for name in names:
+            hit = fixture.get(normalize(name))
+            if hit is not None:
+                row = copy.deepcopy(hit)
+                row["query"] = name
+                out.append(row)
+            else:
+                out.append({"query": name, "status": "not_in_lincs"})
+        return out
 
 
 
@@ -600,6 +631,37 @@ class ParquetRepository:
             "reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.",
             "provenance": self._provenance("evidence/targets.parquet", candidate_id),
         }
+
+    # -- drugs / lookup (MVP D1) -------------------------------------------
+    def get_drug_detail(self, drug_id: str) -> dict:
+        from app.services import drug_detail as dd
+
+        try:
+            evidence: dict = self.get_evidence(drug_id)
+        except NotFoundError:
+            # Ranked but outside the candidate pool: no approval/targets rows.
+            evidence = {
+                "approval_status": {"status": "unknown"},
+                "mechanism": None,
+                "targets": [],
+                "structure": None,
+            }
+            # Still 404 when the drug has no ranking data at all.
+            ranking = self._frame(
+                "scores/GSE132903__main__compound_ranking.parquet",
+                "WHERE pert_id = ?",
+                [drug_id],
+            )
+            if ranking.empty:
+                raise
+        return dd.build_drug_detail(
+            self.base, drug_id, evidence, self._provenance("evidence/gaps.parquet", drug_id)
+        )
+
+    def lookup_compounds(self, names: list[str]) -> list[dict]:
+        from app.services import drug_detail as dd
+
+        return dd.lookup_compounds(self.base, names)
 
     # -- attack --------------------------------------------------------------
     def get_attack_world(self, candidate_id: str):  # -> AttackWorld (import cycle-safe)

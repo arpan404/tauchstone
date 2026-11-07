@@ -341,3 +341,86 @@ class SingleCellExploratory(BaseModel):
     signatures: list[SingleCellSignature]
     drugs: list[SingleCellDrug]
     provenance: Provenance
+
+
+class GapBrainCell(BaseModel):
+    cell_id: str
+    consensus: float
+    below_theta: bool
+
+
+class GapsExposure(BaseModel):
+    level: ExposureLevel
+    label: str
+    measured_available: bool | None = None
+
+
+class EvidenceGaps(BaseModel):
+    brain_cells: list[GapBrainCell]
+    cancer_lines_only: bool
+    doses_um: list[float]
+    times_h: list[float]
+    exposure: GapsExposure
+    has_targets: bool
+
+
+class ContextCell(BaseModel):
+    cell_id: str
+    dose: str
+    time: str
+    consensus: float
+    neural: bool | None = None
+
+
+class MoleculeAtom(BaseModel):
+    el: str
+    x: float
+    y: float
+    z: float
+
+
+class Molecule3D(BaseModel):
+    formula: str
+    atoms: list[MoleculeAtom]
+    bonds: list[list[int]]
+    smiles: str | None = None
+    method: str | None = None
+
+
+class DrugDetail(BaseModel):
+    drug_id: str
+    name: str
+    pool_rank: int | None = None
+    rank_total: int | None = None
+    consensus: float
+    n_contexts: int
+    scores: MethodScores | None = None
+    approval_status: ApprovalStatus | None = None
+    mechanism: str | None = None
+    targets: list[Target] | None = None
+    structure: Structure | None = None
+    gaps: EvidenceGaps
+    contexts: list[ContextCell]
+    molecule: Molecule3D | None = None
+    n_hidden_tests: int | None = None
+    attack_ready: bool
+    preregistered: bool
+    provenance: Provenance | None = None
+
+
+class LookupResult(BaseModel):
+    query: str
+    status: Literal["ranked", "not_rankable", "not_in_lincs"]
+    drug_id: str | None = None
+    name: str | None = None
+    pool_rank: int | None = None
+    rank_total: int | None = None
+    consensus: float | None = None
+    n_contexts: int | None = None
+    attack_ready: bool | None = None
+    preregistered: bool | None = None
+
+
+class LookupRequest(BaseModel):
+    names: list[str] = Field(max_length=200)
+    project_id: str | None = None
