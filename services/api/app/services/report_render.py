@@ -95,7 +95,8 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['processing'] = provenance.get('processing_version', 'unspecified')
     view['timestamp'] = provenance.get('timestamp', 'unspecified')
     view['mock'] = str(view['processing']).startswith('mock') or view['commit'] == 'mock'
-    view['signature'] = project_id or 'GSE132903'
+    view['signature'] = 'GSE132903' if project_id in (None, 'builtin-gse132903') else 'unspecified'
+    view['project'] = project_id
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))
     return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback)

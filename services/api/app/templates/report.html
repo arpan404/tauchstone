@@ -7,7 +7,7 @@
 @media print{body{background:white}.paper{margin:0;padding:0;border:0;max-width:none}.print{display:none}section{break-inside:avoid}}
 </style></head><body><main class="paper">
 {% if fallback %}<div class="print"><p>PDF renderer unavailable. Print HTML to PDF.</p><button onclick="window.print()">Print report</button></div>{% endif %}
-<header>Tauchstone evidence report · Signature {{ report.signature }} · preregistration {{ report.hash }}{% if report.mock %} · Mock fixture{% endif %}</header>
+<header>Tauchstone evidence report · Signature {{ report.signature }}{% if report.project %} · Project {{ report.project }}{% endif %} · preregistration {{ report.hash }}{% if report.mock %} · Mock fixture{% endif %}</header>
 <h1>{{ report.name }}</h1><div class="chips"><span class="chip">Pool rank {{ report.pool_rank if report.pool_rank is not none else 'unspecified' }}</span><span class="chip">{{ report.approval_status or 'unspecified' }}</span><span class="chip">Reversal {{ '%.2f'|format(report.consensus) if report.consensus is not none else 'unspecified' }}</span>{% if not report.preregistered %}<span class="chip gap">not preregistered</span>{% endif %}</div>
 <section><h2>Signal</h2><p>{{ report.n_contexts }} LINCS contexts · {{ report.cells }} · {{ report.concentrations }} · {{ report.times }}</p></section>
 <section><h2>Gaps</h2><p>{{ report.gaps|join(' · ') }}</p></section>

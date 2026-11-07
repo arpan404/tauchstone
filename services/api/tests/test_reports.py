@@ -1,4 +1,5 @@
 """Report contract, leakage boundary, and offline rendering checks."""
+import io
 import sys
 from dataclasses import replace
 from hashlib import sha256
@@ -81,6 +82,11 @@ def test_print_fallback_is_html_not_fake_pdf(client, monkeypatch):
 
 def test_pdf_contract_offline(client, monkeypatch):
     import socket
+
+    try:
+        from weasyprint import HTML  # noqa: F401
+    except (ImportError, OSError):
+        pytest.skip('Native WeasyPrint libraries unavailable; fallback and PDF route tested separately')
     def blocked(*args, **kwargs):
         raise AssertionError('network access')
     monkeypatch.setattr(socket, 'create_connection', blocked)
@@ -89,6 +95,12 @@ def test_pdf_contract_offline(client, monkeypatch):
     assert response.headers['content-type'] == 'application/pdf'
     assert response.content.startswith(b'%PDF-')
     assert len(response.content) > 1000
+    from pypdf import PdfReader
+    document = PdfReader(io.BytesIO(response.content))
+    assert len(document.pages) == 1
+    text = document.pages[0].extract_text()
+    for value in ['Brinzolamide', 'CA2', 'P00918', 'Provenance', '3 hidden tests', 'not preregistered']:
+        assert value in text
     assert 'attachment' in response.headers['content-disposition']
 
 
@@ -101,3 +113,24 @@ def test_next_experiment_order():
     assert render.next_experiment(gaps) == 'Measure target engagement'
     gaps['has_targets'] = True
     assert 'time point' in render.next_experiment(gaps)
+
+
+def test_csv_allowlist_and_formula_escaping(client, monkeypatch):
+    from app.routes import reports
+    payload = {'candidates': [{'candidate_id': 'BRD-1', 'name': '=FORMULA()', 'rank': 1,
+                              'consensus': -1.7, 'n_contexts': 3, 'hidden': 'SECRET_OUTCOME'}]}
+    monkeypatch.setattr(reports, 'get_repository', lambda: SimpleNamespace(list_candidates=lambda n: payload))
+    response = client.get('/projects/builtin-gse132903/candidates.csv')
+    assert response.status_code == 200
+    assert response.headers['content-type'].startswith('text/csv')
+    assert "'=FORMULA()" in response.text
+    assert '-1.7' in response.text
+    assert 'SECRET_OUTCOME' not in response.text
+    assert client.get('/projects/upload/candidates.csv').status_code == 404
+
+
+def test_pdf_suffix_is_not_html_drug_id(client, monkeypatch):
+    monkeypatch.setattr(render, 'render_pdf', lambda html: b'%PDF-contract-stub')
+    response = client.get('/reports/piperacillin.pdf')
+    assert response.headers['content-type'] == 'application/pdf'
+    assert response.content == b'%PDF-contract-stub'
