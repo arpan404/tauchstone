@@ -1,0 +1,78 @@
+{
+  "drug_id": "brinzolamide",
+  "name": "Brinzolamide",
+  "pool_rank": 12,
+  "rank_total": 1816,
+  "consensus": -1.67,
+  "n_contexts": 3,
+  "approval_status": "approved",
+  "targets": [
+    {
+      "symbol": "CA2",
+      "uniprot": "P00918",
+      "entrez_id": "760",
+      "action_type": "INHIBITOR",
+      "ad_association_score": 0.037
+    }
+  ],
+  "gaps": {
+    "brain_cells": [],
+    "cancer_lines_only": false,
+    "doses_um": [
+      10
+    ],
+    "times_h": [
+      6,
+      24
+    ],
+    "exposure": {
+      "level": "predicted",
+      "label": "predicted low",
+      "measured_available": false
+    },
+    "has_targets": true
+  },
+  "contexts": [
+    {
+      "cell_id": "HA1E",
+      "dose": "10 uM",
+      "time": "6 h",
+      "consensus": -1.67
+    },
+    {
+      "cell_id": "MCF7",
+      "dose": "10 uM",
+      "time": "24 h",
+      "consensus": -1.67
+    },
+    {
+      "cell_id": "PHH",
+      "dose": "10 uM",
+      "time": "6 h",
+      "consensus": -1.67
+    }
+  ],
+  "n_hidden_tests": 3,
+  "attack_ready": true,
+  "preregistered": false,
+  "provenance": {
+    "step": "report-fixture",
+    "dataset_accession": [
+      "MOCK",
+      "GSE132903",
+      "LINCS GSE92742/GSE70138",
+      "Open Targets 26.09",
+      "ChEMBL 37"
+    ],
+    "inputs": {},
+    "sample_filter": "mock only",
+    "gene_mapping_version": "unspecified",
+    "model": "illustrative fixture",
+    "parameters": {},
+    "random_seed": null,
+    "validation_context": null,
+    "processing_version": "mock-track-f-1",
+    "git_commit": "mock",
+    "timestamp": "2026-11-07T00:00:00Z"
+  }
+}
