@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 
-from app.services.repository import MOCK_WORLD_PATH
+from app.services.repository import MOCK_WORLD_PATH, display_name
 from app.settings import settings
 from pipelines.common.provenance import Provenance
 
@@ -151,7 +151,7 @@ def candidates(project_id, approved=None, brain_cells=None, penetrant=None, min_
                 else root() / f'{sid}.parquet')
         rows = []
         for r in pd.read_parquet(path).to_dict('records'):
-            rows.append(dict(id=r['pert_id'], rank=int(r['pool_rank']), name=r['drug_name'],
+            rows.append(dict(id=r['pert_id'], rank=int(r['pool_rank']), name=display_name(r['drug_name']),
                 consensus=r['consensus_median'], consensus_iqr=[r['consensus_q25'], r['consensus_q75']],
                 n_ranking_contexts=int(r['n_ranking_contexts']),
                 scores={k: r[f'z_{k}_median'] for k in ['wtcs', 'ks', 'cosine']}, by_cell_line=[],

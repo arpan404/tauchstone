@@ -9,6 +9,7 @@ import pandas as pd
 from fastapi import HTTPException
 
 from app.services import projects as store
+from app.services.repository import display_name
 from app.settings import settings
 
 executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='screen')
@@ -31,7 +32,7 @@ def update(ident, **fields):
 
 
 def hits(frame):
-    return [dict(rank=int(r.pool_rank), drug_id=r.pert_id, name=r.drug_name,
+    return [dict(rank=int(r.pool_rank), drug_id=r.pert_id, name=display_name(r.drug_name),
                  consensus=float(r.consensus_median)) for r in frame.head(10).itertuples()]
 
 
