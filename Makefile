@@ -65,7 +65,7 @@ calibrate: ## Development-only calibration (type priors, lam/lam_L -> proposed v
 	uv run python -m pipelines.tauchstone.calibrate
 
 demo: ## Freeze data/demo bundle and build Docker images (fully offline at expo)
-	python3 scripts/make_demo_bundle.py
+	uv run python scripts/make_demo_bundle.py
 	docker compose build
 
 ## ---- Run --------------------------------------------------------------

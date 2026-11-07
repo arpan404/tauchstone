@@ -20,11 +20,25 @@ raw data and never the multi-GB LINCS matrices.
   (only the JSON: the API reads `parameters.theta` from it, never the 26 MB
   null distribution itself)
 - `lincs/landmark_order.parquet` (query-set construction), `evidence/*.parquet`,
-  all 104 `evidence/structures/*.cif`, `tauchstone/truth_table.parquet`,
+  all `evidence/structures/*.cif`, `tauchstone/truth_table.parquet`,
   `tauchstone/benchmark_summary.json`
-- Total: 144 files, ~215 MB (target < 300 MB). Deliberately excluded: LINCS
-  `level5/order/rank` matrices (~2.3 GB), permutations (39 MB), cell_scores,
-  signature_scores, `_interim`, PNGs/QC markdown.
+- MVP additions:
+  - `lincs/`: the gold rows only (113,310 of 312,438) of `level5_landmark_f32`,
+    `order_i16`, `rank_i16` and `sig_info`, plus `context_split`, `genes`, `compounds`
+    (live screens, lookup). A screen on the sliced arrays matches the frozen
+    ranking to 1e-15.
+  - `evidence/gaps.parquet`, `evidence/molecules/*.json` (3D molecules),
+    `evidence/ot_drug_molecule.parquet` (Open Targets names and synonyms for
+    brand-name lookup), `resources/agreement.parquet`.
+  - `scores/GSE173955__main__compound_ranking` and
+    `GSE132903__composition_adjusted__compound_ranking`, read only by ad-hoc
+    tests after an experiment is committed.
+  - `example_signature.csv` (upload demo) and an empty `app/` mount point.
+- Total: about 5,800 files, 1.1 GB. Deliberately excluded: non-gold LINCS rows,
+  permutations (39 MB), cell_scores, signature_scores, `_interim`, PNGs/QC markdown.
+
+The api container mounts `data/demo` read-only. `compose.yaml` puts a 512 MB tmpfs
+at `/data/app` for the project store, so every restart starts clean.
 
 Baked into the api image (not the bundle): `data/manifests/preregistration.yaml`
 (engine config source of truth) and `pipelines/` (scoring + tauchstone engine).
@@ -41,7 +55,7 @@ docker save tauchstone-api:latest tauchstone-web:latest | gzip > expo-images.tar
 ```
 
 Copy to the expo laptop (USB stick / cable): `expo-images.tar.gz` (~sizes below),
-the whole `data/demo/` directory (~215 MB), and this repo (for `compose.yaml`).
+the whole `data/demo/` directory (~1.1 GB), and this repo (for `compose.yaml`).
 
 On the expo laptop (needs only Docker 28 + this repo):
 
@@ -54,7 +68,8 @@ curl -fsS http://localhost:8080/api/health   # {"status":"ok","mock":false}
 
 Rough transfer sizes (measured Nov 2026, this machine): api image 1.52 GB
 uncompressed, web image 85 MB, both images gzipped in one tarball 352 MB,
-bundle 206 MB on disk (~215 MB bytes) — about 570 MB total per laptop.
+bundle about 1.1 GB on disk since the MVP (LINCS gold arrays), so plan for
+about 1.5 GB per laptop.
 
 Image names contain the worktree id (`docker compose build` tags them); retag
 if you want stable names: `docker tag <project>-api tauchstone-api:expo` and

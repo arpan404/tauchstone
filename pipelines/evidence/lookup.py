@@ -102,9 +102,18 @@ def build_index(
     return index
 
 
+OT_SLIM_PATH = PROCESSED / "evidence" / "ot_drug_molecule.parquet"
+
+
 def load_ot_molecule() -> pd.DataFrame | None:
-    """OT drug_molecule raw table (synonyms source); None when not downloaded."""
+    """OT drug_molecule raw table (synonyms source); None when not downloaded.
+
+    The offline demo bundle has no raw/ tree, so it carries these five columns as
+    processed/evidence/ot_drug_molecule.parquet (written by scripts/make_demo_bundle.py).
+    """
     files = sorted(OT_DIR.glob("drug_molecule*/*.parquet"))
+    if not files:
+        files = [p for p in [OT_SLIM_PATH] if p.exists()]
     if not files:
         return None
     try:

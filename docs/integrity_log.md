@@ -50,3 +50,19 @@ files (200 label permutations of GSE132903, seed 20261105).
 | **gold only (used)** | **clinical pool** | **1,816** | **17/20** | **15/20** |
 
 The preregistered gate ("every top-20 compound at p < 0.05") is not met in any row.
+
+## MVP additions (Nov 7, 2026)
+
+None of these change the sealed set, the truth table, θ or the benchmark.
+
+- **Live screens** (`pipelines/lincs/screen_job.py`) run the frozen scoring code on LINCS gold
+  rows. Re-screening GSE132903 reproduces the frozen ranking (max difference 1e-15). Any other
+  signature, including uploads and the built-in GSE173955 project, is labelled
+  *not preregistered*.
+- **Ad-hoc tests** (`pipelines/tauchstone/adhoc.py`) build hidden tests for drugs outside the
+  sealed set. They never write the truth table, refuse sealed drugs, and are labelled
+  *not preregistered*. They read held-out compound rankings only when a committed experiment runs.
+- **Resource agreement** (Perturb-Seqr ranks; CLUE needs a key) is report-only. It feeds no
+  ranking, threshold or candidate choice.
+- **Evidence gaps** (cancer lines only, single concentration, acute time point, brain exposure
+  label) describe the LINCS ranking contexts and are display-only.

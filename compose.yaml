@@ -17,6 +17,10 @@ services:
       TS_CORS_ORIGINS: http://localhost:8080
     volumes:
       - ./data/demo:/data:ro
+    # Project store (uploads, live screens). Fresh on every start, so each visitor
+    # sees only the two built-in projects plus whatever they create.
+    tmpfs:
+      - /data/app:size=512m
     ports:
       - "${TS_API_PORT:-8000}:8000"
     healthcheck:
@@ -31,6 +35,8 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        VITE_EXPO: "1"
     depends_on:
       api:
         condition: service_healthy

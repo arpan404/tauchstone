@@ -53,7 +53,21 @@ SCORE_FILES = [
     "GSE132903__main__candidate_pool.parquet",
     "GSE132903__main__context_scores.parquet",  # 3.5 MB: kept whole, no filtering needed
     "GSE132903__main__compound_ranking.parquet",
+    # Read by pipelines/tauchstone/adhoc.py only when an ad-hoc test runs, i.e. after the
+    # experiment is committed. Never used for ranking, theta or candidate choice.
+    "GSE173955__main__compound_ranking.parquet",
+    "GSE132903__composition_adjusted__compound_ranking.parquet",
 ]
+
+# Live screening (pipelines/lincs/screen_job.py) and lookup (pipelines/evidence/lookup.py).
+LINCS_META = [
+    "context_split.parquet",
+    "landmark_order.parquet",
+    "genes.parquet",
+    "compounds.parquet",
+]
+LINCS_ARRAYS = ["level5_landmark_f32.npy", "order_i16.npy", "rank_i16.npy"]
+OT_COLUMNS = ["id", "name", "synonyms", "tradeNames", "parentId"]
 
 EVIDENCE_FILES = [
     "targets.parquet",
@@ -62,7 +76,8 @@ EVIDENCE_FILES = [
     "exposure.parquet",
     "structures.parquet",
     "approval.parquet",
-    "drug_map.parquet",  # not read by the API today; tiny, kept for completeness
+    "drug_map.parquet",  # candidate pool for live screens + lookup
+    "gaps.parquet",
 ]
 
 TAUCHSTONE_FILES = [
@@ -90,6 +105,81 @@ def copy_with_sidecar(src_dir: Path, rel: str, dst_dir: Path, out: list[Path]) -
     if sidecar.exists():
         shutil.copy2(sidecar, dst.parent / (dst.name + ".provenance.json"))
         out.append(dst.parent / (dst.name + ".provenance.json"))
+
+
+def write_gold_lincs(src: Path, dst: Path) -> list[Path]:
+    """Keep only LINCS gold rows. screen_job.py scores gold rows only, so the sliced
+    arrays give the same ranking at ~0.37x the size (checked by scripts/offline_check.sh)."""
+    import numpy as np
+    import pandas as pd
+
+    sys.path.insert(0, str(REPO))
+    from pipelines.common.provenance import Provenance
+    from pipelines.lincs.rank import gold_mask
+
+    dst.mkdir(parents=True, exist_ok=True)
+    info = pd.read_parquet(src / "sig_info.parquet")
+    keep = np.flatnonzero(gold_mask(info))
+    out = []
+    path = dst / "sig_info.parquet"
+    info.iloc[keep].reset_index(drop=True).to_parquet(path, index=False)
+    out.append(path)
+    for name in LINCS_ARRAYS:
+        arr = np.load(src / name, mmap_mode="r")
+        path = dst / name
+        np.save(path, np.ascontiguousarray(arr[keep]))
+        out.append(path)
+    for path in list(out):
+        Provenance(step="demo_bundle_gold_slice", dataset_accession="GSE92742, GSE70138",
+                   parameters={"source": f"processed/lincs/{path.name}", "rows": int(len(keep)),
+                               "filter": "pipelines.lincs.rank.gold_mask"}).write(path)
+        out.append(path.parent / (path.name + ".provenance.json"))
+    print(f"lincs gold slice: {len(keep):,} of {len(info):,} signatures")
+    return out
+
+
+def write_ot_synonyms(dst: Path) -> list[Path]:
+    """Five-column copy of the Open Targets drug_molecule table (brand/salt names)."""
+    import pandas as pd
+
+    sys.path.insert(0, str(REPO))
+    from pipelines.common.provenance import Provenance
+    from pipelines.evidence._common import OT_DIR, OT_RELEASE
+
+    files = sorted(OT_DIR.glob("drug_molecule*/*.parquet"))
+    if not files:
+        print("WARNING: Open Targets drug_molecule not downloaded; lookup loses synonyms",
+              file=sys.stderr)
+        return []
+    frame = pd.concat([pd.read_parquet(f, columns=OT_COLUMNS) for f in files], ignore_index=True)
+    path = dst / "ot_drug_molecule.parquet"
+    frame.to_parquet(path, index=False)
+    Provenance(step="demo_bundle_ot_synonyms", dataset_accession=f"Open Targets {OT_RELEASE}",
+               parameters={"columns": OT_COLUMNS}).write(path)
+    return [path, path.parent / (path.name + ".provenance.json")]
+
+
+def write_example_signature(processed: Path, demo: Path) -> Path | None:
+    """Upload example for the live-screen demo: gene, log2fc, stat, fdr from the GSE173955
+    signature. The upload is ranked as a separate, not-preregistered project."""
+    import pandas as pd
+
+    sig = processed / "signatures/GSE173955__main.parquet"
+    if not sig.exists():
+        return None
+    frame = pd.read_parquet(sig)
+    cols = {c.lower(): c for c in frame.columns}
+    gene = cols.get("symbol") or cols.get("entrez_id")
+    pick = {"gene": gene, "log2fc": cols.get("log2fc") or cols.get("logfc"),
+            "stat": cols.get("stat") or cols.get("t"), "fdr": cols.get("fdr") or cols.get("padj")
+            or cols.get("adj_p_val")}
+    if not all(pick[k] for k in ("gene", "log2fc", "fdr")):
+        print(f"WARNING: example signature skipped; columns {list(frame.columns)}", file=sys.stderr)
+        return None
+    out = frame[[v for v in pick.values() if v]].rename(columns={v: k for k, v in pick.items() if v})
+    path = demo / "example_signature.csv"
+    out.dropna(subset=["gene", "log2fc", "fdr"]).to_csv(path, index=False)
+    return path
 
 
 def main() -> None:
@@ -127,6 +217,29 @@ def main() -> None:
     # Optional exploratory panel. Existing bundles still work before it is built.
     if (processed / "singlecell/panel.json").is_file():
         copy_with_sidecar(processed, "singlecell/panel.json", demo_processed, copied)
+
+    if (processed / "resources/agreement.parquet").is_file():
+        copy_with_sidecar(processed, "resources/agreement.parquet", demo_processed, copied)
+
+    mol_src = processed / "evidence" / "molecules"
+    mol_dst = demo_processed / "evidence" / "molecules"
+    mol_dst.mkdir(parents=True, exist_ok=True)
+    for mol in sorted(mol_src.glob("*.json")):
+        shutil.copy2(mol, mol_dst / mol.name)
+        copied.append(mol_dst / mol.name)
+
+    for name in LINCS_META:
+        if name != "landmark_order.parquet":  # already copied above
+            copy_with_sidecar(processed, f"lincs/{name}", demo_processed, copied)
+    copied += write_gold_lincs(processed / "lincs", demo_processed / "lincs")
+    copied += write_ot_synonyms(demo_processed / "evidence")
+
+    # The API container mounts data/demo read-only; compose puts a tmpfs here for the
+    # project store. The directory must exist so Docker can mount over it.
+    (demo / "app").mkdir(exist_ok=True)
+    example = write_example_signature(processed, demo)
+    if example:
+        copied.append(example)
 
     # Theta sidecar (provenance JSON only, not the 26 MB null distribution).
     sidecar_src = processed / PERM_THETA_SIDECAR
@@ -180,8 +293,8 @@ def main() -> None:
     ctx = demo_processed / "scores/GSE132903__main__context_scores.parquet"
     print(f"context_scores kept whole: {ctx.stat().st_size / 1e6:.1f} MB "
           f"(small enough; no pool filtering applied)")
-    if total > 300e6:
-        print(f"WARNING: bundle exceeds 300 MB target ({total / 1e6:.1f} MB)",
+    if total > 1.5e9:
+        print(f"WARNING: bundle exceeds 1.5 GB target ({total / 1e6:.1f} MB)",
               file=sys.stderr)
 
 

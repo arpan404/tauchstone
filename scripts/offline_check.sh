@@ -120,6 +120,58 @@ if pdb_id:
 else:
     check("structure cif (no pdb_id in demo evidence)", False, "no structure served")
 
+# ---- MVP flow: projects, live screen, drug page, lookup, resources, report ----
+import time
+
+s, projs, _ = req("GET", "/api/projects")
+pids = [p.get("id") for p in (projs or [])]
+check("projects list has both built-ins", s == 200 and {"GSE132903", "GSE173955"} <= set(pids),
+      f"status={s} ids={pids}")
+
+s, pc, _ = req("GET", "/api/projects/GSE132903/candidates?limit=10")
+check("project candidates 200", s == 200 and len((pc or {}).get("candidates", [])) == 10, f"status={s}")
+
+s, csv_body, ct = req("GET", "/api/projects/GSE132903/candidates.csv")
+check("candidates CSV export", s == 200 and "csv" in ct, f"status={s} ct={ct}")
+
+s, job, _ = req("POST", "/api/screens", {"project_id": "GSE173955", "signature_id": "GSE173955"})
+screen_id = (job or {}).get("id")
+check("live screen submitted", s == 200 and screen_id, f"status={s}")
+# Server-sent events reach the client unbuffered through the web proxy.
+try:
+    with urllib.request.urlopen(BASE + f"/api/screens/{screen_id}/events", timeout=20) as resp:
+        first = resp.readline().decode()
+    check("screen events stream", first.startswith("data:"), first[:60])
+except Exception as exc:  # noqa: BLE001
+    check("screen events stream", False, repr(exc))
+snap, t0 = {}, time.time()
+while time.time() - t0 < 180:
+    s, snap, _ = req("GET", f"/api/screens/{screen_id}")
+    if (snap or {}).get("status") in ("done", "failed"):
+        break
+    time.sleep(2)
+check("live screen done over 113,310 gold signatures",
+      (snap or {}).get("status") == "done" and (snap or {}).get("n_scored") == 113310,
+      f"status={(snap or {}).get('status')} n={(snap or {}).get('n_scored')} t={time.time() - t0:.0f}s")
+
+s, drug, _ = req("GET", f"/api/drugs/{ids[5]}")
+check("drug page with gaps + 3D molecule",
+      s == 200 and (drug or {}).get("gaps") and ((drug or {}).get("molecule") or {}).get("atoms"),
+      f"status={s}")
+
+s, res, _ = req("GET", f"/api/drugs/{ids[5]}/resources")
+check("resource agreement rows", s == 200 and len(res or []) == 3, f"status={s}")
+
+s, lk, _ = req("POST", "/api/lookup", {"names": ["donepezil", "Aricept", "Razadyne"]})
+st = {r.get("query"): (r.get("status"), r.get("name")) for r in (lk or [])}
+check("lookup: donepezil ranked, brand names resolve offline",
+      s == 200 and st.get("donepezil", ("",))[0] == "ranked"
+      and st.get("Razadyne", ("", ""))[1] and "galantamine" in st["Razadyne"][1].lower(),
+      f"status={s} {st}")
+
+s, pdf, ct = req("GET", f"/api/reports/{ids[5]}.pdf?project_id=GSE132903")
+check("report PDF", s == 200 and "pdf" in ct and bytes(pdf or b"")[:4] == b"%PDF", f"status={s} ct={ct}")
+
 s, _, ct = req("GET", "/")
 check("web index 200", s == 200, f"status={s}")
 

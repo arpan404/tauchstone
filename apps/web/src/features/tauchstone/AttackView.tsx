@@ -70,6 +70,9 @@ function useAnimatedNumber(target: number, ms = 900): number {
   return value;
 }
 
+/** Sealed labels spell micromolar as 'uM'; display it properly without touching the data. */
+const unit = (label: string) => label.replace(/(\d)\s*uM\b/g, '$1 µM');
+
 export function AttackView() {
   const { selectedCandidateId, mode, setMode, sessionId, setSessionId, setStep } = useUi();
   const snapshot = useAttackSessionSnapshot(sessionId);
@@ -126,7 +129,7 @@ export function AttackView() {
     if (!session) return [];
     const lines: string[] = [`session start · ${session.contexts.length} hidden tests sealed`];
     for (const h of session.history ?? []) {
-      lines.push(`${h.label} · consensus ${fmt2(h.value)} · ${h.outcome}`);
+      lines.push(`${unit(h.label)} · consensus ${fmt2(h.value)} · ${h.outcome}`);
       lines.push(`P(claim) ${h.belief_before.toFixed(2)} → ${h.belief_after.toFixed(2)}`);
     }
     const stamps: (number | null)[] = [t0];
@@ -267,7 +270,7 @@ export function AttackView() {
                       onClick={() => setPicked(c.context_id)} aria-pressed={isPicked}
                       className={`attack-test ${state === 'next' ? 'next' : ''}`}>
                       <TestCellGlyph state={state} />
-                      <span className="min-w-0 flex-1"><span className="t">{c.label}</span>
+                      <span className="min-w-0 flex-1"><span className="t">{unit(c.label)}</span>
                         <span className="s">{revealed ? `Revealed: ${c.outcome}` : `Hidden · ${TYPE_LABEL[c.type] ?? c.type} · ${failPct}% fail risk`}</span>
                         {isRec && <span className="tag">Recommended</span>}
                       </span>
@@ -280,7 +283,7 @@ export function AttackView() {
                 <RecommendationRationale responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />
               )}
               <div className="attack-foot text-sm" aria-live="polite">
-                {selectedContext ? <p>Next experiment: {selectedContext.label}</p> : <p>No hidden experiment selected.</p>}
+                {selectedContext ? <p>Next experiment: {unit(selectedContext.label)}</p> : <p>No hidden experiment selected.</p>}
               </div>
             </section>
 
@@ -296,7 +299,7 @@ export function AttackView() {
             <section className="attack-latest" aria-label="Latest result" aria-live="polite">
               <h3 className="attack-h">Latest result</h3>
               {lastRevealed ? <>
-                <p className="font-medium">{lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'} · {lastRevealed.label}</p>
+                <p className="font-medium">{lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'} · {unit(lastRevealed.label)}</p>
                 <p className="muted">{observedText(lastRevealed.value, lastRevealed.threshold)} · {lastRevealed.rule}</p>
                 <p className="muted num">P(claim) {lastRevealed.belief_before.toFixed(3)} → {lastRevealed.belief_after.toFixed(3)}</p>
               </> : <p className="muted">No reveals yet.</p>}
