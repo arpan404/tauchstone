@@ -1,0 +1,5 @@
+[
+  {"resource":"tauchstone_lincs_gold","status":"available","rank":1,"n_ranked":100,"score":-2.1,"fetched_at":"2026-11-07T00:00:00Z","source_url":"mock","note":"MOCK; not preregistered; report-only."},
+  {"resource":"perturb_seqr","status":"not_available","rank":null,"n_ranked":null,"score":null,"fetched_at":null,"source_url":"https://perturbseqr.maayanlab.cloud/graphql","note":"MOCK fixture; not preregistered; report-only. No external result asserted."},
+  {"resource":"clue","status":"needs_key","rank":null,"n_ranked":null,"score":null,"fetched_at":null,"source_url":"https://api.clue.io/api/jobs","note":"MOCK fixture; not preregistered; report-only. TS_CLUE_API_KEY required."}
+]
