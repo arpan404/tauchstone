@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
 import { useEffect, useMemo, useState } from 'react';
-import { buildCalibrationOption, buildPolicyOption } from './benchmarkOptions';
+import { buildCalibrationOption, buildPolicyOption, pairHolmP } from './benchmarkOptions';
 import './benchmark.css';
 
 import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
@@ -50,19 +50,6 @@ function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): Benchm
     calibration: data.calibration,
     tests: data.tests,
   };
-}
-
-/** Holm p for a policy pair, either direction; decision_accuracy first. */
-export function pairHolmP(
-  tests: BenchmarkData['tests'],
-  a: string,
-  b: string,
-): number | null {
-  const pair = tests.filter(
-    (t) => (t.policy_a === a && t.policy_b === b) || (t.policy_a === b && t.policy_b === a),
-  );
-  const pick = pair.find((t) => t.metric === 'decision_accuracy') ?? pair[0];
-  return pick ? pick.p_holm : null;
 }
 
 function pct(estimate: number | null | undefined): string {
