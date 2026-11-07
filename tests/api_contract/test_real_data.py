@@ -154,4 +154,4 @@ def test_real_benchmark_and_unknown_candidate(client):
     assert "decision_lookahead_hybrid" in [p["policy"] for p in r.json()["policies"]]
     e = client.post("/attack", json={"candidate_id": "BRD-NOPE-NOTREAL"})
     assert e.status_code == 404
-    assert e.json() == {"detail": "no hidden tests prepared for this candidate: BRD-NOPE-NOTREAL"}
+    assert e.json() == {"detail": "no hidden tests available for this drug"}

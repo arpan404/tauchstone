@@ -7,7 +7,7 @@ export TS_DATA_DIR
 LINCS_RAW := $(TS_DATA_DIR)/raw/lincs
 
 .PHONY: help setup setup-py setup-r setup-web data unpack-lincs checksums \
-        signatures rank permutation-control evidence truth-table benchmark demo \
+        signatures rank permutation-control evidence molecules truth-table benchmark demo \
         api web dev test test-r lint up down
 
 help:
@@ -49,6 +49,9 @@ permutation-control: ## 200 label permutations of GSE132903, gold signatures (ab
 
 evidence: ## Evidence cards for pool ranks 1-100 (targets, AD, brain, approval, exposure, structures)
 	uv run python -m pipelines.evidence.build_all --ranking GSE132903__main
+
+molecules: ## 3D coordinates per ranked drug (RDKit ETKDGv3 + MMFF94, seed 20261105) -> evidence/molecules/
+	uv run python -m pipelines.evidence.molecule3d
 
 truth-table: ## Precompute hidden validation outcomes (server-side only)
 	uv run python -m pipelines.tauchstone.truth_table

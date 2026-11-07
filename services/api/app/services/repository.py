@@ -12,6 +12,7 @@ import re
 import threading
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
 
@@ -82,6 +83,7 @@ class AttackWorld:
     ranking: list[Observation] = field(default_factory=list)
     claim: ClaimInfo | None = None
     engine_cfg: object = None  # real pipelines EngineConfig (parquet mode only)
+    preregistered: bool = True  # False: hidden tests built on the fly (not preregistered)
 
 
 class Repository(Protocol):
@@ -264,6 +266,23 @@ class MockRepository:
 # ----------------------------------------------------------------------------
 # Parquet repository (real-data mode)
 # ----------------------------------------------------------------------------
+
+
+@lru_cache(maxsize=256)
+def _adhoc_rows_cached(base: str, candidate_id: str) -> tuple[dict, ...]:
+    from pipelines.tauchstone.adhoc import SealedCandidateError, build_adhoc_tests
+
+    try:
+        df = build_adhoc_tests(candidate_id, Path(base))
+    except (SealedCandidateError, FileNotFoundError):
+        return ()
+    df = df.astype(object).where(pd.notna(df), None)
+    return tuple(df.to_dict(orient="records"))
+
+
+def _adhoc_rows(base: str, candidate_id: str) -> list[dict]:
+    """On-the-fly hidden tests for a drug outside the truth table (server-side only, cached)."""
+    return [dict(r) for r in _adhoc_rows_cached(base, candidate_id)]
 
 
 PDB_ID_RE = re.compile(r"^[0-9A-Za-z]{4}$")
@@ -665,14 +684,18 @@ class ParquetRepository:
 
     # -- attack --------------------------------------------------------------
     def get_attack_world(self, candidate_id: str):  # -> AttackWorld (import cycle-safe)
-
-
+        """Sealed truth-table rows when the drug has them (preregistered); otherwise hidden
+        tests built on the fly under the same frozen rules (pipelines.tauchstone.adhoc,
+        not preregistered). 404 only when neither exists."""
         rows = [
             r for r in self._maybe_rows("tauchstone/truth_table.parquet")
             if str(r.get("candidate_id")) == candidate_id
         ]
+        preregistered = bool(rows)
         if not rows:
-            raise NotFoundError(f"no hidden tests prepared for this candidate: {candidate_id}")
+            rows = _adhoc_rows(str(self.base), candidate_id)
+        if not rows:
+            raise NotFoundError("no hidden tests available for this drug")
         hidden = [
             HiddenRow(
                 context=Context(
@@ -726,12 +749,13 @@ class ParquetRepository:
             cname = (display_name(hrow["drug_name"]) if pd.notna(hrow.get("drug_name"))
                      else str(hrow.get("pert_iname") or candidate_id))
         else:
-            cname = candidate_id
+            cname = self._ranked_name(candidate_id)
         return AttackWorld(
             candidate_id=candidate_id,
             candidate_name=cname,
             hidden=hidden,
             ranking=ranking,
+            preregistered=preregistered,
             claim=ClaimInfo(
                 text=f"{cname} reverses the AD signature in at least 70% of predefined "
                 "validation contexts",
@@ -739,6 +763,16 @@ class ParquetRepository:
             ),
             engine_cfg=None,  # rebuilt from cfg by the adapter; prereg is the source of truth
         )
+
+    def _ranked_name(self, candidate_id: str) -> str:
+        try:
+            hit = self._frame("scores/GSE132903__main__compound_ranking.parquet",
+                              "WHERE pert_id = ?", [candidate_id])
+        except NotFoundError:
+            return candidate_id
+        if hit.empty or pd.isna(hit.iloc[0].get("pert_iname")):
+            return candidate_id
+        return str(hit.iloc[0]["pert_iname"])
 
     # -- benchmark / structures ----------------------------------------------
     def get_single_cell(self) -> dict:
