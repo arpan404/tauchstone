@@ -124,6 +124,17 @@ function drawMol(ctx: CanvasRenderingContext2D, m: Mol, scale: number) {
     return { x: m.x + x1 * scale, y: m.y + y2 * scale, z: z2, kind };
   });
   ctx.globalAlpha = m.fade;
+  const sp = Math.hypot(m.vx, m.vy);
+  if (sp > 45) {
+    // Faint wake behind fast molecules so the flow toward cells reads at a glance.
+    const k = Math.min(1, (sp - 45) / 120);
+    ctx.strokeStyle = rgba(tint, 0.16 * k);
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(m.x, m.y);
+    ctx.lineTo(m.x - m.vx * 0.16, m.y - m.vy * 0.16);
+    ctx.stroke();
+  }
   ctx.strokeStyle = rgba(tint, 0.55);
   ctx.lineWidth = 1.3;
   ctx.beginPath();

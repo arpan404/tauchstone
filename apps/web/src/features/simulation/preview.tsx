@@ -18,14 +18,14 @@ const GLYPHS: TestCellState[] = ['pending', 'next', 'running', 'survive', 'fail'
 function useFps(): number {
   const [fps, setFps] = useState(0);
   useEffect(() => {
-    let raf = 0, frames = 0, t0 = performance.now();
+    const s = { raf: 0, frames: 0, t0: performance.now() };
     const tick = (t: number) => {
-      frames++;
-      if (t - t0 >= 1000) { setFps(Math.round((frames * 1000) / (t - t0))); frames = 0; t0 = t; }
-      raf = requestAnimationFrame(tick);
+      s.frames++;
+      if (t - s.t0 >= 1000) { setFps(Math.round((s.frames * 1000) / (t - s.t0))); s.frames = 0; s.t0 = t; }
+      s.raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    s.raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(s.raf);
   }, []);
   return fps;
 }
@@ -43,7 +43,6 @@ export function SimulationPreview() {
   useEffect(() => {
     if (!auto) return;
     t0.current = performance.now();
-    setState('scoring');
     const id = window.setInterval(() => {
       const k = Math.min(1, (performance.now() - t0.current) / 8000);
       setProgress(k);
@@ -66,7 +65,7 @@ export function SimulationPreview() {
             {(['idle', 'scoring', 'done'] as const).map((s) => (
               <button key={s} onClick={() => { setAuto(false); setState(s); }} className={`rounded-md border px-3 py-1 ${state === s ? 'border-[#5b3df5] bg-[#5b3df5] text-white' : 'border-[#e6e2d8] bg-white'}`}>{s}</button>
             ))}
-            <button onClick={() => { setProgress(0); setAuto(true); }} className="rounded-md border border-[#12a36a] bg-white px-3 py-1 text-[#12a36a]">run screen</button>
+            <button onClick={() => { setProgress(0); setState('scoring'); setAuto(true); }} className="rounded-md border border-[#12a36a] bg-white px-3 py-1 text-[#12a36a]">run screen</button>
             <label className="ml-2 flex items-center gap-2">progress
               <input type="range" min={0} max={1} step={0.01} value={progress} onChange={(e) => setProgress(Number(e.target.value))} />
               <span className="w-10 font-mono">{progress.toFixed(2)}</span>

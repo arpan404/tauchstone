@@ -170,6 +170,17 @@ export interface Viewport {
   camera: number;
 }
 
+/**
+ * Pixels per angstrom for a molecule spinning about the vertical view axis: the
+ * vertical extent stays fixed and the horizontal extent is bounded by sqrt(x^2+z^2).
+ */
+export function spinFitScale(view: readonly Vec3[], ballRadius: number, width: number, height: number, zoom = 1): number {
+  let rxz = 0, ry = 0;
+  for (const [x, y, z] of view) { rxz = Math.max(rxz, Math.hypot(x, z)); ry = Math.max(ry, Math.abs(y)); }
+  rxz += ballRadius; ry += ballRadius;
+  return Math.min((width * 0.45) / Math.max(rxz, 0.1), (height * 0.4) / Math.max(ry, 0.1)) * zoom;
+}
+
 /** Pixels per angstrom that fits the molecule in the viewport at zoom 1. */
 export function fitScale(radius: number, width: number, height: number, zoom = 1): number {
   return ((Math.min(width, height) * 0.44) / Math.max(radius, 0.1)) * zoom;

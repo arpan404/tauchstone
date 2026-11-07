@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, type KeyboardEvent, type PointerEvent as Re
 import { useCanvasLoop, useReducedMotion, type FrameInfo } from '../simulation/useCanvasLoop';
 import {
   apply, clampZoom, depthOrder, dragRotation, elementStyle, fitScale, formulaParts, mulMat, orthonormalize,
-  prepareMolecule, principalRotation, project, rotX, rotY, shade,
+  prepareMolecule, principalRotation, project, rotX, rotY, shade, spinFitScale,
   type Mat3, type Molecule3D, type PreparedMolecule, type Projected, type Vec3,
 } from './geometry';
 
@@ -68,8 +68,9 @@ function stroke(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: numbe
   if (dashed) ctx.setLineDash([]);
 }
 
-function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: number, mol: PreparedMolecule, rot: Mat3, zoom: number) {
-  const scale = fitScale(mol.radius, width, height, zoom);
+function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: number, mol: PreparedMolecule, rot: Mat3, zoom: number, fitRot: Mat3) {
+  // Fit once per orientation reset (not per frame) so the molecule does not breathe while spinning.
+  const scale = Math.min(spinFitScale(mol.coords.map((c) => apply(fitRot, c)), 0.5, width, height), fitScale(mol.radius, width, height) * 1.9) * zoom;
   const vp = { width, height, scale, camera: Math.max(mol.radius * 5, 14) };
   const view: Vec3[] = mol.coords.map((c) => apply(rot, c));
   const P: Projected[] = view.map((v) => project(v, vp));
@@ -88,7 +89,7 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
   ctx.lineCap = 'round';
   for (const a of depthOrder(zs)) {
     const pa = P[a];
-    const fog = 0.42 * (1 - (view[a][2] - zmin) / zr); // farther atoms fade toward the background
+    const fog = 0.26 * (1 - (view[a][2] - zmin) / zr); // farther atoms fade toward the background
     const pal = palette(mol.elements[a]);
     ctx.globalAlpha = 1;
     // Half-bonds from this atom to each bond midpoint, coloured by this atom.
@@ -126,7 +127,7 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
       }
     }
     // Shaded ball.
-    const r = elementStyle(mol.elements[a]).radius * scale * pa.f;
+    const r = elementStyle(mol.elements[a]).radius * 1.12 * scale * pa.f;
     ctx.globalAlpha = 1;
     const g = ctx.createRadialGradient(pa.x - r * 0.38, pa.y - r * 0.42, r * 0.06, pa.x, pa.y, r * 1.02);
     g.addColorStop(0, pal.light);
@@ -145,15 +146,21 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
   ctx.globalAlpha = 1;
 }
 
+/** Starting view: longest axis across, flattest axis toward the viewer, slight tilt. */
+function homeRotation(mol: PreparedMolecule): Mat3 {
+  return orthonormalize(mulMat(rotX(-0.38), mulMat(rotY(0.22), principalRotation(mol.coords))));
+}
+
 export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: number }) {
   const { molecule, height = 280 } = props;
   const mol = useMemo(() => prepareMolecule(molecule), [molecule]);
   const reduce = useReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const view = useRef({ rot: rotX(-0.35) as Mat3, zoom: 1, idle: RESUME_AFTER, pointers: new Map<number, { x: number; y: number }>(), pinch: 0 });
+  const view = useRef({ rot: rotX(-0.35) as Mat3, fit: rotX(-0.35) as Mat3, zoom: 1, idle: RESUME_AFTER, pointers: new Map<number, { x: number; y: number }>(), pinch: 0 });
 
   useEffect(() => {
-    view.current.rot = mol ? orthonormalize(mulMat(rotX(-0.38), mulMat(rotY(0.22), principalRotation(mol.coords)))) : rotX(-0.35);
+    view.current.rot = mol ? homeRotation(mol) : rotX(-0.35);
+    view.current.fit = view.current.rot;
     view.current.zoom = 1;
   }, [mol]);
 
@@ -167,7 +174,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
         const ramp = Math.min(1, (v.idle - RESUME_AFTER) / 0.8); // ease back in
         v.rot = orthonormalize(mulMat(rotY(AUTO_SPIN * ramp * f.dt), v.rot));
       }
-      drawMolecule(f.ctx, f.width, f.height, mol, v.rot, v.zoom);
+      drawMolecule(f.ctx, f.width, f.height, mol, v.rot, v.zoom, v.fit);
     },
     !reduce && mol !== null,
   );
@@ -259,7 +266,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
         onPointerCancel={onPointerUp}
         onDoubleClick={() => {
           if (!mol) return;
-          view.current.rot = orthonormalize(mulMat(rotX(-0.38), mulMat(rotY(0.22), principalRotation(mol.coords))));
+          view.current.rot = homeRotation(mol);
           view.current.zoom = 1;
           requestDraw();
         }}
