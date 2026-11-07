@@ -1,0 +1,11 @@
+{
+  "id": "46435f1d-e7c4-4577-8c93-97315bcd1618",
+  "name": "Example upload",
+  "kind": "upload",
+  "signature_id": null,
+  "preregistered": false,
+  "created_at": "2026-11-07T21:30:03.860116+00:00",
+  "n_ranked": null,
+  "n_attack_ready": null,
+  "last_screen_id": null
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "GSE132903",
+    "name": "Alzheimer's \u00b7 middle temporal gyrus",
+    "kind": "builtin",
+    "signature_id": "GSE132903",
+    "preregistered": true,
+    "created_at": "2026-11-07T21:30:03.842948+00:00",
+    "n_ranked": 50,
+    "n_attack_ready": 50,
+    "last_screen_id": "frozen-GSE132903"
+  },
+  {
+    "id": "GSE173955",
+    "name": "Alzheimer's \u00b7 hippocampus",
+    "kind": "builtin",
+    "signature_id": "GSE173955",
+    "preregistered": false,
+    "created_at": "2026-11-07T21:30:03.859239+00:00",
+    "n_ranked": null,
+    "n_attack_ready": null,
+    "last_screen_id": null
+  }
+]

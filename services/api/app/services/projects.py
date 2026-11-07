@@ -170,7 +170,16 @@ def candidates(project_id, approved=None, brain_cells=None, penetrant=None, min_
         if isinstance(exp, str):
             exp = json.loads(exp)
         label = g.get('exposure_label', exp.get('label', 'unspecified'))
-        c.update(brain_cells=len(g.get('brain_cells', [])) > 0, penetrant=g.get('penetrant'),
+        neural = g.get('brain_cells', g.get('brain_cells_json', []))
+        if isinstance(neural, str):
+            neural = json.loads(neural)
+        penetration = g.get('penetrant')
+        if penetration is None and label.startswith('predicted '):
+            if 'penetrant' in label:
+                penetration = True
+            elif 'low' in label:
+                penetration = False
+        c.update(brain_cells=len(neural) > 0, penetrant=penetration,
                  exposure_label=label, cancer_lines_only=bool(g.get('cancer_lines_only', False)),
                  attack_ready=c['id'] in ready, preregistered=p['preregistered'])
     total = len(rows)
