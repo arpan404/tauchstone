@@ -343,6 +343,7 @@ def run(data_dir: Path, report: Path, offline: bool = False) -> pd.DataFrame:
             "overlapGe": 1,
             "topN": 10000,
             "ranking": "competition",
+            "pvalue_rounding_tolerance": 1e-9,
         },
         validation_context=LABEL,
     )

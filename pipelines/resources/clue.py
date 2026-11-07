@@ -51,15 +51,20 @@ def parse_archive(content: bytes) -> list[dict]:
 
 
 def fetch(up: list[str], down: list[str], key: str, cache) -> list[dict]:
+    query_hash = hashlib.sha256(json.dumps([up, down]).encode()).hexdigest()
     if cache.offline:
-        archives = sorted(cache.root.glob("*_results.tar.gz"))
+        archives = [
+            path for path in sorted(cache.root.glob("*_results.tar.gz"))
+            if json.loads(path.with_name(path.name + ".meta.json").read_text()).get("query_sha256") == query_hash
+        ]
         if not archives:
             raise FileNotFoundError("No cached CLUE archive")
         # Use recorded checksum rather than trusting a cached binary.
-
         path = archives[-1]
         meta = json.loads(path.with_name(path.name + ".meta.json").read_text())
         content = path.read_bytes()
+        if meta.get("http_status") != 200:
+            raise ValueError("Cached CLUE download was unsuccessful")
         if hashlib.sha256(content).hexdigest() != meta["sha256"]:
             raise ValueError("CLUE archive checksum mismatch")
         cache.inputs[str(path)] = meta["sha256"]
@@ -96,6 +101,11 @@ def fetch(up: list[str], down: list[str], key: str, cache) -> list[dict]:
         url = "https:" + url
     # The credential belongs to api.clue.io, never to the download host.
     response = httpx.get(url, timeout=180, follow_redirects=True)
-    cache.record("results.tar.gz", response.content, url)
+    path = cache.record("results.tar.gz", response.content, url)
+    metadata_path = path.with_name(path.name + ".meta.json")
+    metadata = json.loads(metadata_path.read_text())
+    metadata["query_sha256"] = query_hash
+    metadata["http_status"] = response.status_code
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n")
     response.raise_for_status()
     return parse_archive(response.content)
