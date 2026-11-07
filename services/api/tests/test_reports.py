@@ -135,3 +135,14 @@ def test_pdf_suffix_is_not_html_drug_id(client, monkeypatch):
     response = client.get('/reports/piperacillin.pdf')
     assert response.headers['content-type'] == 'application/pdf'
     assert response.content == b'%PDF-contract-stub'
+
+
+def test_approval_status_dict_renders_as_label():
+    from app.services import report_render
+    html = report_render.render_html({
+        'name': 'X', 'approval_status': {'status': 'approved', 'max_phase': 4.0,
+                                         'source': {'label': 'ChEMBL', 'url': 'https://example'}},
+        'gaps': {}, 'provenance': {}}, 'GSE132903')
+    assert 'approved · phase 4' in html
+    assert "{'status'" not in html and '{&#39;status' not in html
+    assert 'Signature GSE132903' in html

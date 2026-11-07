@@ -33,7 +33,7 @@ class DefaultDrugDetail:
         if not settings.mock:
             raise DetailUnavailableError('Drug detail service unavailable; mock fallback disabled')
         # Explicit allowlist also prevents path traversal. Projects cannot silently reuse fixtures.
-        if project_id not in (None, 'builtin-gse132903'):
+        if project_id not in (None, 'builtin-gse132903', 'GSE132903'):
             raise NotFoundError('Mock report project not found')
         if drug_id.lower() not in {'piperacillin', 'brinzolamide'}:
             raise NotFoundError('Mock report drug not found')
@@ -91,7 +91,13 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['processing'] = provenance.get('processing_version', 'unspecified')
     view['timestamp'] = provenance.get('timestamp', 'unspecified')
     view['mock'] = str(view['processing']).startswith('mock') or view['commit'] == 'mock'
-    view['signature'] = 'GSE132903' if project_id in (None, 'builtin-gse132903') else 'unspecified'
+    # Drug detail always comes from the frozen GSE132903 ranking, whatever project is open.
+    view['signature'] = 'GSE132903'
+    approval = detail.get('approval_status')
+    if isinstance(approval, dict):
+        phase = approval.get('max_phase')
+        view['approval_status'] = ' · '.join(str(v) for v in (
+            approval.get('status'), f'phase {phase:g}' if isinstance(phase, (int, float)) else None) if v)
     view['project'] = project_id
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))
