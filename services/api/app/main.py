@@ -18,6 +18,7 @@ from app.routes import (
     lab,
     lookup,
     projects,
+    reports,
     screens,
     signatures,
     single_cell,
@@ -57,6 +58,7 @@ app.include_router(projects.router)
 app.include_router(screens.router)
 app.include_router(drugs.router)
 app.include_router(lookup.router)
+app.include_router(reports.router)
 
 
 @app.get("/health", response_model=Health, response_model_exclude_unset=True)
