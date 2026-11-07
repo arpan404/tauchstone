@@ -23,10 +23,10 @@ export function SingleCellPanel() {
   }, []) ?? [];
   const tokens = getComputedStyle(document.documentElement);
   const option = data ? heatmapOption(data, {
-    teal: tokens.getPropertyValue('--primary').trim() || '#3667d9',
-    warm: tokens.getPropertyValue('--warning').trim() || '#b56b29',
-    surface: tokens.getPropertyValue('--card').trim() || '#fefefe',
-    muted: tokens.getPropertyValue('--input').trim() || '#e5e8ed',
+    teal: tokens.getPropertyValue('--ac').trim() || '#3667d9',
+    warm: tokens.getPropertyValue('--warm').trim() || '#b56b29',
+    surface: tokens.getPropertyValue('--s1').trim() || '#fefefe',
+    muted: tokens.getPropertyValue('--line').trim() || '#e5e8ed',
   }) : null;
   return <section className="single-cell" aria-labelledby="single-cell-title">
     <BoundaryBanner /><MockRibbon show={mock || synthetic} />

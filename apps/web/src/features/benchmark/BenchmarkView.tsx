@@ -6,8 +6,9 @@ import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { buildCalibrationOption, buildPolicyOption } from './benchmarkOptions';
+import './benchmark.css';
 
 import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
 
@@ -51,6 +52,25 @@ function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): Benchm
   };
 }
 
+/** Holm p for a policy pair, either direction; decision_accuracy first. */
+export function pairHolmP(
+  tests: BenchmarkData['tests'],
+  a: string,
+  b: string,
+): number | null {
+  const pair = tests.filter(
+    (t) => (t.policy_a === a && t.policy_b === b) || (t.policy_a === b && t.policy_b === a),
+  );
+  const pick = pair.find((t) => t.metric === 'decision_accuracy') ?? pair[0];
+  return pick ? pick.p_holm : null;
+}
+
+function pct(estimate: number | null | undefined): string {
+  return estimate === null || estimate === undefined || !Number.isFinite(estimate)
+    ? '—'
+    : `${Math.round(estimate * 100)}%`;
+}
+
 export function BenchmarkView() {
   const { data, isLoading, isError, error } = useBenchmark();
   const mockData = useMockStatus(data?.provenance);
@@ -68,6 +88,27 @@ export function BenchmarkView() {
     () => (analysis ? buildCalibrationOption(analysis.calibration) : null),
     [analysis],
   );
+  const [grown, setGrown] = useState(false);
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => window.requestAnimationFrame(() => setGrown(true)));
+    return () => window.cancelAnimationFrame(id);
+  }, [analysis]);
+
+  const hero = useMemo(() => {
+    if (!analysis || !data) return null;
+    const tau = analysis.policies.find((p) => p.policy === 'tauchstone_hybrid');
+    const random = analysis.policies.find((p) => p.policy === 'random');
+    const sealed = data.all_candidates?.n_candidates ?? analysis.n_candidates;
+    return {
+      tau: tau?.decision_accuracy.estimate,
+      random: random?.decision_accuracy.estimate,
+      sealed,
+      budget: analysis.budget,
+      vsRandom: pairHolmP(analysis.tests, 'tauchstone_hybrid', 'random'),
+      vsConfirmation: pairHolmP(analysis.tests, 'tauchstone_hybrid', 'greedy_strongest'),
+      prereg8: data.preregistration_sha256.slice(0, 8),
+    };
+  }, [analysis, data]);
 
   const notRun =
     isError &&
@@ -131,6 +172,30 @@ export function BenchmarkView() {
 
         {analysis && (
           <>
+            <div className="grid gap-4 xl:grid-cols-2">
+              <section className="benchmark-hero" aria-label="Headline result">
+                <p className="benchmark-kicker">Right keep / drop call within {hero?.budget} tests · {hero?.sealed} sealed drugs</p>
+                <div className="benchmark-big">
+                  <span className="tau num">{pct(hero?.tau)}</span>
+                  <span className="rnd num">{pct(hero?.random)} random</span>
+                </div>
+                <div className="chips">
+                  <span className="chip">vs random p = {hero?.vsRandom !== null && hero?.vsRandom !== undefined ? hero.vsRandom.toPrecision(3) : '—'}</span>
+                  <span className="chip">vs confirmation p = {hero?.vsConfirmation !== null && hero?.vsConfirmation !== undefined ? hero.vsConfirmation.toPrecision(3) : '—'}</span>
+                  <span className="chip">permutation 17/20</span>
+                  <span className="chip mono" style={{ fontFamily: 'ui-monospace, monospace' }}>prereg {hero?.prereg8}</span>
+                </div>
+              </section>
+              <section className="benchmark-bars" aria-label="Decision accuracy by policy">
+                {analysis.policies.map((p) => (
+                  <div key={p.policy} className={`benchmark-bar${p.policy === 'tauchstone_hybrid' ? ' me' : ''}`} aria-label={`${p.label} decision accuracy ${pct(p.decision_accuracy.estimate)}`}>
+                    <span>{p.label}</span>
+                    <span className="trk"><i style={{ width: grown ? `${Math.round(p.decision_accuracy.estimate * 100)}%` : '0%' }} /></span>
+                    <span className="num">{pct(p.decision_accuracy.estimate)}</span>
+                  </div>
+                ))}
+              </section>
+            </div>
             <section aria-label="Decision accuracy after five tests" className="space-y-3">
               <h3 className="text-xl font-medium">Decision accuracy after {analysis.budget} tests</h3>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
