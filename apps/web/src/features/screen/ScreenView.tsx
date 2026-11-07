@@ -10,6 +10,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   startScreen,
   useProjects,
+  useCreateProject,
   watchScreen,
   workspaceMock,
   type Screen,
@@ -39,6 +40,7 @@ export function ScreenView() {
   const [error, setError] = useState("");
   const stop = useRef<(() => void) | null>(null);
   const qc = useQueryClient();
+  const createProject = useCreateProject();
   const signature = source ?? project?.signature_id ?? "GSE132903";
   const running = busy || (!!job && !["done", "failed"].includes(job.status));
   const progress = job ? job.n_scored / Math.max(1, job.n_signatures) : 0;
@@ -60,8 +62,18 @@ export function ScreenView() {
     setJob(null);
     stop.current?.();
     try {
-      setProject(project.id);
-      const next = await startScreen(project.id, signature, file);
+      // Keep uploads and alternate cohorts out of an existing cohort's results.
+      const matches = file
+        ? project.kind === "upload" && !project.last_screen_id
+        : project.signature_id === signature;
+      const target = matches
+        ? project
+        : await createProject.mutateAsync({
+            name: file ? file.name.replace(/\.csv$/i, "") : signature,
+            signature_id: file ? null : signature,
+          });
+      setProject(target.id);
+      const next = await startScreen(target.id, signature, file);
       setJob(next);
       stop.current = watchScreen(
         next,
