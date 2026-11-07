@@ -1,5 +1,7 @@
 # Tauchstone: Second Life — plan for the remaining work (parallel agents)
 
+> **Superseded by [`mvp_plan.md`](mvp_plan.md)** (Nov 7). Kept for history.
+
 Expo: **Mon Nov 9**. Code freeze: **Sun Nov 8, 8 pm**. This file is the brief for every remaining agent.
 
 ## What we are making

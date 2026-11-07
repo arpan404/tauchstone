@@ -1,0 +1,266 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+.app{--bg:#f6f5f1;--s1:#fff;--s2:#f0eee8;--line:#e6e2d8;--ink:#14131a;--mu:#6c6a74;--fa:#a3a0a8;--ac:#5b3df5;--acs:rgba(91,61,245,.10);--ok:#12a36a;--oks:rgba(18,163,106,.10);--bad:#ef4b3f;--bads:rgba(239,75,63,.09);--warm:#f29b38;--warms:rgba(242,155,56,.13);--pink:#e85d9c;
+ position:relative;overflow:hidden;container-type:inline-size;height:720px;border-radius:16px;background:var(--bg);color:var(--ink);
+ font-family:ui-sans-serif,-apple-system,"SF Pro Text","Inter",system-ui,sans-serif;display:grid;grid-template-columns:200px minmax(0,1fr);border:1px solid var(--line)}
+@media (width < 760px){.app{height:auto;grid-template-columns:1fr}}
+.num{font-variant-numeric:tabular-nums}.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+.side{background:var(--s1);border-right:1px solid var(--line);padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15px;padding:0 8px 14px}
+.logo i{width:20px;height:20px;border-radius:7px;background:conic-gradient(from 200deg,var(--ac),var(--pink),var(--warm),var(--ac))}
+.grp{font-size:11px;color:var(--fa);padding:12px 10px 4px}
+.nv{all:unset;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--mu);padding:8px 10px;border-radius:9px}
+.nv:hover{background:var(--s2);color:var(--ink)}.nv[aria-current="true"]{background:var(--acs);color:var(--ac);font-weight:600}
+.nv b{margin-left:auto;font-size:11px;font-weight:600;background:var(--acs);color:var(--ac);border-radius:999px;padding:1px 7px}
+.spacer{flex:1}.live{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mu);padding:8px 10px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px var(--oks)}
+.main{position:relative;min-width:0;display:flex;flex-direction:column}
+.bar{height:56px;display:flex;align-items:center;gap:12px;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.7);flex-shrink:0}
+.bar h2{font-size:17px;margin:0;font-weight:650}.crumb{font-size:12px;color:var(--fa)}
+.bar .r{margin-left:auto;display:flex;gap:8px}
+.btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:var(--ac);color:#fff;font-weight:600;font-size:13.5px;padding:9px 15px;border-radius:10px;box-shadow:0 6px 16px -8px rgba(91,61,245,.6)}
+.btn:disabled{opacity:.4;cursor:default;box-shadow:none}
+.btn2{all:unset;cursor:pointer;font-size:13px;border:1px solid var(--line);background:var(--s1);padding:8px 13px;border-radius:10px}
+.view{flex:1;min-height:0;overflow:auto;padding:20px 22px 44px;display:none}.view.on{display:block;animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:14px}
+.k{font-size:12px;color:var(--mu)}.h{font-size:13px;font-weight:650;margin:0 0 10px}
+.foot{position:absolute;left:0;right:0;bottom:0;font-size:11px;color:var(--fa);padding:7px 22px;border-top:1px solid var(--line);background:var(--bg)}
+canvas{display:block;width:100%}
+.g2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:999px;background:var(--s2);white-space:nowrap}
+.chip.gap{background:var(--warms);color:#9a5a0d}.chip.bad{background:var(--bads);color:var(--bad)}.chip.ok{background:var(--oks);color:var(--ok)}.chip.ac{background:var(--acs);color:var(--ac)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+/* projects */
+.projs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+.pj{all:unset;cursor:pointer;padding:16px;border-radius:14px;background:var(--s1);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.pj:hover{border-color:var(--ac)}.pj .t{font-size:15px;font-weight:650}.pj.new{border-style:dashed;align-items:center;justify-content:center;color:var(--ac);font-weight:600;min-height:120px}
+.mini{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}.mini i{display:block;height:100%;background:var(--ac)}
+/* screen */
+.sim{position:relative;overflow:hidden;border-radius:14px;background:radial-gradient(ellipse at 30% 20%,#fff,#f3eefc 55%,#efe8fb);border:1px solid var(--line)}
+#cellCv{height:280px}.tag{position:absolute;left:12px;top:10px;font-size:12px;color:var(--mu)}
+.opt{all:unset;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--s1);margin-bottom:8px;width:calc(100% - 30px)}
+.opt[aria-pressed="true"]{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}
+.radio{width:15px;height:15px;border-radius:50%;border:2px solid var(--fa)}.opt[aria-pressed="true"] .radio{border:5px solid var(--ac)}
+.drop{border:1.5px dashed #cfc8ee;border-radius:12px;padding:14px;text-align:center;font-size:13px;color:var(--mu);background:#faf8ff;margin-bottom:12px}
+.pb{height:8px;border-radius:4px;background:var(--s2);overflow:hidden;margin-top:14px}.pb i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--ac),var(--pink))}
+.hit{display:grid;grid-template-columns:22px minmax(0,1fr) 54px;gap:10px;font-size:13px;padding:7px 10px;border-radius:10px;background:var(--s1);border:1px solid var(--line);margin-top:6px;animation:fi .3s ease}
+/* table */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.f{all:unset;cursor:pointer;font-size:12.5px;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:var(--s1);color:var(--mu)}
+.f[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11.5px;color:var(--fa);font-weight:500;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl tbody tr{cursor:pointer}.tbl tbody tr:hover td{background:#fbfaf7}
+.rev{height:6px;border-radius:3px;background:var(--s2);position:relative;width:90px}.rev i{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:var(--ac)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.cb{width:15px;height:15px;accent-color:var(--ac)}
+/* drug */
+#molCv{height:250px}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.fact{padding:11px;border-radius:12px;background:var(--s1);border:1px solid var(--line)}.fact .v{font-size:17px;font-weight:650;margin-top:4px}
+.cmap{display:grid;gap:4px;font-size:11.5px}
+.cmap .rw{display:grid;grid-template-columns:70px repeat(6,minmax(0,1fr));gap:4px;align-items:center}
+.cmap .c{height:22px;border-radius:5px;background:var(--s2)}
+.res{display:grid;gap:8px}.rs{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;padding:10px 12px;border-radius:11px;border:1px solid var(--line);font-size:13px}
+/* attack */
+.gauge{position:relative;width:200px;height:200px;margin:4px 0 12px}.gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}.gauge .v{font-size:48px;font-weight:700;letter-spacing:-.03em}
+.verd{font-size:12.5px;padding:5px 11px;border-radius:999px;background:var(--warms);color:#9a5a0d;font-weight:600}.verd.bad{background:var(--bads);color:var(--bad)}
+.test{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 13px;border-radius:13px;background:var(--s1);border:1px solid var(--line);margin-bottom:9px;transition:all .3s}
+.test.next{border-color:var(--ac);box-shadow:0 0 0 3px var(--acs)}.test.run{border-color:var(--warm)}.test.fail{border-color:rgba(239,75,63,.5);background:#fff7f6}
+.cell{width:40px;height:40px;border-radius:46% 54% 50% 50%/52% 46% 54% 48%;background:radial-gradient(circle at 58% 44%,rgba(91,61,245,.35) 0 22%,rgba(91,61,245,.1) 24%);border:1.5px solid rgba(91,61,245,.5)}
+.test.fail .cell{background:radial-gradient(circle at 58% 44%,rgba(239,75,63,.45) 0 22%,rgba(239,75,63,.1) 24%);border-color:var(--bad)}
+.pc{font-size:16px;font-weight:700;color:var(--mu)}.test.next .pc{color:var(--ac)}.test.fail .pc{color:var(--bad)}
+.log{margin-top:12px;font-size:12px;color:var(--mu);display:grid;gap:3px}
+/* compare & report */
+.cmp{width:100%;border-collapse:collapse;font-size:13px}.cmp th,.cmp td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.cmp th{font-size:12px;color:var(--mu);font-weight:500;width:150px}.cmp thead th{font-size:15px;color:var(--ink);font-weight:650}
+.paper{background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 20px 40px -24px rgba(20,19,26,.25);padding:26px 30px;max-width:620px}
+.paper h3{margin:0;font-size:20px}.paper .sec{border-top:1px solid var(--line);padding-top:10px;margin-top:12px;font-size:12.5px}
+.big{font-size:56px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--ac)}
+.br{display:grid;grid-template-columns:130px minmax(0,1fr) 44px;gap:12px;align-items:center;font-size:13px;margin-bottom:10px}
+.trk{height:10px;border-radius:5px;background:var(--s2);position:relative}.trk i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#cfc7f3;transition:width .8s}
+.br.me .trk i{background:var(--ac)}.br.me span:first-child{font-weight:650}
+textarea{width:100%;box-sizing:border-box;min-height:84px;border:1px solid var(--line);border-radius:12px;padding:12px;font:13px ui-monospace,Menlo,monospace;background:#fff;color:var(--ink);resize:vertical}
+@media (prefers-reduced-motion:reduce){.view.on{animation:none}}
+@container (width < 760px){.side{flex-direction:row;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid var(--line)}.logo,.grp,.spacer,.live,.nv b{display:none}.nv{white-space:nowrap}
+ .g2{grid-template-columns:1fr}.facts{grid-template-columns:repeat(2,minmax(0,1fr))}.view{padding:14px 14px 20px}.foot{position:static}.bar{padding:0 14px}.hide{display:none}}
+</style></head><body>
+<div class="app" id="app">
+<aside class="side">
+ <div class="logo"><i></i>Tauchstone</div>
+ <button class="nv" data-v="proj">Projects</button>
+ <div class="grp">Alzheimer's · MTG</div>
+ <button class="nv" data-v="screen">Screen</button>
+ <button class="nv" data-v="cands">Candidates</button>
+ <button class="nv" data-v="drug">Drug</button>
+ <button class="nv" data-v="cmp">Compare <b id="ncmp">3</b></button>
+ <button class="nv" data-v="mine">My compounds</button>
+ <button class="nv" data-v="atk">Attack</button>
+ <button class="nv" data-v="rep">Report</button>
+ <button class="nv" data-v="val">Validation</button>
+ <div class="spacer"></div><div class="live"><i></i>Engine online</div>
+</aside>
+<div class="main">
+ <div class="bar"><div><div class="crumb" id="crumb"></div><h2 id="title"></h2></div><div class="r" id="barR"></div></div>
+
+ <section class="view" data-v="proj">
+  <div class="projs">
+   <button class="pj" data-go="cands"><span class="k">Built-in · GSE132903</span><span class="t">Alzheimer's · middle temporal gyrus</span><span class="chips"><span class="chip">1,816 ranked</span><span class="chip">100 attack-ready</span></span><span class="mini"><i style="width:100%"></i></span></button>
+   <button class="pj" data-go="screen"><span class="k">Built-in · GSE173955</span><span class="t">Alzheimer's · hippocampus</span><span class="chips"><span class="chip">18 brains</span><span class="chip">not screened</span></span><span class="mini"><i style="width:0"></i></span></button>
+   <button class="pj new" data-go="screen">＋ New project</button>
+  </div>
+  <div class="card" style="margin-top:16px;padding:16px"><div class="h">Recent activity</div>
+   <div class="log" style="margin:0"><div><span class="mono">14:02</span>&nbsp;Screen finished · 113,310 signatures · 15.6 s</div><div><span class="mono">14:05</span>&nbsp;Attack · Piperacillin · fragile after 1 test</div><div><span class="mono">14:09</span>&nbsp;Report exported · Brinzolamide</div></div></div>
+ </section>
+
+ <section class="view" data-v="screen"><div class="g2">
+  <div>
+   <div class="h">Disease signature</div>
+   <button class="opt" aria-pressed="true"><span class="radio"></span><span><b style="font-size:14px">GSE132903 · middle temporal gyrus</b><div class="k">97 AD · 98 control · limma · 16,437 genes</div></span><span class="chip ok">QC 7/7</span></button>
+   <button class="opt" aria-pressed="false"><span class="radio"></span><span><b style="font-size:14px">GSE173955 · hippocampus</b><div class="k">8 AD · 10 control · RNA-seq · 14,958 genes</div></span><span class="chip">ρ 0.50</span></button>
+   <div class="drop">Drop a differential-expression CSV<br><span class="mono" style="font-size:12px">gene · log2FC · statistic · FDR</span></div>
+   <div class="chips" style="margin-bottom:14px"><span class="chip">LINCS gold · 113,310</span><span class="chip">978 landmark genes</span><span class="chip">Clinical stage</span><span class="chip">WTCS · KS · cosine</span></div>
+   <button class="btn" id="runScreen">Run screen</button>
+   <div class="pb"><i id="pbar"></i></div><div class="k" style="display:flex;justify-content:space-between;margin-top:6px"><span><b class="num" id="pscored">0</b> signatures scored</span><span class="num" id="ptime">0.0 s</span></div>
+  </div>
+  <div><div class="sim"><canvas id="cellCv"></canvas><span class="tag mono" id="simState">idle</span></div><div id="stream"></div></div>
+ </div></section>
+
+ <section class="view" data-v="cands">
+  <div class="filters" id="filters"><button class="f" data-f="ap">Approved</button><button class="f" data-f="brain">Brain-cell data</button><button class="f" data-f="pen">Brain-penetrant</button><button class="f" data-f="ctx">≥ 5 contexts</button><span class="k" style="margin-left:auto" id="nshow"></span></div>
+  <div class="card" style="overflow:auto"><table class="tbl"><thead><tr><th></th><th>#</th><th>Drug</th><th>Reversal</th><th>Score</th><th class="hide">Contexts</th><th class="hide">Brain cells</th><th class="hide">Exposure</th><th class="hide">Status</th></tr></thead><tbody id="tb"></tbody></table></div>
+ </section>
+
+ <section class="view" data-v="drug"><div class="g2">
+  <div>
+   <div class="sim" style="background:radial-gradient(ellipse at 50% 40%,#fff,#f1ecfb)"><canvas id="molCv"></canvas><span class="tag mono">C23H27N5O7S · piperacillin</span></div>
+   <div class="card" style="padding:14px;margin-top:12px"><div class="h">Where the reversal was measured</div><div class="cmap" id="cmap"></div></div>
+  </div>
+  <div>
+   <div class="k">Pool rank 5 · Approved · β-lactam antibiotic</div><div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin:2px 0 10px">Piperacillin</div>
+   <div class="chips"><span class="chip bad">Cancer lines only</span><span class="chip gap">10 µM only</span><span class="chip gap">6 h only</span><span class="chip bad">Brain exposure · predicted low</span><span class="chip gap">No recorded targets</span></div>
+   <div class="facts"><div class="fact"><div class="k">Reversal</div><div class="v num" style="color:var(--ac)">−1.79</div></div><div class="fact"><div class="k">Contexts</div><div class="v num">3</div></div><div class="fact"><div class="k">Hidden tests</div><div class="v num">3</div></div></div>
+   <div class="card" style="padding:14px;margin-top:12px"><div class="h">Agreement across resources</div><div class="res">
+    <div class="rs"><span>LINCS gold · Tauchstone</span><span class="chip ac">rank 5 / 1,816</span></div>
+    <div class="rs"><span>CLUE connectivity</span><button class="btn2" style="padding:5px 10px">Add API key</button></div>
+    <div class="rs"><span>Perturb-Seqr</span><button class="btn2" style="padding:5px 10px">Fetch</button></div></div></div>
+   <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" data-go="atk">Attack</button><button class="btn2" data-go="cmp">Compare</button><button class="btn2" data-go="rep">Report</button></div>
+  </div></div></section>
+
+ <section class="view" data-v="cmp"><div class="card" style="overflow:auto"><table class="cmp">
+  <thead><tr><th></th><th>Piperacillin</th><th>Nepafenac</th><th>Brinzolamide</th></tr></thead><tbody>
+  <tr><th>Pool rank</th><td class="num">5</td><td class="num">2</td><td class="num">12</td></tr>
+  <tr><th>Reversal</th><td class="num">−1.79</td><td class="num">−2.03</td><td class="num">−1.67</td></tr>
+  <tr><th>Cell lines</th><td>HT29 · MCF7 · VCAP</td><td>HA1E · YAPC</td><td>HA1E · MCF7 · PHH</td></tr>
+  <tr><th>Doses</th><td><span class="chip gap">10 µM</span></td><td><span class="chip">0.04–0.12 µM</span></td><td><span class="chip gap">10 µM</span></td></tr>
+  <tr><th>Time</th><td><span class="chip gap">6 h</span></td><td><span class="chip">24 h</span></td><td><span class="chip">6 h · 24 h</span></td></tr>
+  <tr><th>Brain exposure</th><td><span class="chip bad">predicted low</span></td><td><span class="chip ok">predicted penetrant</span></td><td><span class="chip bad">predicted low</span></td></tr>
+  <tr><th>Targets</th><td class="k">none recorded</td><td>PTGS2 · PTGS1</td><td>CA2</td></tr>
+  <tr><th>Attack</th><td><span class="chip bad">Fragile · 1 test</span></td><td><button class="btn2" data-go="atk" style="padding:5px 10px">Attack</button></td><td><button class="btn2" data-go="atk" style="padding:5px 10px">Attack</button></td></tr>
+  </tbody></table></div></section>
+
+ <section class="view" data-v="mine">
+  <div class="g2" style="align-items:start"><div><div class="h">Paste compound names</div><textarea id="ta">donepezil, memantine, galantamine, rivastigmine, nepafenac</textarea><div style="margin-top:10px"><button class="btn" id="check">Check</button></div></div>
+  <div class="card" style="overflow:auto"><table class="tbl"><thead><tr><th>Compound</th><th>Pool rank</th><th>Score</th><th class="hide">Contexts</th><th></th></tr></thead><tbody id="mineTb"><tr><td colspan="5" class="k">—</td></tr></tbody></table></div></div>
+ </section>
+
+ <section class="view" data-v="atk"><div class="g2">
+  <div class="card" style="padding:18px"><div class="k">Piperacillin · reverses in ≥ 70% of hidden tests</div>
+   <div class="gauge"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="#efece5" stroke-width="9"/><circle id="ring" cx="60" cy="60" r="52" fill="none" stroke="#5b3df5" stroke-width="9" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="248.3" style="transition:stroke-dashoffset .9s,stroke .4s"/></svg><div class="c"><div class="v num" id="pv">0.24</div><div class="k">P(claim holds)</div></div></div>
+   <span class="verd" id="verd">Insufficient evidence</span>
+   <div style="display:flex;gap:8px;margin-top:14px"><button class="btn" id="run">Run next test</button><button class="btn2" id="reset">Reset</button><button class="btn2" id="mode">Attack · Learn</button></div>
+   <div class="log" id="log"></div></div>
+  <div><div class="h">Hidden tests</div><div id="tests"></div>
+   <div class="h" style="margin-top:14px">Open gaps</div><div class="chips"><span class="chip bad">No brain-cell data</span><span class="chip gap">Acute 6 h vs chronic disease</span><span class="chip gap">10 µM vs clinical levels</span></div></div>
+ </div></section>
+
+ <section class="view" data-v="rep"><div class="paper">
+  <div class="k">Tauchstone evidence report · GSE132903 · preregistration 21f7460e</div><h3 style="margin-top:6px">Brinzolamide</h3>
+  <div class="chips" style="margin-top:8px"><span class="chip">Pool rank 12</span><span class="chip ok">Approved</span><span class="chip ac">Reversal −1.67</span></div>
+  <div class="sec"><b>Signal</b> · 3 LINCS contexts · HA1E, MCF7, PHH · 10 µM · 6 h, 24 h</div>
+  <div class="sec"><b>Gaps</b> · no brain-cell data · 10 µM only · brain exposure predicted low</div>
+  <div class="sec"><b>Target</b> · CA2 (P00918) · inhibitor · Open Targets AD 0.037</div>
+  <div class="sec"><b>Attack</b> · 3 hidden tests · not yet run</div>
+  <div class="sec"><b>Next experiment</b> · test in a neural model at clinically relevant exposure</div>
+  <div class="sec k">Provenance · GSE132903 · LINCS GSE92742/GSE70138 · Open Targets 26.09 · ChEMBL 37 · commit 2cf6d72</div>
+ </div></section>
+
+ <section class="view" data-v="val"><div class="g2">
+  <div class="card" style="padding:18px"><div class="k">Right keep / drop call within 5 tests · 50 sealed drugs</div>
+   <div style="display:flex;align-items:baseline;gap:12px;margin-top:10px"><span class="big num">100%</span><span class="num" style="font-size:22px;color:var(--fa);font-weight:700">88% random</span></div>
+   <div class="chips" style="margin-top:14px"><span class="chip">vs random p = 0.0009</span><span class="chip">vs confirmation p = 0.002</span><span class="chip">permutation 17/20</span><span class="chip mono">prereg 21f7460e</span></div></div>
+  <div class="card" style="padding:18px" id="bars"></div></div></section>
+
+ <div class="foot">Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.</div>
+</div></div>
+<script>
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;let seed=9;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const T={proj:["","Projects"],screen:["Alzheimer's · MTG","Screen"],cands:["Alzheimer's · MTG","Candidates"],drug:["Candidates","Piperacillin"],cmp:["Candidates","Compare"],mine:["Alzheimer's · MTG","My compounds"],atk:["Piperacillin","Attack"],rep:["Brinzolamide","Report"],val:["Alzheimer's · MTG","Validation"]};
+const R={proj:'<button class="btn" data-go="screen">New screen</button>',screen:'<button class="btn2">History</button>',cands:'<button class="btn2">Export CSV</button><button class="btn2" data-go="cmp">Compare 3</button>',drug:'',cmp:'<button class="btn2">Export</button>',mine:'',atk:'',rep:'<button class="btn">Download PDF</button>',val:'<button class="btn2">Methods</button>'};
+function bindGo(root){root.querySelectorAll('[data-go]').forEach(b=>b.onclick=e=>{e.stopPropagation();go(b.dataset.go)})}
+function go(v){document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.dataset.v===v));document.querySelectorAll('.nv').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));document.getElementById('crumb').textContent=T[v][0];document.getElementById('title').textContent=T[v][1];const r=document.getElementById('barR');r.innerHTML=R[v];bindGo(r);if(v==='val')grow();setTimeout(fit,20)}
+document.querySelectorAll('.nv').forEach(b=>b.onclick=()=>go(b.dataset.v));bindGo(document);
+document.querySelectorAll('.opt').forEach(o=>o.onclick=()=>document.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===o)));
+// candidates [name,score,ctx,approved,brain,pen]
+const D=[["Ticrynafen",-2.32,4,1,"",1],["Nepafenac",-2.03,3,1,"",1],["Cholic acid",-1.82,13,1,"NEU −0.66",0],["Bavisant",-1.81,5,0,"",1],["Piperacillin",-1.79,3,1,"",0],["Busulfan",-1.79,5,1,"",0],["LY-2886721",-1.77,5,0,"",1],["Cefotetan",-1.76,7,1,"",0],["Enobosarm",-1.71,8,0,"",0],["CPI-1189",-1.68,6,0,"",1],["Granisetron",-1.68,3,1,"",1],["Brinzolamide",-1.67,3,1,"",0]];
+const F={};const sel=new Set([1,4,11]);
+function renderTb(){const rows=D.map((d,i)=>({d,i})).filter(({d})=>(!F.ap||d[3])&&(!F.brain||d[4])&&(!F.pen||d[5])&&(!F.ctx||d[2]>=5));
+ document.getElementById('nshow').textContent=rows.length+' of 1,816';
+ document.getElementById('tb').innerHTML=rows.map(({d,i})=>`<tr data-i="${i}"><td><input type="checkbox" class="cb" ${sel.has(i)?'checked':''} data-c="${i}" aria-label="compare ${d[0]}"></td><td class="num k">${i+1}</td><td style="font-weight:600">${d[0]}</td><td><div class="rev"><i style="width:${Math.abs(d[1])/2.4*100}%"></i></div></td><td class="num" style="font-weight:600">${d[1].toFixed(2)}</td><td class="hide num">${d[2]}</td><td class="hide">${d[4]?`<span class="chip ok">${d[4]}</span>`:'<span class="k">none</span>'}</td><td class="hide"><span class="dot" style="background:${d[5]?'var(--ok)':'var(--bad)'}"></span><span class="k">${d[5]?'penetrant':'low'} · pred.</span></td><td class="hide"><span class="chip ${d[3]?'ok':''}">${d[3]?'Approved':'Investigational'}</span></td></tr>`).join('');
+ document.querySelectorAll('#tb tr').forEach(r=>r.onclick=e=>{if(e.target.matches('input'))return;go('drug')});
+ document.querySelectorAll('#tb input').forEach(c=>c.onchange=()=>{const i=+c.dataset.c;c.checked?sel.add(i):sel.delete(i);document.getElementById('ncmp').textContent=sel.size})}
+document.querySelectorAll('#filters .f').forEach(b=>b.onclick=()=>{F[b.dataset.f]=!F[b.dataset.f];b.setAttribute('aria-pressed',!!F[b.dataset.f]);renderTb()});renderTb();
+// context map
+const cells=["HT29","MCF7","VCAP"],doses=["0.04","0.12","0.37","1.11","3.33","10 µM"];
+document.getElementById('cmap').innerHTML='<div class="rw"><span></span>'+doses.map(d=>`<span class="k" style="text-align:center">${d}</span>`).join('')+'</div>'+cells.map(c=>`<div class="rw"><span class="mono">${c}</span>${doses.map((d,j)=>`<span class="c" style="${j===5?'background:#5b3df5':''}" title="${c} ${d}"></span>`).join('')}</div>`).join('')+'<div class="k" style="margin-top:6px">no data in neurons, NPCs or SH-SY5Y</div>';
+// my compounds (real ranks)
+const M={donepezil:[684,-0.24,6,0],memantine:[502,-0.36,4,0],galantamine:[1214,0.21,4,0],rivastigmine:[null],nepafenac:[2,-2.03,3,1]};
+document.getElementById('check').onclick=()=>{const names=document.getElementById('ta').value.split(/[,\n]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+ document.getElementById('mineTb').innerHTML=names.map(n=>{const m=M[n];const nm=n[0].toUpperCase()+n.slice(1);if(!m)return `<tr><td style="font-weight:600">${nm}</td><td colspan="4" class="k">not in LINCS</td></tr>`;if(m[0]===null)return `<tr><td style="font-weight:600">${nm}</td><td colspan="3"><span class="chip gap">fewer than 3 reproducible contexts</span></td><td></td></tr>`;
+ return `<tr><td style="font-weight:600">${nm}</td><td class="num">${m[0]} / 1,816</td><td class="num" style="color:${m[1]<0?'var(--ac)':'var(--mu)'};font-weight:600">${m[1].toFixed(2)}</td><td class="hide num">${m[2]}</td><td>${m[3]?'<button class="btn2" data-go="atk" style="padding:5px 10px">Attack</button>':'<button class="btn2" style="padding:5px 10px" title="not preregistered">Build tests</button>'}</td></tr>`}).join('');bindGo(document.getElementById('mineTb'))};
+// screen
+let screening=false;
+document.getElementById('runScreen').onclick=e=>{e.target.disabled=true;screening=true;document.getElementById('stream').innerHTML='';document.getElementById('simState').textContent='scoring';const N=113310,dur=reduce?10:5200,t0=performance.now();let shown=0;
+ (function f(t){const k=Math.min(1,(t-t0)/dur);document.getElementById('pbar').style.width=k*100+'%';document.getElementById('pscored').textContent=Math.round(N*k).toLocaleString();document.getElementById('ptime').textContent=(k*15.6).toFixed(1)+' s';
+  while(shown<Math.floor(k*5)){const d=D[shown];const el=document.createElement('div');el.className='hit';el.innerHTML=`<span class="k num">${shown+1}</span><b>${d[0]}</b><span class="num" style="color:var(--ac);font-weight:600;text-align:right">${d[1].toFixed(2)}</span>`;document.getElementById('stream').appendChild(el);shown++}
+  if(k<1)requestAnimationFrame(f);else{screening=false;document.getElementById('simState').textContent='1,816 ranked';const b=document.createElement('button');b.className='btn2';b.style.marginTop='8px';b.textContent='Open candidates';b.onclick=()=>go('cands');document.getElementById('stream').appendChild(b)}})(t0)};
+// attack
+const W0=[{n:"Composition-adjusted",k:"GSE132903 · cell-loss corrected",p:43,next:1},{n:"Held-out cohort",k:"GSE173955 · hippocampus",p:43},{n:"Unseen cell line",k:"HA1E · 10 µM · 6 h",p:24}];let W;
+function renderT(){document.getElementById('tests').innerHTML=W.map(w=>`<div class="test ${w.st||(w.next?'next':'')}"><span class="cell"></span><span style="min-width:0"><b style="font-size:14px">${w.n}</b><div class="k">${w.k}</div></span><span class="pc num">${w.st==='fail'?'Fail':w.st==='run'?'…':w.p+'% fail'}</span></div>`).join('')}
+function setP(p){document.getElementById('ring').style.strokeDashoffset=326.7*(1-p)}
+function resetA(){W=JSON.parse(JSON.stringify(W0));renderT();setP(.24);document.getElementById('pv').textContent='0.24';const v=document.getElementById('verd');v.className='verd';v.textContent='Insufficient evidence';document.getElementById('run').disabled=false;document.getElementById('ring').style.stroke='#5b3df5';document.getElementById('log').innerHTML='<div><span class="mono">00:00</span>&nbsp;3 hidden tests sealed</div>'}
+function count(el,a,b,ms){if(reduce){el.textContent=b.toFixed(2);return}const t0=performance.now();(function f(t){const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);el.textContent=(a+(b-a)*e).toFixed(2);if(k<1)requestAnimationFrame(f)})(t0)}
+document.getElementById('run').onclick=e=>{e.target.disabled=true;W[0].st='run';renderT();setTimeout(()=>{W[0].st='fail';W[0].next=0;W[1].next=1;W[1].p=46;renderT();setP(0);document.getElementById('ring').style.stroke='#ef4b3f';count(document.getElementById('pv'),.24,0,900);
+ setTimeout(()=>{const v=document.getElementById('verd');v.className='verd bad';v.textContent='Fragile';document.getElementById('log').innerHTML+='<div><span class="mono">00:02</span>&nbsp;Composition-adjusted · consensus 0.17 · fail</div><div><span class="mono">00:02</span>&nbsp;P(claim) 0.24 → 0.00</div>'},500)},reduce?0:1100)};
+document.getElementById('reset').onclick=resetA;document.getElementById('mode').onclick=e=>e.target.textContent=e.target.textContent==='Attack · Learn'?'Learn · Attack':'Attack · Learn';resetA();
+// validation
+const B=[["Tauchstone",1,1],["Max failure",1],["Max uncertainty",1],["Learn",.98],["Random",.88],["Decision-aware",.87],["Confirmation",.80]];
+document.getElementById('bars').innerHTML=B.map(b=>`<div class="br ${b[2]?'me':''}"><span>${b[0]}</span><span class="trk"><i data-w="${b[1]*100}" style="width:0"></i></span><span class="num" style="text-align:right">${Math.round(b[1]*100)}%</span></div>`).join('');
+function grow(){document.querySelectorAll('#bars i').forEach(i=>{i.style.width='0';requestAnimationFrame(()=>requestAnimationFrame(()=>i.style.width=i.dataset.w+'%'))})}
+// canvases
+const cv={};function fit(){for(const id of ['cellCv','molCv']){const c=document.getElementById(id);const r=c.getBoundingClientRect();if(!r.width)continue;const d=Math.max(1,devicePixelRatio||1);c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);cv[id]={x,w:r.width,h:r.height}}}
+new ResizeObserver(fit).observe(document.getElementById('app'));
+const cl=[...Array(9)].map(()=>({x:.1+rnd()*.8,y:.12+rnd()*.76,r:22+rnd()*20,ph:rnd()*6,vx:(rnd()-.5)*.0004,vy:(rnd()-.5)*.0004,hue:rnd()<.5,bound:0}));
+const ml=[...Array(42)].map(()=>({x:rnd(),y:rnd(),a:rnd()*6,vx:0,vy:0,t:Math.floor(rnd()*9),c:rnd()<.5}));let tick=0;
+function blob(x,cx,cy,r,ph,n=14){x.beginPath();for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,rr=r*(1+.07*Math.sin(a*3+ph+tick*.02)+.04*Math.sin(a*5-ph+tick*.03));i?x.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr):x.moveTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr)}x.closePath()}
+function drawCells(){const c=cv.cellCv;if(!c)return;const{x,w,h}=c;x.clearRect(0,0,w,h);
+ for(const k of cl){k.x+=k.vx;k.y+=k.vy;if(k.x<.08||k.x>.92)k.vx*=-1;if(k.y<.1||k.y>.9)k.vy*=-1;const cx=k.x*w,cy=k.y*h;blob(x,cx,cy,k.r,k.ph);x.fillStyle=k.hue?'rgba(232,93,156,.10)':'rgba(91,61,245,.09)';x.fill();x.lineWidth=1.6;x.strokeStyle=k.hue?'rgba(232,93,156,.55)':'rgba(91,61,245,.5)';x.stroke();
+  blob(x,cx+k.r*.12,cy-k.r*.08,k.r*.36,k.ph+2,10);x.fillStyle=k.hue?'rgba(232,93,156,.25)':'rgba(91,61,245,.22)';x.fill();
+  if(k.bound>0){x.strokeStyle=`rgba(18,163,106,${k.bound})`;x.lineWidth=3;blob(x,cx,cy,k.r+5,k.ph);x.stroke();k.bound-=.01}}
+ for(const m of ml){const tg=cl[m.t];if(screening){const dx=tg.x*w-m.x*w,dy=tg.y*h-m.y*h,d=Math.hypot(dx,dy);if(d<tg.r+4){tg.bound=1;m.x=rnd();m.y=rnd()<.5?0:1;m.t=Math.floor(rnd()*9)}else{m.vx+=dx/d*.00006;m.vy+=dy/d*.00006}}
+  m.vx+=(rnd()-.5)*.00012;m.vy+=(rnd()-.5)*.00012;m.vx*=.96;m.vy*=.96;m.x=Math.min(1,Math.max(0,m.x+m.vx*(screening?6:1)));m.y=Math.min(1,Math.max(0,m.y+m.vy*(screening?6:1)));m.a+=.02;
+  const mx=m.x*w,my=m.y*h,col=m.c?'#5b3df5':'#e85d9c';x.strokeStyle=col;x.fillStyle=col;x.lineWidth=1.2;const p=[[0,0],[6,0],[9,5],[-4,4]].map(([a,b])=>[mx+a*Math.cos(m.a)-b*Math.sin(m.a),my+a*Math.sin(m.a)+b*Math.cos(m.a)]);
+  x.beginPath();x.moveTo(...p[0]);x.lineTo(...p[1]);x.lineTo(...p[2]);x.moveTo(...p[0]);x.lineTo(...p[3]);x.stroke();for(const q of p){x.beginPath();x.arc(q[0],q[1],2,0,7);x.fill()}}}
+const at=[],bd=[];(function(){const ring=(cx,cy,cz,n,r)=>{const s=at.length;for(let i=0;i<n;i++){const a=i/n*Math.PI*2;at.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,z:cz+(rnd()-.5)*.2,e:i===2?'N':i===4&&n===5?'S':'C'});bd.push([s+i,s+(i+1)%n])}return s};
+ const a=ring(-.9,0,0,6,.42),b=ring(.25,.1,.1,4,.32),c=ring(.95,-.1,-.1,5,.36),d=ring(-.2,-1,.2,6,.4);bd.push([a+1,b+2],[b,c+3],[a+4,d]);
+ [[a+3,'O'],[b+1,'O'],[c+1,'O'],[c+2,'O'],[d+3,'N'],[d+2,'O']].forEach(([i,e])=>{const p=at[i];at.push({x:p.x*1.45,y:p.y*1.45,z:p.z+.3,e});bd.push([i,at.length-1])})})();
+let mr=0;const EC={C:'#3a3846',N:'#5b3df5',O:'#ef4b3f',S:'#f2b138'};
+function drawMol(){const c=cv.molCv;if(!c)return;const{x,w,h}=c;x.clearRect(0,0,w,h);const R=Math.min(w,h)*.32,ca=Math.cos(mr),sa=Math.sin(mr),cb=Math.cos(.4),sb=Math.sin(.4);
+ const P=at.map(a=>{let X=a.x*ca-a.z*sa,Z=a.x*sa+a.z*ca,Y=a.y*cb-Z*sb;Z=a.y*sb+Z*cb;const f=3/(3+Z);return{x:w/2+X*R*f,y:h/2+Y*R*f,z:Z,f,e:a.e}});
+ x.lineWidth=3;x.strokeStyle='rgba(60,56,70,.35)';for(const[i,j]of bd){x.beginPath();x.moveTo(P[i].x,P[i].y);x.lineTo(P[j].x,P[j].y);x.stroke()}
+ [...P].sort((a,b)=>b.z-a.z).forEach(p=>{const r=(p.e==='C'?7:8)*p.f;const g=x.createRadialGradient(p.x-r*.35,p.y-r*.35,r*.1,p.x,p.y,r);g.addColorStop(0,'#fff');g.addColorStop(.35,EC[p.e]);g.addColorStop(1,EC[p.e]);x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,r,0,7);x.fill()})}
+function loop(){tick++;if(!reduce)mr+=.008;drawCells();drawMol();requestAnimationFrame(loop)}
+go('proj');fit();loop();
+</script></body></html>
