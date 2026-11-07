@@ -172,10 +172,7 @@ export function EvidenceView({
                   >
                     <span>Molecule unavailable</span>
                     <span className="mvp-muted">
-                      {drug.molecule?.formula ??
-                        (drug.name.toLowerCase() === "piperacillin"
-                          ? "C23H27N5O7S"
-                          : "Formula unspecified")}
+                      {drug.molecule?.formula ?? "Formula unspecified"}
                     </span>
                     <span className="mvp-chip">3D coordinates pending</span>
                   </div>

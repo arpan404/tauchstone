@@ -3,6 +3,7 @@ import { api } from "./client";
 import { isMockMode } from "./mock";
 import type { operations } from "./schema";
 import type { Schema } from "./types";
+import piperacillinMolecule from "@/features/molecule/__fixtures__/piperacillin.BRD-K86873305.json";
 
 export type CandidateFilters = NonNullable<
   operations["listProjectCandidates"]["parameters"]["query"]
@@ -82,7 +83,7 @@ export function mockDrug(id: string): Schema<"DrugDetail"> {
     approval_status: candidate.approval_status,
     targets: [],
     structure: null,
-    molecule: null,
+    molecule: piperacillin ? (piperacillinMolecule as Schema<"Molecule3D">) : null,
     gaps: {
       brain_cells: candidate.brain_cells
         ? [{ cell_id: "NEU", consensus: -0.66, below_theta: false }]
