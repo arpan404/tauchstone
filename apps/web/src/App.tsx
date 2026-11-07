@@ -12,7 +12,7 @@ import { AttackView } from "@/features/tauchstone/AttackView";
 import { ProjectsView } from "@/features/projects/ProjectsView";
 import { ScreenView } from "@/features/screen/ScreenView";
 import { Action, Chip } from "@/components/mvp";
-import { BOUNDARY_TEXT } from "@/components/BoundaryBanner";
+import { BOUNDARY_TEXT, ShellBoundaryContext } from "@/components/BoundaryBanner";
 import {
   Command,
   CommandDialog,
@@ -43,8 +43,18 @@ function optionalView(folder: string, exportName: string) {
         </div>
       );
 }
-const Compare = optionalView("compare", "CompareView");
-const Report = optionalView("report", "ReportView");
+const CompareInner = optionalView("compare", "CompareView") as ComponentType<{ drugIds: string[]; projectId?: string }>;
+const ReportInner = optionalView("report", "ReportView") as ComponentType<{ drugId: string; projectId?: string }>;
+function Compare() {
+  const { compareIds, currentProjectId } = useUi();
+  if (compareIds.length < 2) return <div className="mvp-view"><Chip>Select 2–4 candidates</Chip></div>;
+  return <CompareInner drugIds={compareIds} projectId={currentProjectId ?? undefined} />;
+}
+function Report() {
+  const { selectedCandidateId, currentProjectId } = useUi();
+  if (!selectedCandidateId) return <div className="mvp-view"><Chip>Select a candidate</Chip></div>;
+  return <ReportInner drugId={selectedCandidateId} projectId={currentProjectId ?? undefined} />;
+}
 const Compounds = optionalView("compounds", "CompoundsView");
 const VIEWS: Record<StepId, ComponentType> = {
   projects: ProjectsView,
@@ -220,7 +230,9 @@ export default function App() {
                 </div>
               }
             >
-              <View />
+              <ShellBoundaryContext.Provider value={true}>
+                <View />
+              </ShellBoundaryContext.Provider>
             </Suspense>
           </main>
           <footer className="shell-footer">{BOUNDARY_TEXT}</footer>

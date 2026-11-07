@@ -19,7 +19,10 @@ class CreateProject(BaseModel):
 @router.get('/projects')
 def projects():
     store.seed()
-    return store.all_records('project')
+    # Built-in projects first (preregistered primary on top), then uploads newest first.
+    records = store.all_records('project')
+    return sorted(records, key=lambda p: (p.get('kind') != 'builtin', not p.get('preregistered'),
+                                          '' if p.get('kind') == 'builtin' else _neg(p.get('created_at', ''))))
 
 
 @router.post('/projects')
@@ -52,3 +55,8 @@ def export(project_id: str, approved: bool | None = None, brain_cells: bool | No
                          for k, v in row.items()})
     return Response(stream.getvalue(), media_type='text/csv',
                     headers={'Content-Disposition': 'attachment; filename="candidates.csv"'})
+
+
+def _neg(stamp: str) -> str:
+    """Sort key that orders ISO timestamps newest first."""
+    return ''.join(chr(0x10FFFF - ord(c)) for c in stamp)

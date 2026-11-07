@@ -24,6 +24,12 @@ from pipelines.evidence._common import OT_DIR
 _RANKING_NAME = "GSE132903__main"
 
 
+def _display(name: object) -> str:
+    """Title-case plain names; keep codes with digits as written (LY-2886721)."""
+    text = str(name)
+    return text if any(ch.isdigit() for ch in text) else text.title()
+
+
 def normalize(name: object) -> str:
     """Case/hyphen/space-insensitive key. Non-strings normalise to ''."""
     if not isinstance(name, str):
@@ -165,7 +171,7 @@ def lookup(
                     "query": query,
                     "status": "not_rankable",
                     "drug_id": pid,
-                    "name": compound_names.get(pid, pid),
+                    "name": _display(compound_names.get(pid, pid)),
                     "pool_rank": None,
                     "rank_total": None,
                     "consensus": None,
@@ -182,9 +188,9 @@ def lookup(
                 "status": "ranked",
                 "drug_id": pid,
                 "name": (
-                    str(prow.drug_name).title()
+                    _display(prow.drug_name)
                     if prow is not None and not pd.isna(prow.drug_name)
-                    else compound_names.get(pid, pid)
+                    else _display(compound_names.get(pid, pid))
                 ),
                 "pool_rank": int(prow.pool_rank) if prow is not None else None,
                 "rank_total": rank_total if prow is not None else None,

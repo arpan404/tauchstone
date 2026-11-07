@@ -16,13 +16,12 @@ export function RepurposingView({
   projectId = "GSE132903",
 }: { projectId?: string } = {}) {
   const [active, setActive] = useState<CandidateFilters>({});
-  const [compared, setCompared] = useState<string[]>([]);
   const { data, isPending, isError, refetch } = useProjectCandidates(
     projectId,
     active,
   );
   const mock = useMockStatus();
-  const { selectCandidate, setStep } = useUi();
+  const { selectCandidate, setStep, compareIds: compared, toggleCompare } = useUi();
   function open(id: string) {
     selectCandidate(id);
     setStep("evidence");
@@ -109,13 +108,7 @@ export function RepurposingView({
                         type="checkbox"
                         aria-label={`Compare ${c.name}`}
                         checked={compared.includes(c.id)}
-                        onChange={() =>
-                          setCompared((ids) =>
-                            ids.includes(c.id)
-                              ? ids.filter((id) => id !== c.id)
-                              : [...ids, c.id],
-                          )
-                        }
+                        onChange={() => toggleCompare(c.id)}
                       />
                     </td>
                     <td className="mvp-muted">{c.rank}</td>

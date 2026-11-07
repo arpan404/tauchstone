@@ -122,13 +122,15 @@ export function CompoundsView({
                     </td>
                     <td>{result.n_contexts ?? "—"}</td>
                     <td>
-                      <button
-                        className={`mvp-btn ${result.attack_ready ? "primary" : ""}`}
-                        disabled={!result.drug_id && !onBuildTests}
-                        onClick={() => attack(result)}
-                      >
-                        {result.attack_ready ? "Attack" : "Build tests"}
-                      </button>
+                      {result.status === "ranked" && (
+                        <button
+                          className={`mvp-btn ${result.attack_ready ? "primary" : ""}`}
+                          disabled={!result.drug_id && !onBuildTests}
+                          onClick={() => attack(result)}
+                        >
+                          {result.attack_ready ? "Attack" : "Build tests"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

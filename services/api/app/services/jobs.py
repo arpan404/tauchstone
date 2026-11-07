@@ -90,7 +90,7 @@ def run(ident, signature):
         with lock:
             project = store.get('project', obj['project_id'])
             project.update(last_screen_id=ident, n_ranked=n, preregistered=obj['preregistered'],
-                           n_attack_ready=len(store.attack_ids()))
+                           n_attack_ready=len(store.attack_ids()) if obj['preregistered'] else None)
             store.put('project', project)
             update(ident, status='done', n_ranked=n)
     except Exception as exc:
