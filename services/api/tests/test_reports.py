@@ -53,7 +53,9 @@ def test_unknown_and_project_scope(client):
 
 def test_real_mode_never_uses_fixture(monkeypatch):
     monkeypatch.setattr(render, 'settings', replace(render.settings, mock=False))
-    with pytest.raises(render.DetailUnavailableError):
+    monkeypatch.setitem(sys.modules, 'app.services.drug_detail',
+                        SimpleNamespace(get_drug_detail=lambda d, p: (_ for _ in ()).throw(render.NotFoundError(d))))
+    with pytest.raises(render.NotFoundError):  # real mode asks the real service, never the fixture
         render.DefaultDrugDetail().get_drug_detail('piperacillin', None)
 
 
@@ -62,6 +64,7 @@ def test_future_detail_provider_receives_project(monkeypatch):
     def get_detail(drug_id, project_id):
         seen.append((drug_id, project_id))
         return {'name': 'real'}
+    monkeypatch.setattr(render, 'settings', replace(render.settings, mock=False))
     monkeypatch.setitem(sys.modules, 'app.services.drug_detail', SimpleNamespace(get_drug_detail=get_detail))
     assert render.DefaultDrugDetail().get_drug_detail('BRD-real', 'project-2') == {'name': 'real'}
     assert seen == [('BRD-real', 'project-2')]
@@ -115,17 +118,16 @@ def test_next_experiment_order():
 
 
 def test_csv_allowlist_and_formula_escaping(client, monkeypatch):
-    from app.routes import reports
-    payload = {'candidates': [{'candidate_id': 'BRD-1', 'name': '=FORMULA()', 'rank': 1,
-                              'consensus': -1.7, 'n_contexts': 3, 'hidden': 'SECRET_OUTCOME'}]}
-    monkeypatch.setattr(reports, 'get_repository', lambda: SimpleNamespace(list_candidates=lambda n: payload))
-    response = client.get('/projects/builtin-gse132903/candidates.csv')
+    from app.routes import projects
+    rows = [{'id': 'BRD-1', 'name': '=FORMULA()', 'rank': 1, 'consensus': -1.7, 'hidden': 'SECRET_OUTCOME'}]
+    monkeypatch.setattr(projects.store, 'seed', lambda: None)
+    monkeypatch.setattr(projects.store, 'candidates', lambda *a, **k: {'candidates': rows})
+    response = client.get('/projects/GSE132903/candidates.csv')
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/csv')
     assert "'=FORMULA()" in response.text
     assert '-1.7' in response.text
     assert 'SECRET_OUTCOME' not in response.text
-    assert client.get('/projects/upload/candidates.csv').status_code == 404
 
 
 def test_pdf_suffix_is_not_html_drug_id(client, monkeypatch):

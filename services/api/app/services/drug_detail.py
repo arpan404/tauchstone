@@ -202,3 +202,11 @@ def lookup_compounds(base: Path, names: list[str]) -> list[dict]:
         drug_map=drug_map,
         truth=truth,
     )
+
+
+def get_drug_detail(drug_id: str, project_id: str | None = None) -> dict:
+    """DrugDetail payload exactly as GET /drugs/{drug_id} serves it (used by the report renderer)."""
+    from app.deps import get_repository
+    from app.present import public
+
+    return public(get_repository().get_drug_detail(drug_id))

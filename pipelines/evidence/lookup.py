@@ -52,6 +52,7 @@ def build_index(
         _add(index, getattr(rec, "pert_iname", None), str(rec.pert_id))
     for rec in drug_map.itertuples():
         _add(index, getattr(rec, "drug_name", None), str(rec.pert_id))
+    synonym_targets: dict[str, set[str]] = {}
     if ot_molecule is not None and len(ot_molecule):
         chembl_to_pert = {
             str(r.chembl_id): str(r.pert_id)
@@ -65,16 +66,33 @@ def build_index(
         }
         for rec in ot_molecule.itertuples():
             chembl_id = str(getattr(rec, "id", ""))
-            pert_id = chembl_to_pert.get(chembl_id, parent_to_pert.get(chembl_id))
-            if pert_id is None:
-                continue
-            _add(index, getattr(rec, "name", None), pert_id)
+            parent = getattr(rec, "parentId", None)
+            family = parent if isinstance(parent, str) and parent else chembl_id  # salt -> parent drug
+            pert_id = (chembl_to_pert.get(chembl_id) or parent_to_pert.get(chembl_id)
+                       or chembl_to_pert.get(family) or parent_to_pert.get(family))
+            # Unlinked records still count when checking whether a synonym is ambiguous.
+            target = pert_id if pert_id is not None else f"chembl:{family}"
+            if pert_id is not None:
+                _add(index, getattr(rec, "name", None), pert_id)
+            else:
+                name_key = normalize(getattr(rec, "name", None))
+                if name_key:
+                    synonym_targets.setdefault(name_key, set()).add(target)
             for field in ("synonyms", "tradeNames"):
                 values = getattr(rec, field, None)
                 if values is None:
                     continue
                 for item in list(values):
-                    _add(index, item.get("label") if isinstance(item, dict) else item, pert_id)
+                    key = normalize(item.get("label") if isinstance(item, dict) else item)
+                    if key:
+                        synonym_targets.setdefault(key, set()).add(target)
+        # Synonyms only fill gaps, and only when they point to exactly one compound: source synonym
+        # lists contain errors (e.g. a donepezil brand listed under rivastigmine), and a real name
+        # must never be overridden by a synonym.
+        for key, targets in synonym_targets.items():
+            only = next(iter(targets))
+            if key not in index and len(targets) == 1 and not only.startswith("chembl:"):
+                index[key] = only
     return index
 
 
@@ -84,7 +102,7 @@ def load_ot_molecule() -> pd.DataFrame | None:
     if not files:
         return None
     try:
-        frames = [pd.read_parquet(f, columns=["id", "name", "synonyms", "tradeNames"]) for f in files]
+        frames = [pd.read_parquet(f, columns=["id", "name", "synonyms", "tradeNames", "parentId"]) for f in files]
     except (OSError, ValueError):
         return None
     return pd.concat(frames, ignore_index=True)

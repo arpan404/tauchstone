@@ -27,12 +27,8 @@ class DetailUnavailableError(Exception):
 
 class DefaultDrugDetail:
     def get_drug_detail(self, drug_id: str, project_id: str | None) -> dict:
-        try:
+        if not settings.mock:
             module = importlib.import_module('app.services.drug_detail')
-        except ModuleNotFoundError as exc:
-            if exc.name != 'app.services.drug_detail':
-                raise
-        else:
             return module.get_drug_detail(drug_id, project_id)
         if not settings.mock:
             raise DetailUnavailableError('Drug detail service unavailable; mock fallback disabled')

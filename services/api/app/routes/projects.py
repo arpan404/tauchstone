@@ -46,6 +46,9 @@ def export(project_id: str, approved: bool | None = None, brain_cells: bool | No
               'exposure_label', 'cancer_lines_only', 'attack_ready', 'preregistered']
     writer = csv.DictWriter(stream, fieldnames=fields, extrasaction='ignore')
     writer.writeheader()
-    writer.writerows(rows)
+    for row in rows:
+        # Spreadsheet formula injection is possible even in a quoted CSV cell.
+        writer.writerow({k: "'" + v if isinstance(v, str) and v.startswith(('=', '+', '-', '@')) else v
+                         for k, v in row.items()})
     return Response(stream.getvalue(), media_type='text/csv',
                     headers={'Content-Disposition': 'attachment; filename="candidates.csv"'})
