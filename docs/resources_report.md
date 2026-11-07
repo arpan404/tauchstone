@@ -1,6 +1,6 @@
 # Cross-resource agreement
 
-Generated 2026-11-07T21:39:06+00:00. not preregistered; report-only.
+Generated 2026-11-07T21:42:47+00:00. not preregistered; report-only.
 
 GSE132903 alone supplies the AD-minus-control query. No held-out cohort, composition-adjusted signature, exposure lookup, truth table or benchmark output is read. These results never feed ranking, thresholds, tuning, candidate selection or the benchmark.
 
@@ -46,7 +46,26 @@ Perturb-Seqr includes LINCS L1000 chemical data, so agreement can reflect shared
 
 Run `uv run python -m pipelines.resources.collect`; replay without network with `uv run python -m pipelines.resources.collect --offline`. Defaults use $TS_DATA_DIR or ~/Data/tauchstone. Raw responses and request metadata live in raw/resources/{resource}/, named with UTC timestamp and SHA-256; query.json records the exact symbols and Entrez IDs. Processed resources/agreement.parquet has a provenance sidecar including input hashes, raw response hashes, parameters, git commit and output checksum. No randomness is used.
 
-Processing commit: `44164747cf751ee7e6174a1d8138a2af09e0783e-dirty`.
+Processing commit: `645606f60e1736ddee803056637afc84bb3491d0`.
 
 perturb_seqr: 16 cached artifacts; fetched_at 2026-11-07T21:35:57+00:00 to 2026-11-07T21:36:25+00:00.
 clue: 0 cached artifacts; fetched_at unspecified to unspecified.
+
+## Verification
+
+The five top-100 compounds without a returned normalized-name match are LY-2886721,
+emedastine, dimercaptosuccinic-acid / succimer, alizapride and tonabersat. All 95 matched
+rows map to distinct normalized external names in this run.
+
+The final committed implementation replays all 15 response pages without network access.
+The 20 Track E tests pass, including saved-response parsing, score direction, pagination,
+cache checksums, matching, collector provenance and failure statuses, CLUE archive parsing,
+query-bound offline archive selection, and mock/real endpoint contract validation.
+`uv run ruff check .` passes.
+
+The full `uv run pytest -q` run reports 198 passed, 5 skipped and 1 failed. The failure is
+`tests/redteam/test_wording.py::test_no_clinical_language`, which flags unchanged lines in
+`services/api/app/routes/lab.py:185` and `services/api/tests/test_lab.py:56,65`. Those files
+are identical to contract commit 4416474 and outside Track E ownership. No Track E file
+is reported by that scan. The full test run collected before the final query-binding test
+was added; that test is included in the separate 20-test passing Track E run.
