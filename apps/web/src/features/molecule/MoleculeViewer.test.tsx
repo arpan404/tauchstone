@@ -32,7 +32,7 @@ describe('MoleculeViewer', () => {
     expect(screen.getByTestId('molecule-viewer').textContent).toBe('');
   });
 
-  it('treats a malformed molecule as empty', () => {
+  it('renders a malformed molecule as empty', () => {
     installFakeCanvas();
     installManualRaf();
     render(<MoleculeViewer molecule={{ formula: 'X', atoms: [], bonds: [] }} />);
