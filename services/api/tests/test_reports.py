@@ -6,11 +6,10 @@ from hashlib import sha256
 from types import SimpleNamespace
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.main import app
 from app.services import report_render as render
 from app.services.report_render import get_drug_detail_provider
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
