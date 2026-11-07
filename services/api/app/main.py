@@ -5,14 +5,28 @@ returned after POST /attack/{session}/run records a committed experiment.
 Endpoints are defined in contracts/openapi.yaml; build against that, not this file.
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import attack, benchmark, candidates, lab, signatures, single_cell, structures
+from app.routes import attack, benchmark, candidates, lab, projects, screens, signatures, single_cell, structures
 from app.schemas.models import Health
 from app.settings import settings
 
-app = FastAPI(title="Tauchstone: Second Life", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app):
+    projects.store.seed()
+    # Interrupted jobs cannot resume after a process restart.
+    for screen in projects.store.all_records('screen'):
+        if screen['status'] not in ('done', 'failed'):
+            screen.update(status='failed', error='Server restarted before the screen completed')
+            projects.store.put('screen', screen)
+    yield
+
+
+app = FastAPI(lifespan=lifespan, title="Tauchstone: Second Life", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -27,6 +41,8 @@ app.include_router(benchmark.router)
 app.include_router(structures.router)
 app.include_router(single_cell.router)
 app.include_router(lab.router)
+app.include_router(projects.router)
+app.include_router(screens.router)
 
 
 @app.get("/health", response_model=Health, response_model_exclude_unset=True)
