@@ -79,9 +79,13 @@ export function Preview() {
   );
 }
 const root = document.getElementById("root");
-if (root)
-  createRoot(root).render(
+if (root) {
+  const previewRoot = createRoot(root);
+  previewRoot.render(
     <QueryClientProvider client={new QueryClient()}>
       <Preview />
     </QueryClientProvider>,
   );
+
+  import.meta.hot?.dispose(() => previewRoot.unmount());
+}
