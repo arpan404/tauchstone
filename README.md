@@ -10,7 +10,7 @@ Each candidate has a cached evidence card with targets, brain expression, associ
 
 Tauchstone chooses held-out tests that could break the claim, revealing one committed outcome at a time.
 
-The website is the pitch: start on Landing, take the story tour, run an attack, then inspect Benchmark.
+The website is a working research tool: screen a signature live, filter and compare candidates, see each drug's evidence gaps, check a lab's own compounds, attack a candidate, export a report.
 
 > Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.
 
@@ -34,21 +34,25 @@ The permutation gate was **not met**. In the gold clinical pool, 17/20 compounds
 
 ## Walk through the website
 
-Screenshots from the restyled app on real data (GSE132903, 1,816 ranked drugs), captured on the build Mac at 1600×1000.
+Real data (GSE132903, 1,816 ranked drugs), captured at 1600×1000. The expo order is in
+[docs/expo_day_checklist.md](docs/expo_day_checklist.md).
 
-| Landing | Story tour |
+| Live screen (113,310 gold LINCS signatures) | Candidates |
 |---|---|
-| ![Landing](docs/figures/screenshot-landing.png) | ![Story tour on the signature step](docs/figures/screenshot-tour.png) |
-| **Attack** | **Benchmark** |
-| ![Attack after one reveal](docs/figures/screenshot-attack.png) | ![Benchmark, primary analysis](docs/figures/screenshot-benchmark.png) |
-| **Expo mode** | |
-| ![Expo mode gene sphere](docs/figures/screenshot-expo.png) | |
+| ![Screen while scoring](docs/figures/mvp-screen-running.png) | ![Candidates with filters](docs/figures/mvp-candidates.png) |
+| **Drug: gaps, 3D molecule, resource agreement** | **Compare** |
+| ![Drug page](docs/figures/mvp-drug.png) | ![Compare three candidates](docs/figures/mvp-compare.png) |
+| **My compounds** | **Attack after one committed test** |
+| ![Compound lookup](docs/figures/mvp-compounds.png) | ![Attack](docs/figures/mvp-attack.png) |
+| **Report (PDF export)** | **Validation (frozen benchmark)** |
+| ![Report](docs/figures/mvp-report.png) | ![Validation](docs/figures/mvp-validation.png) |
 
-The [About panel](apps/web/src/features/about/) (nav item "How it works") explains the pipeline and integrity record.
+Uploads, ad-hoc tests and resource agreement are labelled *not preregistered*; see the
+[integrity log](docs/integrity_log.md).
 
 ## Run offline
 
-The [offline runbook](docs/offline.md) describes building, transferring and rehearsing the frozen bundle. With Docker images already loaded and `data/demo/processed` plus `data/demo/MANIFEST.json` copied from the build machine:
+The [offline runbook](docs/offline.md) describes building, transferring and rehearsing the frozen bundle. With Docker images already loaded and the whole `data/demo` directory (about 1.1 GB, including the LINCS gold arrays for live screens) copied from the build machine:
 
 ```sh
 make up
