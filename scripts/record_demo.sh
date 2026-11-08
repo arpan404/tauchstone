@@ -6,7 +6,8 @@ cd tests/e2e
 bun install --frozen-lockfile
 bunx playwright test
 cd "$root"
-video="$(find tests/e2e/test-results -name video.webm -type f -print -quit)"
+# The expo tour is the recording; skipped specs can leave empty videos behind.
+video="$(find tests/e2e/test-results -path "*mvp_tour*" -name video.webm -type f -print -quit)"
 test -n "$video"
 mkdir -p data/demo
 cp "$video" data/demo/fallback_recording.webm
