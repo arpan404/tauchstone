@@ -164,7 +164,7 @@ export function ProjectsView() {
                   Ranked
                 </span>
                 <span role="columnheader" className="text-right">
-                  <Term tip="Drugs that have hidden tests, so they can be tested in Attack.">Testable</Term>
+                  <Term tip="Drugs with hidden checks set up, so they can be tested on the Attack page.">Testable</Term>
                 </span>
                 <span role="columnheader" className="pl-3">
                   Preregistration

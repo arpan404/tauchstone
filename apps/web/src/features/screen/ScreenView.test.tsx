@@ -115,7 +115,7 @@ it("offers a template and flags the weak held-out signature", () => {
   expect(
     screen.getByRole("link", { name: /Download template/ }).getAttribute("href"),
   ).toBe("/api/screens/template.csv");
-  expect(screen.getByText(/0 genes at FDR < 0.05 after normalisation/)).toBeTruthy();
+  expect(screen.getByText(/No gene differs clearly between Alzheimer's and control/)).toBeTruthy();
 });
 it("keeps the ranked count provisional until the screen is done", async () => {
   watch.mockImplementation((job, onEvent) => {

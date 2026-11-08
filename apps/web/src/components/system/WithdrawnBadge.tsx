@@ -30,8 +30,8 @@ export function WithdrawnBadge({ approval, size = "md", className }: { approval:
         {withdrawnLabel(approval)}
       </TooltipTrigger>
       <TooltipContent className="max-w-72 flex-col items-start gap-0.5 text-left leading-snug">
-        <span>{classes.length ? classes.join(", ") : "Class unspecified"}</span>
-        <span>{countries.length ? `${shown}${more}` : "Country unspecified"}</span>
+        <span>Withdrawn from the market for: {classes.length ? classes.join(", ") : "reason unspecified"}</span>
+        <span>Where: {countries.length ? `${shown}${more}` : "country unspecified"}</span>
         <span className="opacity-70">{approval.withdrawn_source ?? "ChEMBL 37"}</span>
       </TooltipContent>
     </Tooltip>

@@ -73,7 +73,7 @@ export function ResourceAgreement({
                 Sources disagree
               </TooltipTrigger>
               <TooltipContent className="max-w-72 text-left leading-snug">
-                {`Our LINCS rank ${int(disagree.lincs.rank!)} / ${int(disagree.lincs.n_ranked!)}. Perturb-Seqr rank ${int(disagree.seqr.rank!)} / ${int(disagree.seqr.n_ranked!)}. The resources use different compound libraries and assays.`}
+                {`Our LINCS rank ${int(disagree.lincs.rank!)} / ${int(disagree.lincs.n_ranked!)}. Perturb-Seqr rank ${int(disagree.seqr.rank!)} / ${int(disagree.seqr.n_ranked!)}. They test different sets of drugs in different ways, so disagreement is common.`}
               </TooltipContent>
             </Tooltip>
           )}
@@ -81,7 +81,7 @@ export function ResourceAgreement({
             <TooltipTrigger render={<StatusBadge tone="neutral" tabIndex={0} />}>
               Report only
             </TooltipTrigger>
-            <TooltipContent>Not preregistered. Shown for comparison only, never used in the ranking.</TooltipContent>
+            <TooltipContent>Shown for comparison only. These outside databases are not part of the main study and never change our ranking.</TooltipContent>
           </Tooltip>
         </div>
       {resources.isPending && (

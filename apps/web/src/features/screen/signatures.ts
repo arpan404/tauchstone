@@ -17,7 +17,7 @@ export const SIGNATURES = [
     // QC fact (integrity log #6): quantile normalisation left 0 FDR genes. Not recomputed here.
     warning: {
       label: "Weak signature",
-      detail: "0 genes at FDR < 0.05 after normalisation",
+      detail: "No gene differs clearly between Alzheimer's and control once you correct for testing thousands of genes",
     },
   },
 ] as const;

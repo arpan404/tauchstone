@@ -167,12 +167,12 @@ export function DiseaseSignatureView() {
                   <Panel
                     icon={<SealCheckIcon />}
                     title="Sign check on known Alzheimer's genes"
-                    caption="t statistic · positive = higher in Alzheimer's"
+                    caption="positive = higher in Alzheimer's, negative = lower"
                     actions={
                       <StatusBadge
                         tone={allPass ? 'ok' : 'bad'}
                         className="font-mono"
-                        tip="Each marker gene must move in the direction reported for Alzheimer's cortex before the signature is used."
+                        tip="Before this signature is used, each well-known Alzheimer's gene has to move the way it is known to move in Alzheimer's brains."
                       >
                         <SealCheckIcon weight="fill" aria-hidden />
                         {passed} of {signCheck.length} {allPass ? 'pass' : 'match'}

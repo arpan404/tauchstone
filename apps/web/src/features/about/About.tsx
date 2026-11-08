@@ -80,8 +80,8 @@ export function About() {
         </h2>
         <ul className="m-0 mt-5 flex list-none flex-wrap gap-2 p-0" aria-label="Record">
           <li><StatusBadge title={frozenPreregistrationSha256} className="font-mono"><FingerprintIcon aria-hidden className="text-primary" /><span className="font-sans">Preregistration</span> {frozenPreregistrationSha256.slice(0, 8)}</StatusBadge></li>
-          <li><StatusBadge tone="gap" tip="Strategies are replayed on drugs whose hidden test outcomes were fixed in advance. This scores how well each strategy picks tests, not the drugs."><ClockCounterClockwiseIcon aria-hidden /> Replay on past data</StatusBadge></li>
-          <li><StatusBadge tip="The table of hidden test outcomes never reaches the browser. Only the result of a committed test is sent."><LockIcon aria-hidden /> Outcomes stay on server</StatusBadge></li>
+          <li><StatusBadge tone="gap" tip="Each strategy is replayed on drugs whose hidden results were fixed in advance. It scores how well a strategy chooses tests, not how good the drugs are."><ClockCounterClockwiseIcon aria-hidden /> Replay on past data</StatusBadge></li>
+          <li><StatusBadge tip="The full table of hidden results never reaches the browser. Only the result of a test you actually run is sent."><LockIcon aria-hidden /> Outcomes stay on server</StatusBadge></li>
         </ul>
       </header>
 

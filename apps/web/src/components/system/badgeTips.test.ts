@@ -13,13 +13,13 @@ it("explains every recurring badge label", () => {
     expect(badgeTip(label), label).toBeTruthy();
 });
 it("states what preregistered means and what QC counts", () => {
-  expect(badgeTip("not preregistered")).toMatch(/Before any results were seen.*fixed in writing/);
-  expect(badgeTip("preregistered")).toMatch(/fixed in writing before any results/);
+  expect(badgeTip("not preregistered")).toMatch(/locked before we saw any results.*not in that locked plan/);
+  expect(badgeTip("preregistered")).toMatch(/locked before we saw any results/);
   expect(badgeTip("QC 7/7")).toMatch(/7 of 7 known Alzheimer's marker genes/);
 });
 it("states the verdict cut-offs", () => {
-  expect(badgeTip("SUPPORTED SO FAR")).toMatch(/0\.8 or more/);
-  expect(badgeTip("FRAGILE / CONTEXT-DEPENDENT")).toMatch(/0\.2 or less/);
+  expect(badgeTip("SUPPORTED SO FAR")).toMatch(/80% or more/);
+  expect(badgeTip("FRAGILE / CONTEXT-DEPENDENT")).toMatch(/20% or less/);
 });
 it("returns null for unknown labels", () => {
   expect(badgeTip("zzz")).toBeNull();

@@ -12,7 +12,7 @@ type Target = Schema<"Target">;
 type Structure = Schema<"Structure">;
 
 const STRUCTURE_NOTE =
-  "Target context only. Not evidence that the drug binds this structure.";
+  "A 3D structure of the protein this drug is known to act on, shown for orientation. It is not evidence that the drug binds to it.";
 
 function peakBrain(t: Target) {
   const rows = t.brain_expression ?? [];

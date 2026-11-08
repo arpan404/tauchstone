@@ -215,7 +215,7 @@ function Headline({
                   <li>
                     <StatusBadge
                       tone="gap"
-                      tip={`Replayed on ${analysis.n_candidates} candidates whose hidden test outcomes were fixed in advance. It scores how well each strategy picks tests, not the drugs.`}
+                      tip={`Each strategy replayed on ${analysis.n_candidates} drugs whose hidden results were fixed in advance. It scores how well a strategy chooses tests, not how good the drugs are.`}
                     >
                       <ClockCounterClockwiseIcon aria-hidden /> Replay on past data
                     </StatusBadge>
@@ -356,7 +356,7 @@ function RecallTable({ policies }: { policies: Policy[] }) {
   return (
     <Panel
       title={
-        <Term tip="Runs on candidates whose verdict with every hidden test shown is FRAGILE / CONTEXT-DEPENDENT: share that reach that verdict after 3 or 5 tests.">
+        <Term tip="Of the drugs that end up FRAGILE / CONTEXT-DEPENDENT once every test is run, the share a strategy already flags after 3 or 5 tests.">
           Fragile claims caught
         </Term>
       }
@@ -503,7 +503,7 @@ export function BenchmarkView() {
                 <Panel
                   title={<Term term="decisionAccuracy">{`Verdict match rate after ${analysis.budget} tests`}</Term>}
                   icon={<ChartScatterIcon />}
-                  caption="dot = estimate · line = 95% CI"
+                  caption="dot = estimate · line = 95% confidence range"
                   aria-label="Verdict match rate after five tests"
                 >
                   <IntervalPlot

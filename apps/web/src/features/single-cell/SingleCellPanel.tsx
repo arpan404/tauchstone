@@ -314,7 +314,7 @@ export function SingleCellPanel() {
                           <StatusBadge
                             tone="gap"
                             size="sm"
-                            tip="Too few genes passed FDR < 0.05 in these signatures, so their LINCS query used the top-ranked genes regardless of significance. Their scores are weak evidence."
+                            tip="Too few genes differed clearly between Alzheimer's and control in these cell types, so the comparison used the top genes anyway. Read their scores as weak evidence."
                           >
                             weak evidence
                           </StatusBadge>
