@@ -57,13 +57,13 @@ it('shows the verdict pill and seals the event log on start', () => {
   render(<AttackView />);
   expect(screen.getByRole('status', { name: 'Verdict: SUPPORTED SO FAR' }).textContent).toBe('SUPPORTED SO FAR');
   expect(screen.getByText('2 hidden tests set up')).toBeTruthy();
-  expect(screen.queryByText(/not preregistered/)).toBeNull();
+  expect(screen.queryByText('Exploratory')).toBeNull();
 });
 
-it('flags a session built on the fly as not preregistered', () => {
+it('flags a session built on the fly as Exploratory', () => {
   mocks.snapshot = { ...base, preregistered: false };
   render(<AttackView />);
-  expect(screen.getByText('not preregistered')).toBeTruthy();
+  expect(screen.getByText('Exploratory')).toBeTruthy();
 });
 
 it('runs the next test through a running state before the reveal', () => {

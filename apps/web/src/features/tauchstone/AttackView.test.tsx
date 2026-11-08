@@ -72,7 +72,7 @@ it('creates only on explicit action, with the budget fixed at min(5, hidden test
   expect(screen.queryByRole('combobox')).toBeNull();
   expect(screen.getByText('3 tests available')).toBeTruthy();
   // A drug outside the sealed set is flagged before anything starts and is never previewed.
-  expect(screen.getByText('not preregistered')).toBeTruthy();
+  expect(screen.getByText('Exploratory')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Start test session' }));
   expect(mocks.start.mock.calls[0][0]).toEqual({ candidateId: 'drug-a', mode: 'attack', budget: 3 });
   expect(mocks.run).not.toHaveBeenCalled();

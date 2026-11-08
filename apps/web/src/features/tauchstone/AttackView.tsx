@@ -16,6 +16,7 @@ import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { EmptyState, NumberTicker, Panel, StatusBadge } from '@/components/system';
+import { badgeTip } from '@/components/system/badgeTips';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -33,6 +34,9 @@ import {
 import './attack.css';
 
 type Session = Schema<'AttackSession'>;
+
+/** Same tooltip as before the rename; badgeTips serves it under 'exploratory' once that key lands. */
+const EXPLORATORY_TIP = badgeTip('exploratory') ?? badgeTip('not preregistered') ?? undefined;
 
 /** Kinds shown on the start screen when the drug's own tests are not listed yet. */
 const GENERIC_KINDS = ['held_out_cohort', 'composition_adjusted', 'lincs_context', 'brain_exposure'] as const;
@@ -330,8 +334,8 @@ function AttackSessionView() {
                 </p>
                 {notPrereg && (
                   <p className="m-0 mt-3 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-2">
-                    <StatusBadge tone="gap"><WarningCircleIcon />not preregistered</StatusBadge>
-                    This drug is outside the sealed set. Its hidden tests are built under the same frozen rules.
+                    <StatusBadge tone="gap" tip={EXPLORATORY_TIP}><WarningCircleIcon />Exploratory</StatusBadge>
+                    This drug is outside the sealed set, so its hidden tests were not preregistered. They are built under the same frozen rules.
                   </p>
                 )}
                 {/* Hidden tests */}
