@@ -120,6 +120,16 @@ def report_filename(detail: dict, drug_id: str, today: date | None = None) -> st
     return f'tauchstone-{slug(detail.get("name") or drug_id)}-{(today or date.today()).isoformat()}'
 
 
+def withdrawn_label(approval: dict) -> str | None:
+    """'withdrawn 1980', or 'withdrawn in Vietnam 2000' for a single-country withdrawal (ChEMBL 37)."""
+    if not approval.get('withdrawn'):
+        return None
+    countries = [c.strip() for c in str(approval.get('withdrawn_country') or '').split(';') if c.strip()]
+    where = f' in {countries[0]}' if len(countries) == 1 and countries[0].lower() != 'worldwide' else ''
+    year = approval.get('withdrawn_year')
+    return f'withdrawn{where}{f" {int(year)}" if year else ""}'
+
+
 def render_html(detail: dict, project_id: str | None = None, *, fallback: bool = False,
                 session: dict | None = None, title: str | None = None) -> str:
     gaps = detail.get('gaps', {})
@@ -162,7 +172,8 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     if isinstance(approval, dict):
         phase = approval.get('max_phase')
         view['approval_status'] = ' · '.join(str(v) for v in (
-            approval.get('status'), f'phase {phase:g}' if isinstance(phase, (int, float)) else None) if v)
+            approval.get('status'), f'phase {phase:g}' if isinstance(phase, (int, float)) else None,
+            withdrawn_label(approval)) if v)
     view['project'] = project_id
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))

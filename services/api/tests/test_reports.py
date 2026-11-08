@@ -206,3 +206,15 @@ def test_pdf_filename_and_print_title(client, monkeypatch):
     assert response.headers['content-disposition'] == f'attachment; filename="{stem}.pdf"'
     assert f'<title>{stem}</title>' in client.get('/reports/brinzolamide').text
     assert render.slug('Ácido 5-ASA (HCl)') == 'acido-5-asa-hcl'
+
+
+def test_withdrawn_drug_is_flagged_in_report():
+    from app.services import report_render
+    html = report_render.render_html({
+        'name': 'Ticrynafen', 'approval_status': {'status': 'approved', 'max_phase': 4.0, 'withdrawn': True,
+                                                  'withdrawn_year': 1980, 'withdrawn_country': 'France; United States'},
+        'gaps': {}, 'provenance': {}}, 'GSE132903')
+    assert 'approved · phase 4 · withdrawn 1980' in html
+    single = report_render.withdrawn_label({'withdrawn': True, 'withdrawn_year': 2000, 'withdrawn_country': 'Vietnam'})
+    assert single == 'withdrawn in Vietnam 2000'
+    assert report_render.withdrawn_label({'withdrawn': False}) is None
