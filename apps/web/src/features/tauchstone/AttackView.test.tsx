@@ -65,11 +65,11 @@ it('links the empty workspace to candidate selection without starting a session'
 it('creates only on explicit action with the chosen budget', async () => {
   render(<AttackView />);
   expect(mocks.start).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('combobox', { name: 'Session budget' }));
-  const option = await screen.findByRole('option', { name: '2 experiments' });
+  fireEvent.click(screen.getByRole('combobox', { name: 'Tests to run' }));
+  const option = await screen.findByRole('option', { name: '2 tests' });
   fireEvent.pointerDown(option);
   fireEvent.click(option);
-  fireEvent.click(screen.getByRole('button', { name: 'Create experiment session' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start test session' }));
   expect(mocks.start.mock.calls[0][0]).toEqual({ candidateId: 'drug-a', mode: 'attack', budget: 2 });
   expect(mocks.run).not.toHaveBeenCalled();
 });
@@ -83,7 +83,7 @@ it('restores continuity and reveals only the committed server result', () => {
   expect(screen.getByLabelText('Next experiment').textContent).toContain('Held-out cohort B');
   vi.useFakeTimers();
   try {
-    fireEvent.click(screen.getByRole('button', { name: 'Commit & run test' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run test' }));
     vi.advanceTimersByTime(1000);
   } finally {
     vi.useRealTimers();
@@ -112,7 +112,7 @@ it('never presents another candidate session as the current candidate', () => {
   cleanup(); render(<AttackView />);
   expect(screen.getByRole('heading', { name: 'Drug B' })).toBeTruthy();
   expect(screen.queryByText(/Drug A reverses/)).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Commit & run test' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Run test' })).toBeNull();
 });
 it('starts a fresh session only when requested and retains history until success', () => {
   restore();
@@ -128,16 +128,16 @@ it('does not render an outcome attached to a hidden context', () => {
   const hidden = screen.getByRole('button', { name: /Held-out cohort A/ });
   expect(hidden.getAttribute('data-outcome')).toBeNull();
   expect(hidden.textContent).not.toContain('Revealed');
-  expect(hidden.textContent).not.toMatch(/\bfail\b(?! risk)/i);
+  expect(hidden.textContent).not.toMatch(/(?<!chance to )\bfail(ed)?\b/i);
   expect(screen.queryByText('Failed')).toBeNull();
-  expect(screen.getByText('No reveals yet')).toBeTruthy();
+  expect(screen.getByText('No tests run yet')).toBeTruthy();
   expect(mocks.run).not.toHaveBeenCalled();
 });
 it('cannot commit after budget is exhausted', () => {
   mocks.snapshot = { ...initial, budget_remaining: 0 };
   useUi.setState({ sessionId: 'session-a' });
   render(<AttackView />);
-  const commit = screen.getByRole('button', { name: 'Commit & run test' });
+  const commit = screen.getByRole('button', { name: 'Run test' });
   expect(commit.hasAttribute('disabled')).toBe(true);
   fireEvent.click(commit);
   expect(mocks.run).not.toHaveBeenCalled();
@@ -146,8 +146,8 @@ it('offers no hidden tests under a non-preregistered project and switches to the
   scope.project = { id: 'upload-1', preregistered: false, signature_id: null };
   useUi.setState({ currentProjectId: 'upload-1', selectedCandidateId: 'drug-a' });
   render(<AttackView />);
-  expect(screen.getByRole('heading', { name: 'Attack runs on the preregistered project' })).toBeTruthy();
-  expect(screen.queryByRole('button', { name: 'Create experiment session' })).toBeNull();
+  expect(screen.getByRole('heading', { name: 'Hidden tests exist only for the preregistered project' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Start test session' })).toBeNull();
   expect(screen.queryByText(/Held-out cohort/)).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Open GSE132903' }));
   expect(useUi.getState().currentProjectId).toBe('GSE132903');
@@ -162,13 +162,13 @@ it('names the drug, never its BRD id, in the header and claim', () => {
   useUi.setState({ selectedCandidateId: 'BRD-A70514680', sessionId: 'session-a' });
   render(<AttackView />);
   expect(screen.getByLabelText('Claim under test').textContent).toBe('Articaine reverses the AD signature');
-  expect(screen.getByRole('region', { name: 'Claim and belief' }).textContent).not.toContain('BRD-');
+  expect(screen.getByRole('region', { name: 'Claim and result' }).textContent).not.toContain('BRD-');
   expect(drugDisplayName('BRD-1', 'BRD-1', undefined, 'Name')).toBe('Name');
   expect(drugDisplayName('BRD-1', null, undefined)).toBe('BRD-1');
 });
 it('refreshes drug and candidate queries after a session builds tests', () => {
   render(<AttackView />);
-  fireEvent.click(screen.getByRole('button', { name: 'Create experiment session' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start test session' }));
   mocks.start.mock.calls[0][1].onSuccess({ ...initial, preregistered: false });
   expect(scope.invalidate.mock.calls.map((c) => c[0].queryKey[0])).toEqual(
     expect.arrayContaining(['drug', 'project-candidates', 'candidates']));
@@ -190,12 +190,12 @@ it('asks before replacing a session with reveals and resets the new session to A
 });
 it('explains both modes and joins hint sentences with one full stop', () => {
   restore();
-  expect(screen.getByRole('button', { name: 'Attack' }).getAttribute('aria-description')).toBe('Run the test most likely to break the claim');
-  expect(screen.getByRole('button', { name: 'Learn' }).getAttribute('aria-description')).toBe('Run the test expected to change the verdict most');
-  expect(joinSentences('Most likely to break the claim: 48% chance this test fails.', 'Learn applies after the next reveal'))
-    .toBe('Most likely to break the claim: 48% chance this test fails. Learn applies after the next reveal');
-  fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
-  expect(screen.getByText('Learn applies after the next reveal')).toBeTruthy();
-  expect(screen.getByText('Attack pick')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Likely to fail' }).getAttribute('aria-description')).toBe('Suggest the test most likely to break the claim');
+  expect(screen.getByRole('button', { name: 'Informative' }).getAttribute('aria-description')).toBe('Suggest the test expected to move the chance the claim holds the most');
+  expect(joinSentences('Most likely to break the claim: 48% chance this test fails.', 'Informative applies after the next result'))
+    .toBe('Most likely to break the claim: 48% chance this test fails. Informative applies after the next result');
+  fireEvent.click(screen.getByRole('button', { name: 'Informative' }));
+  expect(screen.getByText('Informative applies after the next result')).toBeTruthy();
+  expect(screen.getByText('Earlier pick')).toBeTruthy();
   expect(document.getElementById('attack-rec-rationale')?.textContent).not.toContain('..');
 });

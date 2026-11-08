@@ -165,13 +165,13 @@ export default function App() {
           if (!open) setQuery("");
         }}
         title="Search workspace"
-        description="Views and candidates"
+        description="Pages and drugs"
       >
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Go to a view, drug or brand name" value={query} onValueChange={setQuery} />
+          <CommandInput placeholder="Page, drug or brand name" value={query} onValueChange={setQuery} />
           <CommandList>
             {views.length > 0 && (
-              <CommandGroup heading="Workspace">
+              <CommandGroup heading="Pages">
                 {views.map(([id, label]) => (
                   <CommandItem key={id} value={`view:${id}`} onSelect={() => navigate(id)}>
                     {label}

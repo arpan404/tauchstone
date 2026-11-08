@@ -115,7 +115,7 @@ export function DrugSearchGroups({
   query,
   selectedId,
   onSelect,
-  scope = "Ranked pool",
+  scope = "Ranked drugs",
   quiet = false,
 }: {
   query: string;
