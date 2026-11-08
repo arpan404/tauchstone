@@ -74,7 +74,7 @@ it("renders the supplied pool ranks, positive score, unavailable statuses and At
   expect(useUi.getState().selectedCandidateId).toBe("MOCK-0002");
   expect(useUi.getState().step).toBe("attack");
   expect(
-    within(rowFor("donepezil")).getByRole("button", { name: "Build tests" }),
+    within(rowFor("donepezil")).getByRole("button", { name: "Build hidden tests" }),
   ).toBeTruthy();
 });
 it("shows an empty state before the first check and opens a ranked drug", async () => {

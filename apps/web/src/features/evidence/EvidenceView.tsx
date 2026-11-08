@@ -103,7 +103,7 @@ export function EvidenceView({
         className="glass flex items-center gap-3 p-4 text-[13.5px] text-ink-2"
       >
         <WarningIcon className="size-4 text-bad" />
-        Drug unavailable
+        Could not load drug
         <Button variant="outline" onClick={() => void refetch()}>
           Retry
         </Button>
@@ -217,7 +217,7 @@ function DrugHero({
         <ReversalFigure drug={drug} />
         <HeroStat
           icon={<SquaresFourIcon />}
-          label={<Term term="contexts">Contexts</Term>}
+          label={<Term term="contexts">Conditions</Term>}
           value={drug.n_contexts}
         />
         <HeroStat
@@ -238,7 +238,7 @@ function DrugHero({
         </Button>
         <Button size="lg" className="h-10 px-5 max-sm:order-first max-sm:basis-full!" onClick={onAttack}>
           <CrosshairIcon />
-          {drug.attack_ready ? "Attack this claim" : "Build tests"}
+          {drug.attack_ready ? "Attack this claim" : "Build hidden tests"}
         </Button>
       </div>
     </section>
@@ -304,7 +304,7 @@ function ReversalFigure({ drug }: { drug: Drug }) {
             </span>
           }
         >
-          Reversal
+          Reversal score
         </Term>
       </dt>
       <dd className="m-0 font-mono text-[46px] leading-[0.95] font-normal tracking-[-0.04em] text-primary tabular-nums md:text-[58px]">
@@ -313,7 +313,7 @@ function ReversalFigure({ drug }: { drug: Drug }) {
       <dd className="m-0 mt-1.5 text-[13px] text-ink-2">
         <Term term="poolRank">
           {drug.pool_rank != null
-            ? `rank ${int(drug.pool_rank)} of ${int(drug.rank_total ?? 1816)}`
+            ? `rank ${int(drug.pool_rank)} of ${int(drug.rank_total ?? 1816)} clinical-stage drugs`
             : "rank unspecified"}
         </Term>
       </dd>

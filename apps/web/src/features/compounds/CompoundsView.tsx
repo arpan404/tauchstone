@@ -52,14 +52,14 @@ const COLUMNS = [
   "Query",
   "Matched",
   "Status",
-  "Pool rank",
-  "Reversal",
-  "Contexts",
-  "Ready",
+  "Rank",
+  "Reversal score",
+  "Conditions",
+  "Hidden tests",
   "Action",
 ] as const;
 
-const NUMERIC = new Set(["Pool rank", "Reversal", "Contexts"]);
+const NUMERIC = new Set(["Rank", "Reversal score", "Conditions"]);
 
 function Dash() {
   return <span className="text-ink-3">n/a</span>;
@@ -170,7 +170,7 @@ export function CompoundsView({
                   role="alert"
                   className="flex items-center justify-between gap-2 rounded-xl bg-bad/10 px-3 py-2 text-[13px] text-bad"
                 >
-                  Lookup unavailable
+                  Lookup failed
                   <Button type="button" variant="outline" size="sm" onClick={check}>
                     <ArrowClockwiseIcon aria-hidden /> Retry
                   </Button>
@@ -316,7 +316,7 @@ export function CompoundsView({
                                   ) : (
                                     <FlaskIcon aria-hidden />
                                   )}
-                                  {result.attack_ready ? "Attack" : "Build tests"}
+                                  {result.attack_ready ? "Attack" : "Build hidden tests"}
                                 </Button>
                                 <Button
                                   size="icon-sm"

@@ -25,12 +25,12 @@ def test_html_contract_and_hash(client):
     assert response.status_code == 200
     assert response.headers['content-type'].startswith('text/html')
     html = response.text
-    for value in ['Brinzolamide', 'Pool rank 12', '-1.67', 'HA1E, MCF7, PHH', '6 h, 24 h',
+    for value in ['Brinzolamide', 'Clinical-stage rank 12', '-1.67', 'HA1E, MCF7, PHH', '6 h, 24 h',
                   'predicted low', 'CA2 P00918', '0.037', '3 hidden tests', 'not preregistered',
-                  'Mock fixture', 'GSE132903', 'LINCS GSE92742/GSE70138', 'commit mock', render.BOUNDARY]:
+                  'Synthetic data', 'GSE132903', 'LINCS GSE92742/GSE70138', 'commit mock', render.BOUNDARY]:
         assert value in html
     assert sha256((render.ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8] in html
-    for heading in ['Signal', 'Gaps', 'Target', 'Attack', 'Next experiment', 'Provenance']:
+    for heading in ['LINCS data', 'Evidence gaps', 'Targets', 'Attack', 'Suggested next experiment', 'Data source']:
         assert f'<h2>{heading}</h2>' in html
 
 
@@ -101,7 +101,7 @@ def test_pdf_contract_offline(client, monkeypatch):
     document = PdfReader(io.BytesIO(response.content))
     assert len(document.pages) == 1
     text = document.pages[0].extract_text()
-    for value in ['Brinzolamide', 'CA2', 'P00918', 'Provenance', '3 hidden tests', 'not preregistered']:
+    for value in ['Brinzolamide', 'CA2', 'P00918', 'Data source', '3 hidden tests', 'not preregistered']:
         assert value in text
     assert 'attachment' in response.headers['content-disposition']
 
@@ -174,9 +174,9 @@ def test_session_snapshot_shows_revealed_and_never_hidden(client):
         html = client.get(f'/reports/brinzolamide?session_id={sid}').text
     finally:
         app.dependency_overrides.pop(get_session_store, None)
-    assert '<h2>Session snapshot</h2>' in html and '<h2>Attack</h2>' not in html
-    for value in ['LABEL_0 10 µM', 'LINCS held-out', 'Failed', '0.43', '-0.50', 'Budget used',
-                  '1 of 2', '2 hidden tests sealed', 'not preregistered', 'P(claim holds) start']:
+    assert '<h2>Attack session</h2>' in html and '<h2>Attack</h2>' not in html
+    for value in ['LABEL_0 10 µM', 'Held-back LINCS condition', 'Failed', '0.43', '-0.50', 'Tests run',
+                  '1 of 2', '2 hidden tests not run', 'not preregistered', 'Chance claim holds, start']:
         assert value in html, value
     assert any(v in html for v in ('INSUFFICIENT EVIDENCE', 'FRAGILE / CONTEXT-DEPENDENT', 'SUPPORTED SO FAR'))
     # Unrevealed tests: no label, value, outcome, detail or cohort; revealed detail/cohort stay out too.
@@ -194,7 +194,7 @@ def test_session_for_another_drug_is_ignored(client):
     finally:
         app.dependency_overrides.pop(get_session_store, None)
     for page in (html, unknown):
-        assert 'Not attacked yet' in page and 'LABEL_0' not in page and 'Session snapshot' not in page
+        assert 'No tests run yet' in page and 'LABEL_0' not in page and 'Attack session' not in page
 
 
 def test_pdf_filename_and_print_title(client, monkeypatch):

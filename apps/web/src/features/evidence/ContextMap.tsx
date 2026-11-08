@@ -29,12 +29,12 @@ export function ContextMap({
   const below = contexts.filter((c) => c.consensus < 0).length;
   return (
     <Panel
-      title="Where it reverses"
+      title="Reversal score by condition"
       icon={<GridFourIcon />}
       caption={
         contexts.length
-          ? `${below} of ${contexts.length} ranking context${contexts.length === 1 ? "" : "s"} below zero`
-          : "Ranking contexts"
+          ? `${below} of ${contexts.length} ranking condition${contexts.length === 1 ? "" : "s"} below 0`
+          : "Ranking conditions"
       }
       aria-label="Ranking context map"
       className={className}
@@ -42,12 +42,12 @@ export function ContextMap({
         neuralLines.size ? (
           <StatusBadge tone="ok">
             <BrainIcon />
-            Neural-line ranking data
+            Neural cell line data
           </StatusBadge>
         ) : (
           <StatusBadge tone="gap">
             <BrainIcon />
-            No neural-line ranking data
+            No neural cell line data
           </StatusBadge>
         )
       }
@@ -57,7 +57,7 @@ export function ContextMap({
           <div className="overflow-x-auto">
             <table className="-mx-1 border-separate border-spacing-1 text-[12px]">
               <caption className="sr-only">
-                Ranking contexts by cell line and concentration
+                Ranking conditions by cell line and concentration
               </caption>
               <thead>
                 <tr>
@@ -90,7 +90,7 @@ export function ContextMap({
                         {neuralLines.has(line) && (
                           <span
                             className="size-1.5 rounded-full bg-ok"
-                            aria-label="neural line"
+                            aria-label="neural cell line"
                           />
                         )}
                       </span>
@@ -149,7 +149,7 @@ export function ContextMap({
           <HeatLegend />
         </>
       ) : (
-        <p className="m-0 text-[13px] text-ink-3">No ranking contexts</p>
+        <p className="m-0 text-[13px] text-ink-3">No ranking conditions</p>
       )}
     </Panel>
   );
@@ -162,7 +162,7 @@ function HeatLegend() {
       className="mt-4 flex items-center gap-2 font-mono text-[11px] text-ink-3"
       aria-hidden
     >
-      <span className="font-sans">Reversal</span>
+      <span className="font-sans">Opposite to Alzheimer's</span>
       <span>−3</span>
       <span className="flex overflow-hidden rounded-full">
         {stops.map((v) => (
@@ -174,7 +174,7 @@ function HeatLegend() {
         ))}
       </span>
       <span>+2</span>
-      <span className="font-sans">Mimic</span>
+      <span className="font-sans">Same direction as Alzheimer's</span>
     </div>
   );
 }

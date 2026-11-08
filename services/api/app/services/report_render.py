@@ -67,9 +67,9 @@ VERDICT_LABEL = {
     'INSUFFICIENT_EVIDENCE': 'INSUFFICIENT EVIDENCE',
 }
 TYPE_LABEL = {
-    'held_out_cohort': 'Held-out cohort',
-    'composition_adjusted': 'Composition-adjusted',
-    'lincs_context': 'LINCS held-out',
+    'held_out_cohort': 'Independent cohort',
+    'composition_adjusted': 'Cell-mix adjusted',
+    'lincs_context': 'Held-back LINCS condition',
     'brain_exposure': 'Brain exposure',
     'cell_type': 'Cell type',
 }
