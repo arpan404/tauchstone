@@ -66,7 +66,7 @@ const ICONS: Partial<Record<StepId, Icon>> = {
 };
 
 const navButton =
-  "h-9 gap-2.5 rounded-xl px-3 text-[13.5px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink [&_svg]:size-[18px] [&_svg]:text-ink-3 hover:[&_svg]:text-primary data-active:bg-gradient-to-b data-active:from-[#2b6fd3] data-active:to-[#1453ad] data-active:text-white data-active:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] data-active:[&_svg]:text-white data-active:hover:from-[#3a7ddd] data-active:hover:to-[#185cbc] data-active:hover:text-white data-active:hover:[&_svg]:text-white";
+  "h-10 gap-3 rounded-xl px-3.5 text-[14.5px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink [&_svg]:size-5 [&_svg]:text-ink-3 hover:[&_svg]:text-primary data-active:bg-gradient-to-b data-active:from-[#2b6fd3] data-active:to-[#1453ad] data-active:text-white data-active:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] data-active:[&_svg]:text-white data-active:hover:from-[#3a7ddd] data-active:hover:to-[#185cbc] data-active:hover:text-white data-active:hover:[&_svg]:text-white";
 
 export function AppShell({
   title,
@@ -96,7 +96,7 @@ export function AppShell({
     <SidebarProvider
       // Full sidebar on laptops and up; an icon rail on tablets and small laptops (expandable).
       defaultOpen={typeof window === "undefined" || window.matchMedia("(min-width: 1280px)").matches}
-      style={{ "--sidebar-width": "14.5rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "16.5rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}
       className="atmosphere h-dvh min-h-0"
     >
       <a className="workspace-skip" href="#workspace">
@@ -112,7 +112,7 @@ export function AppShell({
               className="flex items-center gap-2.5 rounded-md px-1.5 py-1 text-left"
             >
               <PlateMark />
-              <span className="font-heading text-[16px] font-semibold tracking-tight text-ink [font-stretch:88%] group-data-[collapsible=icon]:hidden">
+              <span className="font-heading text-[17px] font-semibold tracking-tight text-ink [font-stretch:88%] group-data-[collapsible=icon]:hidden">
                 Tauchstone
               </span>
             </button>
@@ -158,7 +158,7 @@ export function AppShell({
           <SidebarContent className="gap-0 px-1">
             {NAV_GROUPS.map((group) => (
               <SidebarGroup key={group.label} className="py-1.5">
-                <SidebarGroupLabel className="h-7 px-2.5 text-[11.5px] font-medium text-ink-3">
+                <SidebarGroupLabel className="h-8 px-3 text-[12px] font-medium text-ink-3">
                   {group.label}
                 </SidebarGroupLabel>
                 <SidebarMenu className="gap-0.5">
@@ -189,7 +189,7 @@ export function AppShell({
             ))}
             {!expo && (
               <SidebarGroup className="py-1.5">
-                <SidebarGroupLabel className="h-7 px-2.5 text-[11.5px] font-medium text-ink-3">
+                <SidebarGroupLabel className="h-8 px-3 text-[12px] font-medium text-ink-3">
                   Lab
                 </SidebarGroupLabel>
                 <SidebarMenu className="gap-0.5">
