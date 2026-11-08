@@ -1,4 +1,4 @@
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { BenchmarkData } from '@/api/types';
 
@@ -21,6 +21,7 @@ const full: BenchmarkData = {
   tests: [
     { policy_a: 'tauchstone_hybrid', policy_b: 'random', metric: 'decision_accuracy', p_holm: 0.0009 },
     { policy_a: 'tauchstone_hybrid', policy_b: 'greedy_strongest', metric: 'decision_accuracy', p_holm: 0.002 },
+    { policy_a: 'decision_lookahead_hybrid', policy_b: 'random', metric: 'decision_accuracy', p_holm: 0.246 },
   ],
   all_candidates: { n_candidates: 50, n_seeds: 20, budget: 5, policies: [], calibration: [], tests: [] },
 };
@@ -34,18 +35,24 @@ import { BenchmarkView } from './BenchmarkView';
 
 afterEach(cleanup);
 describe('benchmark hero', () => {
-  it('computes the headline from /benchmark and bars every policy', () => {
+  it('computes the headline from /benchmark and plots every policy', () => {
     render(<BenchmarkView />);
     const hero = screen.getByRole('region', { name: 'Headline result' });
-    expect(hero.textContent).toContain('within 5 tests · 50 sealed drugs');
+    expect(hero.textContent).toContain('Correct verdict within 5 tests');
     expect(hero.textContent).toContain('100%');
-    expect(hero.textContent).toContain('88% random');
-    expect(hero.textContent).toContain('vs random p = 0.000900');
-    expect(hero.textContent).toContain('vs confirmation p = 0.00200');
-    expect(hero.textContent).toContain('permutation 17/20');
-    expect(hero.textContent).toContain('prereg 21f7460e');
-    const bars = screen.getByRole('region', { name: 'Decision accuracy by policy' });
-    expect(bars.textContent).toContain('100%');
-    expect(bars.textContent).toContain('80%');
+    expect(hero.textContent).toMatch(/88%\s*Random/);
+    expect(hero.textContent).toContain('Holm p · decision accuracy');
+    expect(hero.textContent).toMatch(/Tauchstone vs random\s*0\.000900/);
+    expect(hero.textContent).toMatch(/Tauchstone vs confirmation\s*0\.00200/);
+    expect(hero.textContent).toContain('Permutation gate');
+    expect(hero.textContent).toContain('17/20 not met');
+    expect(hero.textContent).toContain('21f7460e');
+    // The decision-aware co-primary result stays visible: 87%, not better than random.
+    expect(hero.textContent).toMatch(/87%\s*Decision-aware/);
+    expect(hero.textContent).toMatch(/Decision-aware vs random\s*not better\s*0\.246/);
+    const plot = screen.getByRole('region', { name: 'Decision accuracy after five tests' });
+    for (const p of ['Tauchstone decision accuracy 100%', 'Random decision accuracy 88%',
+      'Decision-aware decision accuracy 87%', 'Confirmation decision accuracy 80%'])
+      expect(within(plot).getByRole('listitem', { name: p })).toBeTruthy();
   });
 });

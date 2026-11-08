@@ -1,36 +1,39 @@
-import { Button } from '@/components/ui/button';
+import { useMemo, useState, type ReactNode } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
+import { ArrowClockwise, ChartScatter } from '@phosphor-icons/react';
 import { useBenchmark, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InstrumentChart } from '@/components/InstrumentChart';
+import { EmptyState, NumberTicker, Panel, StatusBadge } from '@/components/system';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { InstrumentChart as ReactECharts } from '@/components/InstrumentChart';
-import { useEffect, useMemo, useState } from 'react';
-import { buildCalibrationOption, buildPolicyOption, pairHolmP } from './benchmarkOptions';
-import './benchmark.css';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { cn } from 'cn';
+import {
+  CO_PRIMARY,
+  POLICY_NAMES,
+  buildCalibrationOption,
+  formatP,
+  metricLabel,
+  niceDomain,
+  pairHolmP,
+  pairMetric,
+  policyName,
+} from './benchmarkOptions';
+import { IntervalPlot, type IntervalRow } from './IntervalPlot';
 
 import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
 
-/** Display labels for benchmark policies (API sends raw ids as labels). */
-export const POLICY_LABELS: Record<string, string> = {
-  random: 'Random',
-  greedy_strongest: 'Greedy strongest',
-  max_failure: 'Attack (max failure)',
-  max_uncertainty: 'Max uncertainty',
-  expected_decision_change: 'Learn (expected decision change)',
-  tauchstone_hybrid: 'Tauchstone (co-primary)',
-  decision_lookahead_hybrid: 'Decision-aware (co-primary)',
-};
+type Scope = 'contested' | 'all';
+type Policy = BenchmarkAnalysis['policies'][number];
 
-function withLabels(analysis: BenchmarkAnalysis): BenchmarkAnalysis {
-  return {
-    ...analysis,
-    policies: analysis.policies.map((p) => ({ ...p, label: POLICY_LABELS[p.policy] ?? p.label })),
-  };
-}
+/** Documented permutation gate result (README, integrity log): 17 of 20 compounds, gate needs 20. */
+const PERMUTATION_GATE = '17/20';
 
-function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): BenchmarkAnalysis {
+function activeAnalysis(data: BenchmarkData, scope: Scope): BenchmarkAnalysis {
   const all = data.all_candidates;
   if (scope === 'all' && all?.policies && all.policies.length > 0) {
     return {
@@ -52,227 +55,375 @@ function activeAnalysis(data: BenchmarkData, scope: 'contested' | 'all'): Benchm
   };
 }
 
-function pct(estimate: number | null | undefined): string {
-  return estimate === null || estimate === undefined || !Number.isFinite(estimate)
-    ? '—'
-    : `${Math.round(estimate * 100)}%`;
+const finite = (v: number | null | undefined): v is number => v !== null && v !== undefined && Number.isFinite(v);
+const pct = (v: number | null | undefined) => (finite(v) ? `${Math.round(v * 100)}%` : 'n/a');
+const isCoPrimary = (id: string) => (CO_PRIMARY as readonly string[]).includes(id);
+const emphasis = (id: string): IntervalRow['emphasis'] =>
+  id === 'tauchstone_hybrid' ? 'accent' : id === 'decision_lookahead_hybrid' ? 'ink' : 'muted';
+
+function PolicyLabel({ id }: { id: string }) {
+  const p = POLICY_NAMES[id];
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span className={cn('shrink-0', id === 'tauchstone_hybrid' ? 'font-semibold text-ink' : 'text-ink')}>
+        {policyName(id)}
+      </span>
+      {isCoPrimary(id) ? (
+        <span className="shrink-0 text-[11px] font-medium text-accent-ink">co-primary</span>
+      ) : (
+        p?.detail && <span className="truncate text-[12px] text-ink-3">{p.detail}</span>
+      )}
+    </span>
+  );
+}
+
+/** Highest first; on ties the Tauchstone co-primary leads. */
+function byAccuracy(policies: Policy[]): Policy[] {
+  return [...policies].sort(
+    (a, b) =>
+      b.decision_accuracy.estimate - a.decision_accuracy.estimate ||
+      Number(b.policy === 'tauchstone_hybrid') - Number(a.policy === 'tauchstone_hybrid'),
+  );
+}
+
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-6 py-1.5">
+      <dt className="text-[12px] text-ink-3">{label}</dt>
+      <dd className="m-0 flex items-center gap-2">{children}</dd>
+    </div>
+  );
+}
+
+function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: string }) {
+  const find = (id: string) => analysis.policies.find((p) => p.policy === id)?.decision_accuracy.estimate;
+  const tau = find('tauchstone_hybrid');
+  const random = find('random');
+  const aware = find('decision_lookahead_hybrid');
+  const vsRandom = pairHolmP(analysis.tests, 'tauchstone_hybrid', 'random');
+  const vsConfirmation = pairHolmP(analysis.tests, 'tauchstone_hybrid', 'greedy_strongest');
+  const awareVsRandom = pairHolmP(analysis.tests, 'decision_lookahead_hybrid', 'random');
+  const metric = pairMetric(analysis.tests, 'tauchstone_hybrid', 'random');
+  const awareNotBetter = finite(awareVsRandom) && awareVsRandom >= 0.05;
+  return (
+    <Panel aria-label="Headline result">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10">
+        <div className="flex flex-col justify-center gap-5">
+          <p className="m-0 text-[13px] font-medium text-ink-2">Correct verdict within {analysis.budget} tests</p>
+          <dl className="m-0 flex flex-wrap items-end gap-x-10 gap-y-4">
+            <div>
+              <dd className="m-0 font-mono text-[64px] leading-[0.9] font-semibold tracking-[-0.04em] text-primary tabular-nums">
+                {finite(tau) ? <NumberTicker value={tau * 100} format={(v) => `${Math.round(v)}%`} /> : 'n/a'}
+              </dd>
+              <dt className="mt-2.5 text-[12px] font-medium text-ink">Tauchstone</dt>
+            </div>
+            <div>
+              <dd className="m-0 font-mono text-[32px] leading-none font-medium tracking-tight text-ink-3 tabular-nums">
+                {pct(random)}
+              </dd>
+              <dt className="mt-2.5 text-[12px] text-ink-3">Random</dt>
+            </div>
+            <div>
+              <dd className="m-0 font-mono text-[32px] leading-none font-medium tracking-tight text-ink-2 tabular-nums">
+                {pct(aware)}
+              </dd>
+              <dt className="mt-2.5 text-[12px] text-ink-3">Decision-aware</dt>
+            </div>
+          </dl>
+        </div>
+        <dl className="m-0 divide-y divide-line border-line lg:border-l lg:pl-8">
+          {metric && (
+            <div className="pb-1.5 text-[12px] font-medium text-ink-2">Holm p · {metricLabel(metric)}</div>
+          )}
+          <Fact label="Tauchstone vs random">
+            <StatusBadge tone="accent" className="font-mono">{formatP(vsRandom)}</StatusBadge>
+          </Fact>
+          <Fact label="Tauchstone vs confirmation">
+            <StatusBadge tone="accent" className="font-mono">{formatP(vsConfirmation)}</StatusBadge>
+          </Fact>
+          <Fact label="Decision-aware vs random">
+            {awareNotBetter && <span className="text-[12px] text-ink-2">not better</span>}
+            <StatusBadge className="font-mono">{formatP(awareVsRandom)}</StatusBadge>
+          </Fact>
+          <Fact label="Permutation gate">
+            <StatusBadge tone="gap" className="font-mono" title="Gate requires 20/20">
+              {PERMUTATION_GATE} not met
+            </StatusBadge>
+          </Fact>
+          <Fact label="Preregistration">
+            <StatusBadge className="font-mono" title={prereg}>{prereg.slice(0, 8)}</StatusBadge>
+          </Fact>
+        </dl>
+      </div>
+    </Panel>
+  );
+}
+
+function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
+  const tally = new Map<string, number>();
+  for (const t of tests) tally.set(t.metric, (tally.get(t.metric) ?? 0) + 1);
+  const primary = [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  const rowBadge = (metric: string) =>
+    metric === primary
+      ? null
+      : primary && metric === `${primary}_head_to_head_descriptive`
+        ? 'descriptive'
+        : metricLabel(metric);
+  return (
+    <Panel
+      title="Pairwise tests"
+      flush
+      aria-label="Holm-corrected comparisons"
+      actions={primary && <span className="text-[12px] text-ink-3">{metricLabel(primary)}</span>}
+    >
+      {tests.length === 0 ? (
+        <p className="m-0 p-4 text-[13px] text-ink-3">No paired tests in this scope</p>
+      ) : (
+        <Table className="text-[13px]">
+          <TableHeader>
+            <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
+              <TableHead className="h-8 pl-4 text-[12px] font-medium text-ink-3">Comparison</TableHead>
+              <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">Holm p</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tests.map((t, i) => {
+              const sig = t.p_holm < 0.05;
+              const badge = rowBadge(t.metric);
+              return (
+                <TableRow key={i} className="border-line hover:bg-surface-2">
+                  <TableCell className="h-8 py-1 pl-4">
+                    <span className="flex items-center gap-1.5">
+                      <span className={cn(t.policy_a === 'tauchstone_hybrid' && 'font-medium')}>{policyName(t.policy_a)}</span>
+                      <span className="text-ink-3">vs</span>
+                      {policyName(t.policy_b)}
+                      {badge && <StatusBadge className="ml-1 h-5 px-1.5 text-[11px]">{badge}</StatusBadge>}
+                    </span>
+                  </TableCell>
+                  <TableCell
+                    className={cn(
+                      'h-8 py-1 pr-4 text-right font-mono tabular-nums',
+                      sig ? 'font-medium text-accent-ink' : 'text-ink-3',
+                    )}
+                  >
+                    {formatP(t.p_holm)}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      )}
+    </Panel>
+  );
+}
+
+function RecallTable({ policies }: { policies: Policy[] }) {
+  return (
+    <Panel title="Fragile recall" flush>
+      <Table className="text-[13px]">
+        <TableHeader>
+          <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
+            <TableHead className="h-8 pl-4 text-[12px] font-medium text-ink-3">Policy</TableHead>
+            <TableHead className="h-8 text-right text-[12px] font-medium text-ink-3">@3</TableHead>
+            <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">@5</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {policies.map((p) => (
+            <TableRow
+              key={p.policy}
+              className={cn('border-line hover:bg-surface-2', p.policy === 'tauchstone_hybrid' && 'bg-accent-soft/60 hover:bg-accent-soft')}
+            >
+              <TableCell className="py-1.5 pl-4">{policyName(p.policy)}</TableCell>
+              <TableCell className="py-1.5 text-right font-mono tabular-nums">{p.fragile_recall_at_3.estimate.toFixed(2)}</TableCell>
+              <TableCell className="py-1.5 pr-4 text-right font-mono tabular-nums">{p.fragile_recall_at_5.estimate.toFixed(2)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Panel>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-label="Loading benchmark">
+      <Skeleton className="h-[188px] w-full rounded-lg" />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <Skeleton className="h-[360px] rounded-lg" />
+        <Skeleton className="h-[360px] rounded-lg" />
+      </div>
+    </div>
+  );
 }
 
 export function BenchmarkView() {
-  const { data, isLoading, isError, error } = useBenchmark();
+  const { data, isLoading, isError, error, refetch } = useBenchmark();
   const mockData = useMockStatus(data?.provenance);
-  const [scope, setScope] = useState<'contested' | 'all'>('contested');
+  const reduce = useReducedMotion();
+  const [scope, setScope] = useState<Scope>('contested');
   const hasAll = !!data?.all_candidates?.policies && data.all_candidates.policies.length > 0;
   const analysis = useMemo(
-    () => (data ? withLabels(activeAnalysis(data, hasAll ? scope : 'contested')) : null),
+    () => (data ? activeAnalysis(data, hasAll ? scope : 'contested') : null),
     [data, scope, hasAll],
   );
-  const policyOption = useMemo(
-    () => (analysis ? buildPolicyOption(analysis.policies) : null),
-    [analysis],
-  );
-  const calibOption = useMemo(
-    () => (analysis ? buildCalibrationOption(analysis.calibration) : null),
-    [analysis],
-  );
-  const [grown, setGrown] = useState(false);
-  useEffect(() => {
-    const id = window.requestAnimationFrame(() => window.requestAnimationFrame(() => setGrown(true)));
-    return () => window.cancelAnimationFrame(id);
+  const calibOption = useMemo(() => (analysis ? buildCalibrationOption(analysis.calibration) : null), [analysis]);
+
+  const accuracy = useMemo(() => {
+    if (!analysis) return null;
+    const sorted = byAccuracy(analysis.policies);
+    const { domain, ticks } = niceDomain(
+      sorted.flatMap((p) => [p.decision_accuracy.estimate, ...p.decision_accuracy.ci95]),
+      0.1,
+      undefined,
+      1,
+    );
+    const rows: IntervalRow[] = sorted.map((p) => ({
+      key: p.policy,
+      label: <PolicyLabel id={p.policy} />,
+      ariaLabel: `${policyName(p.policy)} decision accuracy ${pct(p.decision_accuracy.estimate)}`,
+      value: p.decision_accuracy.estimate,
+      ci: p.decision_accuracy.ci95 as [number, number],
+      valueText: pct(p.decision_accuracy.estimate),
+      ciText: p.decision_accuracy.ci95.map((v) => (v * 100).toFixed(1)).join(', '),
+      emphasis: emphasis(p.policy),
+    }));
+    return { rows, domain, ticks };
   }, [analysis]);
 
-  const hero = useMemo(() => {
-    if (!analysis || !data) return null;
-    const tau = analysis.policies.find((p) => p.policy === 'tauchstone_hybrid');
-    const random = analysis.policies.find((p) => p.policy === 'random');
-    const sealed = data.all_candidates?.n_candidates ?? analysis.n_candidates;
-    return {
-      tau: tau?.decision_accuracy.estimate,
-      random: random?.decision_accuracy.estimate,
-      sealed,
-      budget: analysis.budget,
-      vsRandom: pairHolmP(analysis.tests, 'tauchstone_hybrid', 'random'),
-      vsConfirmation: pairHolmP(analysis.tests, 'tauchstone_hybrid', 'greedy_strongest'),
-      prereg8: data.preregistration_sha256.slice(0, 8),
-    };
-  }, [analysis, data]);
+  const experiments = useMemo(() => {
+    if (!analysis) return null;
+    const sorted = byAccuracy(analysis.policies);
+    const { domain, ticks } = niceDomain(
+      sorted.flatMap((p) => [p.experiments_to_correct_verdict.median, ...p.experiments_to_correct_verdict.ci95]),
+      1,
+      0,
+    );
+    const rows: IntervalRow[] = sorted.map((p) => ({
+      key: p.policy,
+      label: <PolicyLabel id={p.policy} />,
+      ariaLabel: `${policyName(p.policy)} median experiments ${p.experiments_to_correct_verdict.median}`,
+      value: p.experiments_to_correct_verdict.median,
+      ci: p.experiments_to_correct_verdict.ci95 as [number, number],
+      valueText: p.experiments_to_correct_verdict.median.toFixed(1),
+      ciText: p.experiments_to_correct_verdict.ci95.map((v) => v.toFixed(1)).join(', '),
+      emphasis: emphasis(p.policy),
+    }));
+    return { rows, domain, ticks };
+  }, [analysis]);
 
-  const notRun =
-    isError &&
-    (error instanceof Error && /404/.test(error.message) ? true : false);
+  const notRun = isError && error instanceof Error && /404/.test(error.message);
+  const allN = data?.all_candidates?.n_candidates;
 
   return (
     <div className="flex h-full flex-col">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex-1 space-y-6 overflow-auto p-5 lg:p-7">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+      <div className="flex-1 overflow-auto p-6">
+        <motion.div
+          className="mx-auto max-w-[1360px] space-y-4"
+          initial={reduce ? false : { opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.18 }}
+        >
           {data && analysis && (
-            <p className="text-sm text-muted-foreground">
-              {scope === 'all' && hasAll ? (
-                <>All candidates (n = <span className="tabular-nums">{analysis.n_candidates}</span>)</>
-              ) : (
-                <>
-                  Candidates undecided before testing (n ={' '}
-                  <span className="tabular-nums">{analysis.n_candidates}</span>
-                  {(data.contested_share ?? data.all_candidates?.contested_share) !== undefined &&
-                    `, ${Math.round(((data.contested_share ?? data.all_candidates?.contested_share) ?? 0) * 100)}% of pool`}
-                  )
-                </>
-              )}{' '}
-              <span className="tabular-nums text-muted-foreground">
-                · {analysis.n_seeds} seeds · budget {analysis.budget} · prereg{' '}
-                <span className="font-mono">{data.preregistration_sha256.slice(0, 12)}…</span>
-              </span>
-            </p>
-          )}
-          {hasAll && (
-            <div className="flex gap-2" role="group" aria-label="Benchmark scope">
-              {(['contested', 'all'] as const).map((s) => (
-                <Button
- variant={scope === s ? "default" : "outline"}
- size="sm"
-                  key={s}
-                  onClick={() => setScope(s)}
-                  aria-pressed={scope === s}
-
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              {hasAll && (
+                <ToggleGroup
+                  aria-label="Benchmark scope"
+                  variant="outline"
+                  size="sm"
+                  spacing={0}
+                  value={[scope]}
+                  onValueChange={(v) => v[0] && setScope(v[0] as Scope)}
                 >
-                  {s === 'contested' ? 'undecided' : 'all candidates'}
-                </Button>
-              ))}
+                  {(['contested', 'all'] as const).map((s) => (
+                    <ToggleGroupItem
+                      key={s}
+                      value={s}
+                      className="h-8 border-line-strong px-3 text-[13px] text-ink-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
+                    >
+                      {s === 'contested' ? 'Undecided' : 'All candidates'}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              )}
+              <dl className="m-0 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px]">
+                {[
+                  ['Candidates', allN && scope === 'contested' && hasAll ? `${analysis.n_candidates} / ${allN}` : String(analysis.n_candidates)],
+                  ['Seeds', String(analysis.n_seeds)],
+                  ['Budget', String(analysis.budget)],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex items-baseline gap-1.5">
+                    <dt className="text-ink-3">{k}</dt>
+                    <dd className="m-0 font-mono text-ink tabular-nums">{v}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           )}
-        </div>
 
-        {isLoading && <Skeleton className="h-[300px] w-full" />}
-        {notRun && (
-          <p role="status" className="text-sm text-muted-foreground">
-            Benchmark not run yet (runs only after preregistration is committed).
-          </p>
-        )}
-        {isError && !notRun && (
-          <p role="alert" className="text-sm text-destructive">
-            Could not load the benchmark.
-          </p>
-        )}
+          {isLoading && <LoadingState />}
+          {notRun && (
+            <EmptyState icon={<ChartScatter />} title="Benchmark not run" />
+          )}
+          {isError && !notRun && (
+            <EmptyState
+              icon={<ChartScatter />}
+              title={<span role="alert">Benchmark failed to load</span>}
+              action={
+                <Button variant="outline" size="sm" onClick={() => void refetch()}>
+                  <ArrowClockwise /> Retry
+                </Button>
+              }
+            />
+          )}
 
-        {analysis && (
-          <>
-            <div className="grid gap-4 xl:grid-cols-2">
-              <section className="benchmark-hero" aria-label="Headline result">
-                <p className="benchmark-kicker">Right keep / drop call within {hero?.budget} tests · {hero?.sealed} sealed drugs</p>
-                <div className="benchmark-big">
-                  <span className="tau num">{pct(hero?.tau)}</span>
-                  <span className="rnd num">{pct(hero?.random)} random</span>
-                </div>
-                <div className="chips">
-                  <span className="chip">vs random p = {hero?.vsRandom !== null && hero?.vsRandom !== undefined ? hero.vsRandom.toPrecision(3) : '—'}</span>
-                  <span className="chip">vs confirmation p = {hero?.vsConfirmation !== null && hero?.vsConfirmation !== undefined ? hero.vsConfirmation.toPrecision(3) : '—'}</span>
-                  <span className="chip">permutation 17/20</span>
-                  <span className="chip mono" style={{ fontFamily: 'ui-monospace, monospace' }}>prereg {hero?.prereg8}</span>
-                </div>
-              </section>
-              <section className="benchmark-bars" aria-label="Decision accuracy by policy">
-                {analysis.policies.map((p) => (
-                  <div key={p.policy} className={`benchmark-bar${p.policy === 'tauchstone_hybrid' ? ' me' : ''}`} aria-label={`${p.label} decision accuracy ${pct(p.decision_accuracy.estimate)}`}>
-                    <span>{p.label}</span>
-                    <span className="trk"><i style={{ width: grown ? `${Math.round(p.decision_accuracy.estimate * 100)}%` : '0%' }} /></span>
-                    <span className="num">{pct(p.decision_accuracy.estimate)}</span>
-                  </div>
-                ))}
-              </section>
-            </div>
-            <section aria-label="Decision accuracy after five tests" className="space-y-3">
-              <h3 className="text-xl font-medium">Decision accuracy after {analysis.budget} tests</h3>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {analysis.policies.map((p) => (
-                  <div key={p.policy} className="space-y-2 border-l-2 border-border pl-4 data-[primary=true]:border-primary" data-primary={p.policy === 'tauchstone_hybrid'}>
-                    <p className="text-sm">{p.label}</p>
-                    <p className="font-mono text-2xl font-semibold tabular-nums">{(p.decision_accuracy.estimate * 100).toFixed(0)}%</p>
-                    <meter min={0} max={1} value={p.decision_accuracy.estimate} aria-label={p.label + ' decision accuracy'} />
-                    <p className="font-mono text-xs text-muted-foreground">
-                      95% CI [{p.decision_accuracy.ci95.map((v) => (v * 100).toFixed(1) + '%').join(', ')}]
-                    </p>
-                  </div>
-                ))}
+          {data && analysis && accuracy && experiments && (
+            <>
+              <Headline analysis={analysis} prereg={data.preregistration_sha256} />
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+                <Panel
+                  title={`Decision accuracy after ${analysis.budget} tests`}
+                  aria-label="Decision accuracy after five tests"
+                >
+                  <IntervalPlot
+                    rows={accuracy.rows}
+                    domain={accuracy.domain}
+                    ticks={accuracy.ticks}
+                    tickFormat={(v) => `${Math.round(v * 100)}`}
+                    valueHeader="Accuracy"
+                  />
+                </Panel>
+                <PairwiseTable tests={analysis.tests} />
               </div>
-              <div className="flex flex-wrap gap-3" aria-label="Holm-corrected comparisons">
-                {analysis.tests.map((t, i) => (
-                  <div key={i} className="rounded border border-border bg-card px-4 py-3 text-sm">
-                    <p>{POLICY_LABELS[t.policy_a] ?? t.policy_a} vs {POLICY_LABELS[t.policy_b] ?? t.policy_b}</p>
-                    <p className="font-mono text-primary">Holm p = {t.p_holm.toPrecision(3)}</p>
-                    <p className="text-xs text-muted-foreground">{t.metric.replaceAll('_', ' ')}</p>
-                  </div>
-                ))}
-                {analysis.tests.length === 0 && <p className="text-sm text-muted-foreground">No paired comparisons supplied for this scope.</p>}
-              </div>
-            </section>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Experiments to correct verdict (median, 95% CI)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {policyOption && (
-                  <div role="img" aria-label="Median experiments to correct verdict by policy, with 95% confidence intervals.">
-                    <ReactECharts option={policyOption} style={{ height: 300 }} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-4 xl:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Fragile recall & decision accuracy</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <table className="w-full text-sm tabular-nums">
-                    <thead>
-                      <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                        <th className="py-1 pr-2 font-medium">Policy</th>
-                        <th className="py-1 pr-2 font-medium">Recall@3</th>
-                        <th className="py-1 pr-2 font-medium">Recall@5</th>
-                        <th className="py-1 font-medium">Accuracy</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {analysis.policies.map((p) => (
-                        <tr
-                          key={p.policy}
-                          className={`border-b border-border ${p.policy === 'tauchstone_hybrid' ? 'bg-primary font-medium' : ''}`}
-                        >
-                          <td className="py-1.5 pr-2">{p.label}</td>
-                          <td className="py-1.5 pr-2">
-                            {p.fragile_recall_at_3.estimate.toFixed(2)}
-                          </td>
-                          <td className="py-1.5 pr-2">
-                            {p.fragile_recall_at_5.estimate.toFixed(2)}
-                          </td>
-                          <td className="py-1.5">{p.decision_accuracy.estimate.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Calibration (predicted vs observed)</CardTitle>
-                </CardHeader>
-                <CardContent>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Panel
+                  title="Experiments to correct verdict"
+                  className="lg:col-span-2" actions={<span className="text-[12px] text-ink-3">median · fewer is better</span>}>
+                  <IntervalPlot
+                    rows={experiments.rows}
+                    domain={experiments.domain}
+                    ticks={experiments.ticks}
+                    tickFormat={(v) => String(v)}
+                    valueHeader="Median"
+                  />
+                </Panel>
+                <RecallTable policies={byAccuracy(analysis.policies)} />
+                <Panel title="Calibration">
                   {calibOption && (
                     <div role="img" aria-label="Calibration plot of predicted versus observed survival rates.">
-                      <ReactECharts option={calibOption} style={{ height: 260 }} />
+                      <InstrumentChart option={calibOption} style={{ height: 248 }} />
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          </>
-        )}
+                </Panel>
+              </div>
+            </>
+          )}
+        </motion.div>
       </div>
       <ProvenanceStrip provenance={data?.provenance} />
     </div>

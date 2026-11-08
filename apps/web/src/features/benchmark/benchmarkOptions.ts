@@ -1,13 +1,45 @@
 import type { Schema } from '@/api/types';
 
-type Policy = Schema<'PolicyResult'>;
+type Tests = Pick<Schema<'Benchmark'>, 'tests'>['tests'];
+
+/** Co-primary policies named in the preregistration. */
+export const CO_PRIMARY = ['tauchstone_hybrid', 'decision_lookahead_hybrid'] as const;
+
+/** Short display name and an optional qualifier for each benchmark policy id. */
+export const POLICY_NAMES: Record<string, { name: string; detail?: string }> = {
+  tauchstone_hybrid: { name: 'Tauchstone' },
+  decision_lookahead_hybrid: { name: 'Decision-aware' },
+  random: { name: 'Random' },
+  greedy_strongest: { name: 'Confirmation', detail: 'greedy strongest' },
+  max_failure: { name: 'Attack', detail: 'max failure' },
+  max_uncertainty: { name: 'Max uncertainty' },
+  expected_decision_change: { name: 'Learn', detail: 'expected decision change' },
+};
+
+/** Display labels for benchmark policies (API sends raw ids as labels). */
+export const POLICY_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(POLICY_NAMES).map(([id, p]) => [id, p.detail ? `${p.name} (${p.detail})` : p.name]),
+);
+
+export function policyName(id: string): string {
+  return POLICY_NAMES[id]?.name ?? id.replaceAll('_', ' ');
+}
+
+/** Compact metric names for the pairwise table. */
+export function metricLabel(metric: string): string {
+  const descriptive = metric.endsWith('_head_to_head_descriptive');
+  const base = descriptive ? metric.replace('_head_to_head_descriptive', '') : metric;
+  const name =
+    base === 'experiments_to_correct_verdict'
+      ? 'experiments to verdict'
+      : base === 'decision_accuracy'
+        ? 'decision accuracy'
+        : base.replaceAll('_', ' ');
+  return descriptive ? `${name}, descriptive` : name;
+}
 
 /** Holm p for a policy pair, either direction; decision_accuracy first. */
-export function pairHolmP(
-  tests: Pick<Schema<'Benchmark'>, 'tests'>['tests'],
-  a: string,
-  b: string,
-): number | null {
+export function pairHolmP(tests: Tests, a: string, b: string): number | null {
   const pair = tests.filter(
     (t) => (t.policy_a === a && t.policy_b === b) || (t.policy_a === b && t.policy_b === a),
   );
@@ -15,66 +47,64 @@ export function pairHolmP(
   return pick ? pick.p_holm : null;
 }
 
-/** Median experiments-to-correct-verdict with 95% CI whiskers; hybrid emphasised. */
-export function buildPolicyOption(policies: Policy[]): Record<string, unknown> {
-  const labels = policies.map((p) => p.label);
-  return {
-    textStyle: { color: '#687182', fontFamily: 'Geist Variable, sans-serif' },
-    grid: { left: 150, right: 30, top: 20, bottom: 30 },
-    xAxis: { type: 'value', name: 'median experiments to correct verdict (fewer is better)' },
-    yAxis: { type: 'category', data: labels, inverse: true, axisLabel: { fontSize: 11 } },
-    tooltip: {
-      trigger: 'item',
-      formatter: (p: { data?: number[]; seriesName?: string }) =>
-        `${labels[(p.data?.[3] as number) ?? 0] ?? ''}<br/>median ${(p.data?.[0] as number)?.toFixed(2)} · 95% CI [${(p.data?.[1] as number)?.toFixed(2)}, ${(p.data?.[2] as number)?.toFixed(2)}]`,
-    },
-    series: [
-      {
-        type: 'custom',
-        name: 'policy CI',
-        renderItem: (
-          params: { coordSys?: unknown },
-          api: {
-            value: (dim: number) => number;
-            coord: (pt: number[]) => number[];
-          },
-        ) => {
-          void params;
-          const idx = api.value(3);
-          const median = api.coord([api.value(0), idx]);
-          const lo = api.coord([api.value(1), idx]);
-          const hi = api.coord([api.value(2), idx]);
-          const isHybrid = policies[idx]?.policy === 'tauchstone_hybrid';
-          const color = isHybrid ? '#3667d9' : '#a3a3a3';
-          return {
-            type: 'group',
-            children: [
-              { type: 'line', shape: { x1: lo[0], y1: median[1], x2: hi[0], y2: median[1] }, style: { stroke: color, lineWidth: isHybrid ? 3 : 2 } },
-              { type: 'circle', shape: { cx: median[0], cy: median[1], r: isHybrid ? 6 : 4 }, style: { fill: color } },
-            ],
-          };
-        },
-        data: policies.map((p, i) => [
-          p.experiments_to_correct_verdict.median,
-          p.experiments_to_correct_verdict.ci95[0],
-          p.experiments_to_correct_verdict.ci95[1],
-          i,
-        ]),
-      },
-    ],
-  };
+/** Metric the headline p-values were computed on (for the badge label). */
+export function pairMetric(tests: Tests, a: string, b: string): string | null {
+  const pair = tests.filter(
+    (t) => (t.policy_a === a && t.policy_b === b) || (t.policy_a === b && t.policy_b === a),
+  );
+  const pick = pair.find((t) => t.metric === 'decision_accuracy') ?? pair[0];
+  return pick ? pick.metric : null;
 }
 
-/** Calibration / reliability plot: predicted vs observed with the diagonal. */
+export function formatP(p: number | null | undefined): string {
+  return p === null || p === undefined || !Number.isFinite(p) ? 'n/a' : p.toPrecision(3);
+}
+
+/** Axis domain and ticks for an interval plot; snaps outward to `step`. */
+export function niceDomain(values: number[], step: number, floor?: number, ceil?: number) {
+  const finite = values.filter(Number.isFinite);
+  const lo = floor ?? Math.floor((Math.min(...finite) - 1e-9) / step) * step;
+  const hi = ceil ?? Math.ceil((Math.max(...finite) + 1e-9) / step) * step;
+  const ticks: number[] = [];
+  for (let v = lo; v <= hi + 1e-9; v += step) ticks.push(Math.round(v * 1000) / 1000);
+  return { domain: [lo, hi] as [number, number], ticks };
+}
+
+function token(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+/** Calibration / reliability plot: predicted vs observed with the diagonal. Colours from tokens. */
 export function buildCalibrationOption(
-  bins: { mean_predicted: number; observed_rate: number }[],
+  bins: { mean_predicted: number; observed_rate: number; n?: number }[],
 ): Record<string, unknown> {
+  const ink3 = token('--ink-3', '#6B7080');
+  const line = token('--line', '#E2E4E9');
+  const accent = token('--primary', '#5B3DF5');
+  const axis = {
+    type: 'value',
+    min: 0,
+    max: 1,
+    interval: 0.25,
+    nameLocation: 'middle',
+    nameTextStyle: { color: ink3, fontSize: 11 },
+    axisLabel: { color: ink3, fontSize: 10, fontFamily: 'Geist Mono Variable, monospace' },
+    axisLine: { show: false },
+    axisTick: { show: false },
+    splitLine: { lineStyle: { color: line } },
+  };
   return {
-    textStyle: { color: '#687182', fontFamily: 'Geist Variable, sans-serif' },
-    grid: { left: 44, right: 16, top: 24, bottom: 32 },
-    xAxis: { type: 'value', min: 0, max: 1, name: 'mean predicted', nameLocation: 'middle', nameGap: 26 },
-    yAxis: { type: 'value', min: 0, max: 1, name: 'observed rate' },
-    tooltip: { trigger: 'item' },
+    textStyle: { color: ink3, fontFamily: 'Instrument Sans Variable, sans-serif' },
+    legend: { show: false },
+    grid: { left: 48, right: 12, top: 12, bottom: 36 },
+    xAxis: { ...axis, name: 'predicted', nameGap: 22 },
+    yAxis: { ...axis, name: 'observed', nameGap: 34 },
+    tooltip: {
+      trigger: 'item',
+      formatter: (p: { data?: number[] }) =>
+        p.data ? `predicted ${p.data[0]?.toFixed(2)}<br/>observed ${p.data[1]?.toFixed(2)}` : '',
+    },
     series: [
       {
         type: 'line',
@@ -83,15 +113,16 @@ export function buildCalibrationOption(
           [0, 0],
           [1, 1],
         ],
-        lineStyle: { color: '#a3a3a3', type: 'dashed' },
+        lineStyle: { color: ink3, type: 'dashed', width: 1, opacity: 0.6 },
         symbol: 'none',
+        silent: true,
       },
       {
         type: 'scatter',
         name: 'bins',
         data: bins.map((b) => [b.mean_predicted, b.observed_rate]),
-        symbolSize: 10,
-        itemStyle: { color: '#3667d9' },
+        symbolSize: 9,
+        itemStyle: { color: accent },
       },
     ],
   };
