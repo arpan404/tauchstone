@@ -60,7 +60,7 @@ it("renders Piperacillin gaps, ranking contexts, resources, and hidden test coun
   expect(
     screen.queryByText(/composition-adjusted|survived|failed/i),
   ).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Attack" }));
+  fireEvent.click(screen.getByRole("button", { name: "Attack this claim" }));
   expect(useUi.getState().step).toBe("attack");
 });
 it("labels non-preregistered drugs and calls shell actions with the selected drug ID", async () => {
@@ -112,4 +112,15 @@ it("keeps context-map combinations empty and retains multiple time points", () =
   expect(screen.getAllByText("Not measured")).toHaveLength(2);
   expect(screen.getByText("24 h")).toBeTruthy();
   expect(screen.getByText("Neural-line ranking data")).toBeTruthy();
+});
+it("opens Compare with this drug and Report from the hero when the shell passes no handlers", async () => {
+  useUi.setState({ compareIds: [] });
+  setup();
+  await screen.findByRole("heading", { name: "Piperacillin" });
+  fireEvent.click(screen.getByRole("button", { name: "Compare" }));
+  expect(useUi.getState().step).toBe("compare");
+  expect(useUi.getState().compareIds).toEqual(["MOCK-0005"]);
+  useUi.setState({ step: "evidence" });
+  fireEvent.click(screen.getByRole("button", { name: "Report" }));
+  expect(useUi.getState().step).toBe("report");
 });

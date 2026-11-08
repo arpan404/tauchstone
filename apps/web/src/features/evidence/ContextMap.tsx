@@ -1,3 +1,4 @@
+import { BrainIcon, GridFourIcon } from "@phosphor-icons/react";
 import type { Schema } from "@/api/types";
 import { Panel, StatusBadge } from "@/components/system";
 import { cn } from "cn";
@@ -25,23 +26,36 @@ export function ContextMap({
   const doses = [...new Set(contexts.map((c) => c.dose))].sort(
     (a, b) => parseFloat(a) - parseFloat(b),
   );
+  const below = contexts.filter((c) => c.consensus < 0).length;
   return (
     <Panel
-      title="Ranking contexts"
+      title="Where it reverses"
+      icon={<GridFourIcon />}
+      caption={
+        contexts.length
+          ? `${below} of ${contexts.length} ranking context${contexts.length === 1 ? "" : "s"} below zero`
+          : "Ranking contexts"
+      }
       aria-label="Ranking context map"
       className={className}
       actions={
         neuralLines.size ? (
-          <StatusBadge tone="ok">Neural-line ranking data</StatusBadge>
+          <StatusBadge tone="ok">
+            <BrainIcon />
+            Neural-line ranking data
+          </StatusBadge>
         ) : (
-          <StatusBadge tone="gap">No neural-line ranking data</StatusBadge>
+          <StatusBadge tone="gap">
+            <BrainIcon />
+            No neural-line ranking data
+          </StatusBadge>
         )
       }
     >
       {contexts.length ? (
         <>
           <div className="overflow-x-auto">
-            <table className="border-separate border-spacing-1 text-[12px]">
+            <table className="-mx-1 border-separate border-spacing-1 text-[12px]">
               <caption className="sr-only">
                 Ranking contexts by cell line and concentration
               </caption>
@@ -49,7 +63,7 @@ export function ContextMap({
                 <tr>
                   <th
                     scope="col"
-                    className="w-24 pb-1 text-left text-[12px] font-normal text-ink-3"
+                    className="w-20 pb-1 text-left text-[11.5px] font-normal text-ink-3"
                   >
                     Cell line
                   </th>
@@ -57,7 +71,7 @@ export function ContextMap({
                     <th
                       key={dose}
                       scope="col"
-                      className="w-[104px] min-w-[92px] pb-1 text-left font-mono text-[12px] font-normal text-ink-3"
+                      className="w-[104px] min-w-[86px] pb-1 pl-1 text-left font-mono text-[11.5px] font-normal text-ink-3"
                     >
                       {doseLabel(dose)}
                     </th>
@@ -92,7 +106,7 @@ export function ContextMap({
                           className="p-0 align-top"
                         >
                           {cells.length ? (
-                            <div className="flex flex-col gap-px overflow-hidden rounded-md">
+                            <div className="flex flex-col gap-1">
                               {cells.map((c, i) => {
                                 const h = heat(c.consensus);
                                 return (
@@ -101,7 +115,7 @@ export function ContextMap({
                                     title={`${line} · ${doseLabel(dose)} · ${c.time}: ${signed(c.consensus)}`}
                                     style={{ background: h.background }}
                                     className={cn(
-                                      "flex h-7 items-center justify-between gap-1 px-1.5 font-mono text-[11.5px] whitespace-nowrap tabular-nums",
+                                      "flex h-8 items-center justify-between gap-1 rounded-lg px-2 font-mono text-[11.5px] whitespace-nowrap tabular-nums",
                                       h.strong ? "text-primary-foreground" : "text-ink",
                                     )}
                                   >
@@ -120,7 +134,7 @@ export function ContextMap({
                               })}
                             </div>
                           ) : (
-                            <div className="h-7 rounded-md border border-dashed border-line">
+                            <div className="h-8 rounded-lg bg-ink/[0.035]">
                               <span className="sr-only">Not measured</span>
                             </div>
                           )}
@@ -145,12 +159,12 @@ function HeatLegend() {
   const stops = [-3, -2, -1, 0, 1, 2];
   return (
     <div
-      className="mt-3 flex items-center gap-2 font-mono text-[11px] text-ink-3"
+      className="mt-4 flex items-center gap-2 font-mono text-[11px] text-ink-3"
       aria-hidden
     >
       <span className="font-sans">Reversal</span>
       <span>−3</span>
-      <span className="flex overflow-hidden rounded-[3px]">
+      <span className="flex overflow-hidden rounded-full">
         {stops.map((v) => (
           <span
             key={v}

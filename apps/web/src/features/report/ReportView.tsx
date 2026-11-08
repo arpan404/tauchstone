@@ -19,6 +19,10 @@ export interface ReportViewProps {
 const SHEET_STYLE =
   "<style>html,body{background:transparent!important}.paper{margin:0 auto!important;border:0!important;border-radius:0!important;max-width:none!important;padding:44px 52px!important}</style>";
 
+/** The page floats on the atmosphere: white paper, no border, a soft long shadow. */
+const SHEET =
+  "rounded-[6px] bg-white shadow-[0_1px_2px_rgb(15_24_48/0.06),0_2px_8px_rgb(15_24_48/0.04),0_32px_64px_-24px_rgb(30_60_140/0.32)]";
+
 function asSheet(html: string) {
   return html.includes("</head>")
     ? html.replace("</head>", `${SHEET_STYLE}</head>`)
@@ -61,22 +65,27 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
 
   return (
     <section aria-label="Drug report" className="flex min-h-full flex-col">
-      <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-3 border-b border-line bg-surface/90 px-4 backdrop-blur md:px-6">
-        <FileTextIcon className="size-4 text-ink-3" />
-        <span className="text-[13px] font-medium text-ink">Evidence report</span>
-        <span className="truncate font-mono text-[12px] text-ink-3">{drugId}</span>
+      <div className="sticky top-0 z-10 shrink-0 px-3 pt-3 md:px-6 md:pt-4">
+      <div className="glass mx-auto flex w-full max-w-[800px] flex-wrap items-center gap-x-3 gap-y-2 py-2.5 pr-2.5 pl-3">
+        <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-primary">
+          <FileTextIcon className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="text-[14px] font-medium text-ink">Evidence report</div>
+          <div className="truncate font-mono text-[11.5px] text-ink-3">{drugId}</div>
+        </div>
         <div className="ml-auto flex items-center gap-2">
           <a
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            className={cn(buttonVariants({ variant: "outline" }))}
             href={`${url}${query}`}
             target="_blank"
             rel="noreferrer"
           >
             <PrinterIcon />
-            Print HTML
+            Print
           </a>
           <a
-            className={cn(buttonVariants({ size: "sm" }))}
+            className={cn(buttonVariants())}
             href={`${url}.pdf${query}`}
             target="_blank"
             rel="noreferrer"
@@ -86,19 +95,20 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
           </a>
         </div>
       </div>
-      <div className="flex-1 px-4 py-8 md:px-6">
-        <div className="mx-auto w-full max-w-[760px]">
+      </div>
+      <div className="flex-1 px-3 pt-4 pb-10 md:px-6 md:pt-5">
+        <div className="mx-auto w-full max-w-[800px]">
           {loading && (
             <div
               role="status"
               aria-label="Loading report"
-              className="space-y-4 rounded-sm border border-line bg-surface p-12 shadow-overlay"
+              className={cn("space-y-4 p-8 md:p-12", SHEET)}
             >
               <Skeleton className="h-3 w-2/3" />
               <Skeleton className="h-8 w-48" />
               <Skeleton className="h-6 w-80" />
               {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="space-y-2 border-t border-line pt-4">
+                <div key={i} className="space-y-2 border-t border-ink/[0.06] pt-4">
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-full" />
                 </div>
@@ -106,13 +116,13 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
             </div>
           )}
           {error && (
-            <div className="flex items-center gap-3 rounded-lg border border-line bg-surface p-4 text-[13.5px] text-ink-2">
+            <div className="glass flex items-center gap-3 p-4 text-[13.5px] text-ink-2">
               <p role="alert" className="m-0">
                 Report unavailable
               </p>
               <button
                 type="button"
-                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+                className={cn(buttonVariants({ variant: "outline" }))}
                 onClick={() => {
                   setResult(null);
                   setAttempt((n) => n + 1);
@@ -124,7 +134,7 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
           )}
           {html && (
             <iframe
-              className="block h-[1075px] w-full rounded-sm border border-line bg-surface shadow-overlay"
+              className={cn("block h-[1075px] w-full", SHEET)}
               title="Drug evidence report"
               srcDoc={asSheet(html)}
               sandbox="allow-modals"

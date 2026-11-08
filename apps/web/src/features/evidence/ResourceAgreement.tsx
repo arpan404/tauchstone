@@ -1,4 +1,5 @@
-import { InfoIcon, KeyIcon } from "@phosphor-icons/react";
+import type { ReactNode } from "react";
+import { InfoIcon, KeyIcon, UsersThreeIcon, WarningIcon } from "@phosphor-icons/react";
 import type { useDrugResources } from "@/api/mvpHooks";
 import type { Schema } from "@/api/types";
 import { Panel, StatusBadge } from "@/components/system";
@@ -42,12 +43,15 @@ function noteText(note?: string | null) {
   return note?.replace(/^not preregistered;\s*report-only\.\s*/i, "").trim() || null;
 }
 
+/** Rank of the drug in each resource. Children (the evidence gaps) render under the rows. */
 export function ResourceAgreement({
   resources,
   className,
+  children,
 }: {
   resources: ReturnType<typeof useDrugResources>;
   className?: string;
+  children?: ReactNode;
 }) {
   const rows = [...(resources.data ?? [])].sort(
     (a, b) => ORDER.indexOf(a.resource) - ORDER.indexOf(b.resource),
@@ -55,15 +59,17 @@ export function ResourceAgreement({
   const disagree = sourcesDisagree(rows);
   return (
     <Panel
-      title="Resource agreement"
+      title="Agreement across resources"
+      icon={<UsersThreeIcon />}
+      caption="Rank in each resource · left is the top of its list"
       aria-label="Agreement across resources"
       className={className}
-      flush
-      actions={
-        <span className="flex items-center gap-1.5">
+    >
+      <div className="-mt-1 mb-4 flex flex-wrap items-center gap-1.5">
           {disagree && (
             <Tooltip>
               <TooltipTrigger render={<StatusBadge tone="gap" tabIndex={0} />}>
+                <WarningIcon />
                 Sources disagree
               </TooltipTrigger>
               <TooltipContent className="max-w-72 text-left leading-snug">
@@ -77,34 +83,30 @@ export function ResourceAgreement({
             </TooltipTrigger>
             <TooltipContent>Not preregistered. Not used for ranking.</TooltipContent>
           </Tooltip>
-        </span>
-      }
-    >
+        </div>
       {resources.isPending && (
-        <div role="status" aria-label="Loading resources" className="space-y-2 p-4">
-          <Skeleton className="h-6" />
-          <Skeleton className="h-6" />
-          <Skeleton className="h-6" />
+        <div role="status" aria-label="Loading resources" className="space-y-4">
+          <Skeleton className="h-9 rounded-[12px]" />
+          <Skeleton className="h-9 rounded-[12px]" />
+          <Skeleton className="h-9 rounded-[12px]" />
         </div>
       )}
       {resources.isError && (
-        <div role="alert" className="flex items-center gap-3 p-4 text-[13px] text-ink-2">
+        <div role="alert" className="flex items-center gap-3 text-[13px] text-ink-2">
           Resources unavailable
-          <Button size="sm" variant="outline" onClick={() => void resources.refetch()}>
+          <Button variant="outline" onClick={() => void resources.refetch()}>
             Retry
           </Button>
         </div>
       )}
       {rows.length > 0 && (
-        <table className="w-full text-[13px]">
-          <caption className="sr-only">Rank of this drug in each resource</caption>
-          <tbody>
-            {rows.map((r) => (
-              <ResourceRow key={r.resource} resource={r} />
-            ))}
-          </tbody>
-        </table>
+        <ul className="m-0 flex list-none flex-col gap-4 p-0" aria-label="Rank of this drug in each resource">
+          {rows.map((r) => (
+            <ResourceRow key={r.resource} resource={r} />
+          ))}
+        </ul>
       )}
+      {children && <div className="mt-5 border-t border-ink/[0.06] pt-4">{children}</div>}
     </Panel>
   );
 }
@@ -113,15 +115,15 @@ function ResourceRow({ resource: r }: { resource: Resource }) {
   const note = noteText(r.note);
   const ranked = r.status === "available" && r.rank != null;
   return (
-    <tr className="border-t border-line first:border-t-0">
-      <th scope="row" className="px-4 py-2.5 text-left font-medium text-ink">
-        <span className="flex items-center gap-1.5">
+    <li className="min-w-0">
+      <div className="flex min-h-7 items-center justify-between gap-3 text-[13px]">
+        <span className="flex min-w-0 items-center gap-1.5 font-medium text-ink">
           {NAMES[r.resource]}
           {note && (
             <Tooltip>
               <TooltipTrigger
                 aria-label={`${NAMES[r.resource]} note`}
-                className="rounded-sm text-ink-3 hover:text-ink focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                className="rounded-full text-ink-3 hover:text-primary focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
                 <InfoIcon className="size-3.5" />
               </TooltipTrigger>
@@ -129,23 +131,24 @@ function ResourceRow({ resource: r }: { resource: Resource }) {
             </Tooltip>
           )}
         </span>
-      </th>
-      <td className="px-4 py-2.5">
         {ranked ? (
-          <span className="font-mono text-[13px] tabular-nums text-ink">
-            rank {int(r.rank!)}
-            {r.n_ranked != null ? ` / ${int(r.n_ranked)}` : ""}
+          <span className="font-mono text-[12.5px] whitespace-nowrap text-ink tabular-nums">
+            {`rank ${int(r.rank!)}${r.n_ranked != null ? ` / ${int(r.n_ranked)}` : ""}`}
           </span>
         ) : r.status === "needs_key" ? (
           <ClueKeyDialog />
         ) : (
-          <StatusBadge>{STATUS[r.status]}</StatusBadge>
+          <StatusBadge size="sm">{STATUS[r.status]}</StatusBadge>
         )}
-      </td>
-      <td className="px-4 py-2.5">
-        {ranked && r.n_ranked ? <RankTrack rank={r.rank!} total={r.n_ranked} /> : null}
-      </td>
-    </tr>
+      </div>
+      <div className="mt-1.5">
+        {ranked && r.n_ranked ? (
+          <RankTrack rank={r.rank!} total={r.n_ranked} />
+        ) : (
+          <span className="block h-2 rounded-full bg-ink/[0.035]" aria-hidden />
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -153,9 +156,12 @@ function ResourceRow({ resource: r }: { resource: Resource }) {
 function RankTrack({ rank, total }: { rank: number; total: number }) {
   const at = Math.min(1, Math.max(0, (rank - 1) / Math.max(1, total - 1)));
   return (
-    <span className="relative block h-1.5 w-20 rounded-full bg-surface-2" aria-hidden>
+    <span
+      className="relative mx-1.5 block h-2 rounded-full bg-gradient-to-r from-primary/30 via-primary/10 to-ink/[0.04]"
+      aria-hidden
+    >
       <span
-        className="absolute top-1/2 size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface bg-primary"
+        className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-[2.5px] ring-white"
         style={{ left: `${at * 100}%` }}
       />
     </span>
@@ -165,7 +171,7 @@ function RankTrack({ rank, total }: { rank: number; total: number }) {
 function ClueKeyDialog() {
   return (
     <Dialog>
-      <DialogTrigger render={<Button size="sm" variant="outline" />}>
+      <DialogTrigger render={<Button size="sm" variant="outline" className="rounded-full" />}>
         <KeyIcon /> Add API key
       </DialogTrigger>
       <DialogContent className="shadow-overlay">

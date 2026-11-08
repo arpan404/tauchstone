@@ -13,7 +13,7 @@ it('fetches scoped HTML and exposes PDF and print links', async () => {
   const fetcher = vi.fn(async (_url: string) => ({ ok: true, text: async () => '<h1>Report</h1>' }));
   vi.stubGlobal('fetch', fetcher);
   setup(<ReportView drugId="BRD/a" projectId="project 1" />);
-  expect(screen.getByText('Print HTML').getAttribute('href')).toBe('/api/reports/BRD%2Fa?project_id=project%201');
+  expect(screen.getByText('Print').getAttribute('href')).toBe('/api/reports/BRD%2Fa?project_id=project%201');
   const frame = await screen.findByTitle('Drug evidence report');
   expect(frame.getAttribute('sandbox')).toBe('allow-modals');
   expect(frame.getAttribute('srcdoc')).toContain('<h1>Report</h1>');
