@@ -166,10 +166,25 @@ s, lk, _ = req("POST", "/api/lookup", {"names": ["donepezil", "Aricept", "Razady
 st = {r.get("query"): (r.get("status"), r.get("name")) for r in (lk or [])}
 check("lookup: donepezil ranked, brand names resolve offline",
       s == 200 and st.get("donepezil", ("",))[0] == "ranked"
-      and st.get("Razadyne", ("", ""))[1] and "galantamine" in st["Razadyne"][1].lower(),
+      and "galantamine" in (st.get("Razadyne", ("", ""))[1] or "").lower()
+      and "donepezil" in (st.get("Aricept", ("", ""))[1] or "").lower(),
       f"status={s} {st}")
 
+s, pc1, _ = req("GET", "/api/projects/GSE132903/candidates?limit=1")
+top = ((pc1 or {}).get("candidates") or [{}])[0]
+check("withdrawn flag served (ChEMBL 37)", s == 200 and "withdrawn" in (top.get("approval_status") or {}),
+      f"status={s} {top.get('name')} {top.get('approval_status')}")
+
+s, _, _ = req("GET", "/api/projects/GSE173955/candidates")
+check("unscreened project does not borrow another ranking", s == 409, f"status={s}")
+
 s, pdf, ct = req("GET", f"/api/reports/{ids[5]}.pdf?project_id=GSE132903")
+try:
+    with urllib.request.urlopen(BASE + f"/api/reports/{ids[5]}.pdf?project_id=GSE132903", timeout=30) as resp:
+        disp = resp.headers.get("Content-Disposition", "")
+    check("report PDF named after the drug", "tauchstone-" in disp and ".pdf" in disp, disp)
+except Exception as exc:  # noqa: BLE001
+    check("report PDF named after the drug", False, repr(exc))
 check("report PDF", s == 200 and "pdf" in ct and bytes(pdf or b"")[:4] == b"%PDF", f"status={s} ct={ct}")
 
 s, _, ct = req("GET", "/")
