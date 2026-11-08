@@ -80,3 +80,30 @@ None of these change the sealed set, the truth table, θ or the benchmark.
   are tagged "in training data". Compounds outside that table get a fresh estimate from SMILES;
   if their fingerprint is identical to a training structure they are also tagged "in training
   data". Artifacts are checked against their provenance checksums before the model is loaded.
+- **More training labels for the structure model** (Nov 8). Exploratory, not preregistered. We
+  retrained the same random forest (same fingerprints, settings, seed 20261105 and scaffold split
+  procedure) on labels from the all-signature GSE132903 ranking that the permutation control had
+  already produced (`GSE132903__permctl__compound_ranking.parquet`, 16,482 compounds, ranking
+  contexts only, nothing recomputed), instead of the gold-only ranking (5,690 compounds). Code:
+  `train_model(labels='all')` and `pipelines/lincs/exploratory_compare.py`; artifacts in
+  `processed/models/exploratory_candidates/`. Each run's own test numbers use its own labels and
+  test compounds, so they are not like for like. The other rows score both models on the same
+  held-out compounds against the gold labels the app shows:
+
+| test set | model | trained on | MAE (mean-only MAE) | R2 | Spearman |
+|---|---|---|---|---|---|
+| each run's own (not like for like) | gold labels | 4,510 | 0.472 (0.481), n = 1,123 | 0.023 | 0.18 |
+| each run's own (not like for like) | all labels | 12,805 | 0.404 (0.408), n = 3,602, all labels | 0.030 | 0.19 |
+| held out by both, n = 212 | gold labels | 4,510 | 0.494 (0.487) | −0.049 | 0.19 |
+| held out by both, n = 212 | all labels | 12,805 | 0.472 (0.486) | 0.027 | 0.28 |
+| gold test set, n = 1,123 | gold labels | 4,510 | 0.472 (0.481) | 0.023 | 0.18 |
+| gold test set, n = 1,123 | all labels, refit without any gold-test scaffold | 14,332 | 0.479 (0.480) | 0.021 | 0.15 |
+
+All-minus-gold differences with 95% intervals from 2,000 scaffold-group bootstraps: on the 212
+shared compounds MAE −0.023 (−0.047 to +0.001), Spearman +0.09 (−0.06 to +0.21); on the 1,123
+gold test compounds MAE +0.007 (−0.001 to +0.016), Spearman −0.03 (−0.09 to +0.03). The small
+set leans towards more labels, the five-times-larger set leans the other way, and every interval
+includes zero. About three times more labels did not make the model better on unseen structures, so
+the app keeps serving the gold-label model unchanged (same run, same artifacts, same numbers).
+No preregistered artifact changed: `preregistration.yaml` is still `21f7460e…bb8a3` and the
+frozen GSE132903 ranking is still sha256 `34c1a646…afe4`.
