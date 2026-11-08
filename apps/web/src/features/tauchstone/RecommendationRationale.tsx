@@ -1,3 +1,4 @@
+import { TargetIcon } from '@phosphor-icons/react';
 import type { Schema } from '@/api/types';
 import { StatusBadge } from '@/components/system';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -13,7 +14,10 @@ export function RecommendedBadge({
   return (
     <Tooltip>
       <TooltipTrigger render={<span />} className="inline-flex">
-        <StatusBadge tone={copy.stale ? 'neutral' : 'accent'}>{copy.stale ? copy.badge : 'Recommended'}</StatusBadge>
+        <StatusBadge tone={copy.stale ? 'neutral' : 'accent'} className="cursor-help">
+          <TargetIcon weight={copy.stale ? 'regular' : 'bold'} />
+          {copy.stale ? copy.badge : 'Recommended'}
+        </StatusBadge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-72 flex-col items-start gap-1 text-left">
         <span className="font-medium">{copy.title}</span>
