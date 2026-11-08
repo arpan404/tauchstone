@@ -454,6 +454,28 @@ paths:
       responses:
         "200": { description: CSV export, content: { text/csv: { schema: { type: string } } } }
 
+  /cell-lines:
+    get:
+      operationId: listCellLines
+      description: |
+        Cited facts for every LINCS cell line that can appear in a screen, from cached
+        Cellosaurus records (CC BY 4.0) and LINCS cell metadata. Served offline; never
+        fetched at request time. Missing values are "unspecified".
+      responses:
+        "200":
+          description: all cell-line cards
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CellLineList" }
+
+  /cell-lines/{cell_id}/image:
+    get:
+      operationId: getCellLineImage
+      parameters:
+        - { name: cell_id, in: path, required: true, schema: { type: string }, examples: { mcf7: { value: MCF7 } } }
+      responses:
+        "200": { description: cached Human Protein Atlas micrograph (CC BY 4.0), content: { image/jpeg: { schema: { type: string, format: binary } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
 
 components:
   responses:
@@ -919,6 +941,46 @@ components:
             Most negative signature-level consensus so far (strongest reversal), on the same
             provisional scale as the live ranking. Ranking contexts only; null when none yet.
         neural: { type: boolean, description: "SHSY5Y, NEU, NEU.KCL, MNEU.E, NPC, NPC.CAS9, NPC.TAK, FIBRNPC" }
+
+    CellLineImage:
+      type: object
+      required: [url, caption, credit, licence, page_url, gene]
+      properties:
+        url: { type: string, description: "local path served by the API, e.g. /cell-lines/MCF7/image" }
+        caption: { type: string }
+        credit: { type: string }
+        licence: { type: string, examples: ["CC BY 4.0"] }
+        page_url: { type: string, description: Human Protein Atlas page for this image }
+        gene: { type: string }
+
+    CellLineCard:
+      type: object
+      required: [cell_id, display_name, cellosaurus_id, organ, sampled_from, disease, description,
+                 category, sex, age, neural, summary, source, licence, source_url, image]
+      properties:
+        cell_id: { type: string, examples: ["MCF7"] }
+        display_name: { type: string, examples: ["MCF-7"] }
+        cellosaurus_id: { type: string, description: "CVCL accession or unspecified", examples: ["CVCL_0031"] }
+        organ: { type: string, description: organ or tissue of origin, or unspecified }
+        sampled_from: { type: string, description: "site the cells were taken from (Cellosaurus), or unspecified" }
+        disease: { type: string, description: "donor disease (Cellosaurus), or unspecified" }
+        description: { type: string, description: "what the cells are (cell type, or how stem-cell derived lines were made), or unspecified" }
+        category: { type: string, enum: [cancer, normal, stem-cell derived, unspecified] }
+        sex: { type: string, description: "female, male or unspecified" }
+        age: { type: string, description: "donor age, e.g. 69 years, or unspecified" }
+        neural: { type: boolean, description: same rule as ScreenCellLine.neural }
+        summary: { type: string, description: one plain sentence built only from the facts above }
+        source: { type: string }
+        licence: { type: string }
+        source_url: { type: string, description: "Cellosaurus page, or unspecified" }
+        image: { oneOf: [{ $ref: "#/components/schemas/CellLineImage" }, { type: "null" }] }
+
+    CellLineList:
+      type: object
+      required: [cell_lines, provenance]
+      properties:
+        cell_lines: { type: array, items: { $ref: "#/components/schemas/CellLineCard" } }
+        provenance: { $ref: "#/components/schemas/Provenance" }
 
     Screen:
       type: object

@@ -14,6 +14,7 @@ from app.routes import (
     attack,
     benchmark,
     candidates,
+    cell_lines,
     compounds,
     compounds_estimate,
     drugs,
@@ -65,6 +66,7 @@ app.include_router(lookup.router)
 app.include_router(compounds.router)
 app.include_router(reports.router)
 app.include_router(resources.router)
+app.include_router(cell_lines.router)
 
 
 @app.get("/health", response_model=Health, response_model_exclude_unset=True)
