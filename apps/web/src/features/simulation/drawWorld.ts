@@ -39,7 +39,7 @@ function drawCell(ctx: CanvasRenderingContext2D, c: Cell, t: number, motion: num
   const outline = blobPoints(c.x, c.y, c.r, c.phase, time, 28, wob);
   tracePath(ctx, outline);
   const fill = ctx.createRadialGradient(c.x - c.r * 0.35, c.y - c.r * 0.4, c.r * 0.1, c.x, c.y, c.r * 1.05);
-  fill.addColorStop(0, 'rgba(255,255,255,0.75)');
+  fill.addColorStop(0, document.documentElement.classList.contains('dark') ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.75)');
   fill.addColorStop(0.55, rgba(tint, 0.08));
   fill.addColorStop(1, rgba(tint, 0.2));
   ctx.fillStyle = fill;

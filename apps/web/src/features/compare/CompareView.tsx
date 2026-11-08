@@ -252,7 +252,7 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
   return (
     <section className="px-6 pb-6" aria-label="Compare compounds" style={{ maxWidth: 48 + LABEL_COL + ids.length * 320 }}>
       <Toolbar className="mb-0 h-14">
-        <span className="inline-flex h-8 items-center gap-2 rounded-full bg-white/60 pr-3 pl-1 ring-1 ring-white/80">
+        <span className="inline-flex h-8 items-center gap-2 rounded-full bg-frost/60 pr-3 pl-1 ring-1 ring-rim/80">
           <span className="grid size-6 place-items-center rounded-full bg-accent-soft text-primary">
             <ColumnsIcon className="size-3.5" aria-hidden />
           </span>
@@ -295,7 +295,7 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
                         "relative flex h-full flex-col rounded-[14px] px-4 pt-3.5 pb-4 ring-1 backdrop-blur",
                         top
                           ? "bg-gradient-to-b from-primary/[0.09] to-primary/[0.03] ring-primary/20"
-                          : "bg-white/70 ring-ink/[0.06]",
+                          : "bg-frost/70 ring-ink/[0.06]",
                       )}
                     >
                       <div className="flex min-h-7 items-center gap-2 pr-7">

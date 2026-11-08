@@ -146,3 +146,13 @@ section conflicts with the sections above, this section wins.
   ink-3. Body 13-13.5px.
 - **Colour.** Blue (`primary`) for data and selection; dark ink for the primary action; red,
   green, amber only for fail, survive/ok, gap. No other hues.
+
+## Dark mode (Nov 8)
+
+Light is the default; the top-bar switch offers Light, Dark and Match system (stored as `ts-theme`
+in localStorage, applied before paint by the script in `index.html`). Dark is neutral black, not
+navy, with the same single blue accent. Never hard-code white for tiles: use `bg-frost/N`,
+`ring-rim/N`, `border-rim/N` (white in light mode, grey in dark) and `text-on-ink` on `bg-ink`.
+`bg-white` and `text-white` are only for content sitting on the blue selected pill and for the
+report paper preview, which stays white like the PDF. Canvas views read the theme through
+`useIsDark()` from `src/app/theme.ts`; ECharts colours are remapped in `InstrumentChart`.

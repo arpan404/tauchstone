@@ -119,7 +119,7 @@ export function About() {
               </tr>)}</tbody>
             </table>
           </div>
-          <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i} className="rounded-full bg-white/55 px-3 py-1 text-[12px] text-ink-2 ring-1 ring-white/80">
+          <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i} className="rounded-full bg-frost/55 px-3 py-1 text-[12px] text-ink-2 ring-1 ring-rim/80">
             {t.policy_a === 'tauchstone_hybrid' ? 'Tauchstone' : 'Decision-aware co-primary'} vs random: Holm p = <span className="font-mono text-primary">{t.p_holm.toPrecision(3)}</span> for {t.metric.replaceAll('_', ' ')}.
           </li>)}</ul>
           {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert" className="m-0 mt-3 rounded-xl bg-bad/10 px-3 py-2 text-[13px] text-bad">The API hash differs from the frozen record. Verify the serving bundle before citing results.</p>}

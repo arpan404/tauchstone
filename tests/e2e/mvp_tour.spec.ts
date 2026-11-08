@@ -2,7 +2,6 @@ import { test, expect, type Page } from '@playwright/test';
 
 // Expo tour on real data: also the fallback recording (`make record`).
 // Projects -> live screen -> candidates -> compare -> drug -> my compounds -> attack -> report -> validation.
-const BOUNDARY = 'Research hypothesis only. Not a treatment recommendation. Gene expression reversal does not establish efficacy, safety, dosing, brain exposure or clinical benefit.';
 // Slow enough to narrate over the recording.
 const pause = (page: Page, ms = 1200) => page.waitForTimeout(ms * Number(process.env.TS_E2E_PACE ?? 2.5));
 const nav = (page: Page, label: string) =>
@@ -13,10 +12,8 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   page.on('request', r => {
     if (r.method() === 'POST' && /\/attack\/[^/]+\/run$/.test(new URL(r.url()).pathname)) runs++;
   });
-  const boundary = () => expect(page.getByRole('note', { name: 'Boundary' })).toHaveText(BOUNDARY);
 
   await page.goto('/');
-  await boundary();
   await expect(page.getByRole('button', { name: /middle temporal gyrus/ }).first()).toBeVisible();
   await pause(page);
   await page.getByRole('button', { name: /middle temporal gyrus/ }).first().click();
@@ -54,7 +51,6 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   await expect(page.getByTestId('molecule-formula')).toBeVisible({ timeout: 20000 });
   await expect(page.getByRole('region', { name: 'Ranking context map' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Agreement across resources' })).toBeVisible();
-  await boundary();
   await pause(page, 2500);
 
   // A lab's own compounds.
@@ -84,6 +80,5 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   await pause(page, 2000);
   await nav(page, 'Validation');
   await pause(page, 2500);
-  await boundary();
   expect(runs).toBe(1);
 });

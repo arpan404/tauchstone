@@ -151,7 +151,7 @@ export function CompoundsView({
                 }}
                 placeholder="Compound names · comma or newline"
                 spellCheck={false}
-                className="min-h-24 min-[1400px]:min-h-40 resize-y rounded-xl border-0 bg-white/70 px-3 py-2.5 text-[13.5px] leading-relaxed text-ink ring-1 ring-ink/12 backdrop-blur placeholder:text-ink-3 focus-visible:ring-2 focus-visible:ring-primary/45"
+                className="min-h-24 min-[1400px]:min-h-40 resize-y rounded-xl border-0 bg-frost/70 px-3 py-2.5 text-[13.5px] leading-relaxed text-ink ring-1 ring-ink/12 backdrop-blur placeholder:text-ink-3 focus-visible:ring-2 focus-visible:ring-primary/45"
               />
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-[12px] text-ink-3 tabular-nums">
@@ -208,7 +208,7 @@ export function CompoundsView({
               <EmptyState
                 icon={<FlaskIcon />}
                 title="No compounds checked"
-                className="m-0 min-h-64 rounded-xl border-0 bg-white/45 shadow-none ring-1 ring-white/80"
+                className="m-0 min-h-64 rounded-xl border-0 bg-frost/45 shadow-none ring-1 ring-rim/80"
               />
             ) : (
               <Table

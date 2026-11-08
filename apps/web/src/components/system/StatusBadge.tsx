@@ -6,7 +6,7 @@ import { badgeTip } from "./badgeTips";
 export type Tone = "neutral" | "accent" | "ok" | "bad" | "gap";
 
 const TONES: Record<Tone, string> = {
-  neutral: "bg-white/80 text-ink-2 border-ink/10",
+  neutral: "bg-frost/80 text-ink-2 border-ink/10",
   accent: "bg-accent-soft text-accent-ink border-transparent",
   ok: "bg-ok/10 text-ok border-transparent",
   bad: "bg-bad/10 text-bad border-transparent",

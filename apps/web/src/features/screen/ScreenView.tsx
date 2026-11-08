@@ -93,7 +93,7 @@ const METHOD = [
 /** Selected tile: solid blue pill from the Nov 8 brief (no drop shadow, inner highlight only). */
 const SELECTED =
   "bg-gradient-to-b from-[#2b6fd3] to-[#1453ad] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]";
-const TILE = "bg-white/55 ring-1 ring-white/80";
+const TILE = "bg-frost/55 ring-1 ring-rim/80";
 /** PlateMap empty wells as soft tinted fills instead of grey outlined circles. */
 const SOFT_WELLS =
   "[&_.bg-surface-2]:border-transparent [&_.bg-surface-2]:bg-ink/[0.06]";
@@ -274,7 +274,7 @@ export function ScreenView() {
               {METHOD.map(([k, v]) => (
                 <div
                   key={k}
-                  className="rounded-full bg-white/60 px-2.5 py-1 ring-1 ring-ink/[0.07]"
+                  className="rounded-full bg-frost/60 px-2.5 py-1 ring-1 ring-ink/[0.07]"
                 >
                   <dt className="sr-only">{k}</dt>
                   <dd className="m-0">{v}</dd>
@@ -540,7 +540,7 @@ export function ScreenView() {
                     "absolute top-2.5 right-3 inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-[12px] outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                     file
                       ? "bg-white/20 text-white hover:bg-white/30"
-                      : "bg-white/70 text-primary ring-1 ring-ink/[0.08] hover:bg-primary/8",
+                      : "bg-frost/70 text-primary ring-1 ring-ink/[0.08] hover:bg-primary/8",
                   )}
                 >
                   <DownloadSimpleIcon className="size-3.5" aria-hidden />

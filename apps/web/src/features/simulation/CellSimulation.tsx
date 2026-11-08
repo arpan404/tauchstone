@@ -49,7 +49,7 @@ export function CellSimulation(props: { state: 'idle' | 'scoring' | 'done'; prog
   return (
     <div
       className={cn('relative overflow-hidden rounded-xl', className)}
-      style={{ height, background: 'linear-gradient(180deg, rgb(255 255 255 / 0.6) 0%, rgb(228 236 250 / 0.7) 100%)' }}
+      style={{ height, background: 'var(--sim-bg)' }}
       data-testid="cell-simulation"
       data-state={state}
     >

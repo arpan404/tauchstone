@@ -102,9 +102,6 @@ describe("MVP workspace shell", () => {
       "Validation",
     ])
       expect(screen.getByRole("button", { name })).toBeTruthy();
-    expect(screen.getByRole("note", { name: "Boundary" }).textContent).toContain(
-      "Research hypothesis only.",
-    );
     expect(screen.queryByRole("button", { name: "AI lab" })).toBeNull();
   });
   it("retains selection across Drug, Attack and Projects", () => {

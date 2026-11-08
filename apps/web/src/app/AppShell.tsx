@@ -18,9 +18,9 @@ import {
 } from "@phosphor-icons/react";
 import { useCandidates, useHealth, useMockStatus } from "@/api/hooks";
 import { useProjects } from "@/api/workspace";
-import { BOUNDARY_TEXT } from "@/components/BoundaryBanner";
 import { PlateMark, StatusBadge } from "@/components/system";
 import { Kbd } from "@/components/ui/kbd";
+import { ThemeToggle } from "@/app/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,7 +45,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { frozenPreregistrationSha256 } from "@/features/about/integrity";
 import { useUi, type StepId } from "@/store/ui";
 import { NAV_GROUPS } from "./nav";
 import { CandidatePicker } from "./CandidatePicker";
@@ -118,7 +117,7 @@ export function AppShell({
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="flex w-full items-center gap-2 rounded-xl border border-ink/8 bg-white/80 px-3 py-2 text-left shadow-[0_1px_2px_rgb(15_24_48/0.04)] hover:bg-white group-data-[collapsible=icon]:hidden"
+                className="flex w-full items-center gap-2 rounded-xl border border-ink/8 bg-frost/80 px-3 py-2 text-left shadow-[0_1px_2px_rgb(15_24_48/0.04)] hover:bg-frost group-data-[collapsible=icon]:hidden"
                 aria-label="Switch project"
               >
                 <span className="min-w-0 flex-1">
@@ -250,32 +249,22 @@ export function AppShell({
                 type="button"
                 onClick={onSearch}
                 aria-label="Search workspace"
-                className="flex h-8 items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-[12px] text-ink-3 shadow-[0_1px_2px_rgb(15_24_48/0.05)] backdrop-blur hover:bg-white"
+                className="flex h-8 items-center gap-2 rounded-full border border-rim/90 bg-frost/75 px-3 text-[12px] text-ink-3 shadow-[0_1px_2px_rgb(15_24_48/0.05)] backdrop-blur hover:bg-frost"
               >
                 Search <Kbd>⌘K</Kbd>
               </button>
+              <ThemeToggle />
             </div>
           </header>
           <div id="workspace" tabIndex={-1} className="min-h-0 flex-1 overflow-auto">
             <ViewErrorBoundary resetKey={`${active}`}>{children}</ViewErrorBoundary>
           </div>
-          <footer className="shell-status flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-6 pt-1 pb-2.5 font-mono text-[11px] text-ink-3">
-            <span className="flex items-center gap-1.5">
-              <span
-                className={
-                  "size-1.5 rounded-full " +
-                  (engine === "online" ? "bg-ok" : engine === "offline" ? "bg-bad" : "bg-gap")
-                }
-              />
+          {engine !== "online" && (
+            <footer className="shell-status flex shrink-0 items-center gap-1.5 px-6 pt-1 pb-2.5 font-mono text-[11px] text-ink-3">
+              <span className={"size-1.5 rounded-full " + (engine === "offline" ? "bg-bad" : "bg-gap")} />
               Engine {engine}
-            </span>
-          {mock && <span className="text-gap">Synthetic data</span>}
-            <span>LINCS gold 113,310</span>
-            <span>Prereg {frozenPreregistrationSha256.slice(0, 8)}</span>
-            <p role="note" aria-label="Boundary" className="m-0 font-sans text-[11px] text-ink-3 lg:ml-auto">
-              {BOUNDARY_TEXT}
-            </p>
-          </footer>
+            </footer>
+          )}
         </SidebarInset>
     </SidebarProvider>
   );

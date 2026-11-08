@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useIsDark } from '@/app/theme';
 import { useCanvasLoop, useReducedMotion, type FrameInfo } from '../simulation/useCanvasLoop';
 import {
   apply, clampZoom, depthOrder, dragRotation, elementStyle, fitScale, formulaParts, mulMat, orthonormalize,
@@ -14,13 +15,20 @@ const STICK = 0.15; // stick half-width in angstrom
 const GAP = 0.15; // spacing of multiple-bond lines in angstrom
 
 interface Palette { base: string; dark: string; light: string; stick: string; stickHi: string }
+/** Scene colours; dark mode lightens carbon so the skeleton stays visible on navy. */
+const SCENE = {
+  light: { carbon: null as string | null, fog: '#f4f0fc', shadow: '15,24,48', shadowA: 0.07, bg: 'radial-gradient(ellipse at 50% 38%, #ffffff, #eef2fa 78%)' },
+  dark: { carbon: '#a9afc3' as string | null, fog: '#141416', shadow: '0,0,0', shadowA: 0.3, bg: 'radial-gradient(ellipse at 50% 38%, #1f1f23, #121214 78%)' },
+};
+let scene = SCENE.light;
 const paletteCache = new Map<string, Palette>();
 function palette(el: string): Palette {
-  let p = paletteCache.get(el);
+  const key = `${el}:${scene === SCENE.dark ? 'd' : 'l'}`;
+  let p = paletteCache.get(key);
   if (!p) {
-    const c = elementStyle(el).color;
+    const c = el === 'C' && scene.carbon ? scene.carbon : elementStyle(el).color;
     p = { base: c, dark: shade(c, -0.45), light: shade(c, 0.78), stick: shade(c, el === 'C' ? 0.18 : 0.05), stickHi: shade(c, 0.6) };
-    paletteCache.set(el, p);
+    paletteCache.set(key, p);
   }
   return p;
 }
@@ -81,8 +89,8 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
 
   // Soft contact shadow under the molecule.
   const sh = ctx.createRadialGradient(width / 2, height / 2 + mol.radius * scale * 0.9, 0, width / 2, height / 2 + mol.radius * scale * 0.9, mol.radius * scale * 0.9);
-  sh.addColorStop(0, 'rgba(15,24,48,0.07)');
-  sh.addColorStop(1, 'rgba(15,24,48,0)');
+  sh.addColorStop(0, `rgba(${scene.shadow},${scene.shadowA})`);
+  sh.addColorStop(1, `rgba(${scene.shadow},0)`);
   ctx.fillStyle = sh;
   ctx.fillRect(0, 0, width, height);
 
@@ -139,7 +147,7 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
     ctx.fill();
     if (fog > 0.01) {
       ctx.globalAlpha = fog;
-      ctx.fillStyle = '#f4f0fc';
+      ctx.fillStyle = scene.fog;
       ctx.fill();
     }
   }
@@ -155,6 +163,8 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
   const { molecule, height = 280 } = props;
   const mol = useMemo(() => prepareMolecule(molecule), [molecule]);
   const reduce = useReducedMotion();
+  const dark = useIsDark();
+  scene = dark ? SCENE.dark : SCENE.light;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const view = useRef({ rot: rotX(-0.35) as Mat3, fit: rotX(-0.35) as Mat3, zoom: 1, idle: RESUME_AFTER, pointers: new Map<number, { x: number; y: number }>(), pinch: 0 });
 
@@ -178,7 +188,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
     },
     !reduce && mol !== null,
   );
-  useEffect(() => { requestDraw(); }, [mol, requestDraw]);
+  useEffect(() => { requestDraw(); }, [mol, requestDraw, dark]);
 
   // Wheel zoom needs a non-passive listener to stop the page from scrolling.
   useEffect(() => {
@@ -249,8 +259,8 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
 
   return (
     <div
-      className="relative overflow-hidden rounded-[14px] border border-[#e6e2d8]"
-      style={{ height, background: 'radial-gradient(ellipse at 50% 38%, #ffffff, #eef2fa 78%)' }}
+      className="relative overflow-hidden rounded-[14px] border border-line"
+      style={{ height, background: scene.bg }}
       data-testid="molecule-viewer"
       data-state={mol ? 'molecule' : 'empty'}
     >
@@ -274,7 +284,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
       />
       {mol && mol.formula && (
         <span
-          className="pointer-events-none absolute bottom-2.5 left-3 rounded-md bg-white/75 px-2 py-0.5 font-mono text-[12px] text-[#3a3846] shadow-[0_0_0_1px_rgba(230,226,216,0.9)] backdrop-blur-sm"
+          className="pointer-events-none absolute bottom-2.5 left-3 rounded-md bg-frost/75 px-2 py-0.5 font-mono text-[12px] text-ink-2 shadow-[0_0_0_1px_var(--line)] backdrop-blur-sm"
           title={molecule?.method}
           data-testid="molecule-formula"
         >

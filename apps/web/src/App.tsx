@@ -95,6 +95,7 @@ const VIEWS: Record<StepId, ComponentType> = {
   signature: DiseaseSignatureView,
 };
 import { NAV_ITEMS as ITEMS } from "@/app/nav";
+import { applyTheme } from "@/app/theme";
 export default function App() {
   useUrlSync();
   const { step, setStep, selectCandidate } = useUi();
@@ -118,7 +119,7 @@ export default function App() {
     setSearch(false);
   }
   useEffect(() => {
-    document.documentElement.classList.remove("dark");
+    applyTheme();
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();

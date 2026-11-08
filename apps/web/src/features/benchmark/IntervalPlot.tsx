@@ -81,7 +81,7 @@ export function IntervalPlot({
                   ))}
                   <span
                     className={cn(
-                      'absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white',
+                      'absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-rim',
                       tone,
                       r.emphasis === 'accent' ? 'size-3' : 'size-2.5',
                     )}

@@ -121,7 +121,7 @@ function byAccuracy(policies: Policy[]): Policy[] {
 const SEGMENT =
   'h-8 rounded-full px-3.5 text-[13px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink aria-pressed:bg-gradient-to-b aria-pressed:from-[#2b6fd3] aria-pressed:to-[#1453ad] aria-pressed:text-white aria-pressed:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] aria-pressed:hover:from-[#3a7ddd] aria-pressed:hover:to-[#185cbc] aria-pressed:hover:text-white';
 /** Frosted inner tile inside a glass panel. */
-const TILE = 'rounded-xl bg-white/55 ring-1 ring-white/80';
+const TILE = 'rounded-xl bg-frost/55 ring-1 ring-rim/80';
 /** Rounded table rows with no hard lines. */
 const ROW = '[&>td]:border-0 [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl border-0 hover:bg-primary/6';
 const HEAD_ROW = 'border-0 hover:bg-transparent';
@@ -129,7 +129,7 @@ const HEAD = 'h-8 text-[11.5px] font-medium text-ink-3';
 
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg px-3 py-1.5 transition-colors hover:bg-white/60">
+    <div className="flex items-center justify-between gap-4 rounded-lg px-3 py-1.5 transition-colors hover:bg-frost/60">
       <dt className="text-[12.5px] text-ink-2">{label}</dt>
       <dd className="m-0 flex items-center gap-2">{children}</dd>
     </div>
@@ -372,10 +372,10 @@ function RecallTable({ policies }: { policies: Policy[] }) {
 function LoadingState() {
   return (
     <div className="space-y-4" aria-busy="true" aria-label="Loading benchmark">
-      <Skeleton className="h-[260px] w-full rounded-[18px] bg-white/50" />
+      <Skeleton className="h-[260px] w-full rounded-[18px] bg-frost/50" />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
-        <Skeleton className="h-[360px] rounded-[18px] bg-white/50" />
-        <Skeleton className="h-[360px] rounded-[18px] bg-white/50" />
+        <Skeleton className="h-[360px] rounded-[18px] bg-frost/50" />
+        <Skeleton className="h-[360px] rounded-[18px] bg-frost/50" />
       </div>
     </div>
   );

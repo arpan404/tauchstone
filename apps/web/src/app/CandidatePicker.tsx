@@ -215,8 +215,8 @@ export function CandidatePicker({
         aria-label={selectedCandidateId ? `Selected candidate ${label}` : "Choose drug"}
         className={cn(
           variant === "bar"
-            ? "flex h-8 shrink-0 items-center gap-2 rounded-full border border-white/90 bg-white/75 py-1 pr-3 pl-1.5 text-[13px] whitespace-nowrap shadow-[0_1px_2px_rgb(15_24_48/0.05)] backdrop-blur hover:bg-white"
-            : "flex h-11 min-w-72 items-center gap-2.5 rounded-full border border-ink/10 bg-white px-4 text-[14px] shadow-[0_8px_24px_-12px_rgb(30_60_140/0.35)] hover:border-primary",
+            ? "flex h-8 shrink-0 items-center gap-2 rounded-full border border-rim/90 bg-frost/75 py-1 pr-3 pl-1.5 text-[13px] whitespace-nowrap shadow-[0_1px_2px_rgb(15_24_48/0.05)] backdrop-blur hover:bg-frost"
+            : "flex h-11 min-w-72 items-center gap-2.5 rounded-full border border-ink/10 bg-frost px-4 text-[14px] shadow-[0_8px_24px_-12px_rgb(30_60_140/0.35)] hover:border-primary",
           className,
         )}
       >

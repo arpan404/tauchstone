@@ -170,7 +170,7 @@ export function RepurposingView({
       <BoundaryBanner />
       <MockRibbon show={mock} />
       <div className="flex-1 px-6 pb-6">
-        <Toolbar className="sticky top-0 z-20 -mx-6 mb-0 min-h-14 flex-wrap gap-y-2 bg-[rgb(233_238_248/0.88)] px-6 py-2.5 backdrop-blur-xl lg:h-14 lg:flex-nowrap lg:py-0">
+        <Toolbar className="sticky top-0 z-20 -mx-6 mb-0 min-h-14 flex-wrap gap-y-2 bg-canvas/88 px-6 py-2.5 backdrop-blur-xl lg:h-14 lg:flex-nowrap lg:py-0">
           <ToggleGroup
             multiple
             value={keys}
@@ -205,7 +205,7 @@ export function RepurposingView({
                   : "Loading"}
           </span>
           {data && !notScreened && keys.length > 0 && (
-            <span className="rounded-full bg-white/60 px-2.5 py-1 font-mono text-[11.5px] whitespace-nowrap text-ink-3 tabular-nums ring-1 ring-white/80">
+            <span className="rounded-full bg-frost/60 px-2.5 py-1 font-mono text-[11.5px] whitespace-nowrap text-ink-3 tabular-nums ring-1 ring-rim/80">
               {`${(data.n_ranked ?? 0).toLocaleString("en-US")} ranked`}
             </span>
           )}

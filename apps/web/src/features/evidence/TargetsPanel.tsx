@@ -45,7 +45,7 @@ export function TargetsPanel({
       {targets.length ? (
         <div className="max-h-[260px] overflow-auto px-3 pb-3">
           <table className="w-full border-separate border-spacing-0 text-[13px]">
-            <thead className="sticky top-0 z-[1] bg-white/85 backdrop-blur">
+            <thead className="sticky top-0 z-[1] bg-frost/85 backdrop-blur">
               <tr className="text-left text-[11.5px] text-ink-3">
                 <th scope="col" className="px-4 py-2 font-normal">Symbol</th>
                 <th scope="col" className="px-4 py-2 font-normal">Action</th>
@@ -114,7 +114,7 @@ export function StructurePanel({
     >
       {structure ? (
         <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-          <dl className="m-0 grid content-start gap-3 rounded-[12px] bg-white/55 p-4 ring-1 ring-white/80">
+          <dl className="m-0 grid content-start gap-3 rounded-[12px] bg-frost/55 p-4 ring-1 ring-rim/80">
             <Meta label="PDB" value={structure.pdb_id} />
             <Meta label="UniProt" value={structure.uniprot} />
             <Meta label="Method" value={structure.method ?? "unspecified"} />

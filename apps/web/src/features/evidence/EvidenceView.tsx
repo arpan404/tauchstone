@@ -78,7 +78,7 @@ export function EvidenceView({
   if (!selectedCandidateId) {
     body = (
       <EmptyState
-        className="min-h-80 rounded-[18px] border-solid border-white/80 bg-[var(--glass-bg)] shadow-[var(--glass-shadow)] backdrop-blur-xl"
+        className="min-h-80 rounded-[18px] border-solid border-rim/80 bg-[var(--glass-bg)] shadow-[var(--glass-shadow)] backdrop-blur-xl"
         icon={
           <span className="grid size-12 place-items-center rounded-full bg-accent-soft text-primary">
             <PillIcon className="size-6" weight="duotone" />
@@ -255,7 +255,7 @@ function HeroMolecule({ drug }: { drug: Drug }) {
       className={cn(
         "relative -mx-2 w-full min-w-0 max-w-full overflow-hidden [grid-area:mol] md:-my-2 md:mx-0",
         "[&_[data-testid=molecule-viewer]]:h-[220px]! [&_[data-testid=molecule-viewer]]:rounded-none [&_[data-testid=molecule-viewer]]:border-0 [&_[data-testid=molecule-viewer]]:bg-none! md:[&_[data-testid=molecule-viewer]]:h-[250px]!",
-        "[&_[data-testid=molecule-formula]]:right-2 [&_[data-testid=molecule-formula]]:bottom-1 [&_[data-testid=molecule-formula]]:left-auto [&_[data-testid=molecule-formula]]:rounded-full [&_[data-testid=molecule-formula]]:bg-white/70 [&_[data-testid=molecule-formula]]:px-2.5 [&_[data-testid=molecule-formula]]:py-0.5 [&_[data-testid=molecule-formula]]:text-ink-2 [&_[data-testid=molecule-formula]]:shadow-none [&_[data-testid=molecule-formula]]:ring-1 [&_[data-testid=molecule-formula]]:ring-ink/10",
+        "[&_[data-testid=molecule-formula]]:right-2 [&_[data-testid=molecule-formula]]:bottom-1 [&_[data-testid=molecule-formula]]:left-auto [&_[data-testid=molecule-formula]]:rounded-full [&_[data-testid=molecule-formula]]:bg-frost/70 [&_[data-testid=molecule-formula]]:px-2.5 [&_[data-testid=molecule-formula]]:py-0.5 [&_[data-testid=molecule-formula]]:text-ink-2 [&_[data-testid=molecule-formula]]:shadow-none [&_[data-testid=molecule-formula]]:ring-1 [&_[data-testid=molecule-formula]]:ring-ink/10",
       )}
     >
       <Suspense fallback={<Skeleton className="h-[220px] rounded-[18px] bg-ink/[0.035] md:h-[250px]" />}>
@@ -340,7 +340,7 @@ function ApprovalBadge({ approval }: { approval: Drug["approval_status"] }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`${status}${phase} (${approval?.source?.label ?? "source"})`}
-      className="rounded-full transition-colors hover:[&>span]:bg-white focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+      className="rounded-full transition-colors hover:[&>span]:bg-frost focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
       {badge}
     </a>

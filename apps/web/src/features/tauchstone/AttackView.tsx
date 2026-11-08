@@ -256,7 +256,7 @@ function AttackSessionView() {
   const busy = run.isPending || start.isPending || runningId !== null;
   const budgetSelect = (
     <Select value={budget} onValueChange={(value) => value !== null && setBudget(value)} disabled={busy}>
-      <SelectTrigger aria-labelledby="session-budget-label" className="h-9 min-w-40 rounded-full border-0 bg-white/70 pr-3 pl-3.5 font-mono text-[12.5px] ring-1 ring-ink/12 backdrop-blur hover:bg-white/90">
+      <SelectTrigger aria-labelledby="session-budget-label" className="h-9 min-w-40 rounded-full border-0 bg-frost/70 pr-3 pl-3.5 font-mono text-[12.5px] ring-1 ring-ink/12 backdrop-blur hover:bg-frost/90">
         <SelectValue><FlaskIcon className="text-ink-3" />{budget} experiment{budget === 1 ? '' : 's'}</SelectValue>
       </SelectTrigger>
       <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
@@ -298,7 +298,7 @@ function AttackSessionView() {
                 { icon: <PlayIcon />, title: 'Commit', text: 'Lock in one test' },
                 { icon: <EyeIcon />, title: 'Reveal', text: 'Belief updates' },
               ].map((s, i) => (
-                <li key={s.title} className="flex items-center gap-3 rounded-xl bg-white/55 px-3 py-2.5 ring-1 ring-white/80">
+                <li key={s.title} className="flex items-center gap-3 rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-4">{s.icon}</span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium text-ink"><span className="mr-1.5 font-mono text-[11px] text-ink-3">{i + 1}</span>{s.title}</span>
@@ -363,7 +363,7 @@ function AttackSessionView() {
                         )}
                       </div>
                     </div>
-                    <div className="h-[104px] w-full max-w-lg rounded-xl bg-white/55 px-3 py-2.5 ring-1 ring-white/80">
+                    <div className="h-[104px] w-full max-w-lg rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
                       <BeliefTrace points={trace} slots={Math.min(session.budget, session.contexts.length)} className="h-full" />
                     </div>
                   </div>
@@ -390,7 +390,7 @@ function AttackSessionView() {
                       {rec.note}
                     </p>
                   )}
-                  <div className="flex items-center justify-between gap-3 rounded-xl bg-white/55 px-3 py-2 ring-1 ring-white/80">
+                  <div className="flex items-center justify-between gap-3 rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80">
                     <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-ink-3"><ArrowRightIcon className="size-3.5" />Next test</span>
                     <p className="m-0 min-w-0 truncate font-mono text-[12.5px] text-ink" aria-label="Next experiment" aria-live="polite">
                       {selectedContext ? unit(selectedContext.label) : 'none selected'}
@@ -447,8 +447,8 @@ function AttackSessionView() {
                               isPicked
                                 ? 'bg-primary/10 ring-primary/25'
                                 : revealed
-                                  ? 'bg-white/35 ring-white/60'
-                                  : 'bg-white/55 ring-white/80 enabled:hover:bg-primary/[0.06]',
+                                  ? 'bg-frost/35 ring-rim/60'
+                                  : 'bg-frost/55 ring-rim/80 enabled:hover:bg-primary/[0.06]',
                             )}>
                             <WellMarker state={state} />
                             <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
@@ -577,7 +577,7 @@ function AttackSessionView() {
 }
 
 /** Frosted inner tile for readouts inside a panel. */
-const TILE = 'rounded-xl bg-white/55 px-3 py-2 ring-1 ring-white/80';
+const TILE = 'rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80';
 
 type LogTint = 'seal' | 'ok' | 'bad' | 'belief';
 const logTint = (line: LogLine): LogTint => (line.kind === 'SEAL' ? 'seal' : line.kind === 'BELIEF' ? 'belief' : line.tone === 'bad' ? 'bad' : 'ok');

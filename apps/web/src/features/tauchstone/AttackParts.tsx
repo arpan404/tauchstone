@@ -6,7 +6,7 @@ export type WellMarkerState = 'sealed' | 'next' | 'running' | 'survive' | 'fail'
 
 const WELL: Record<WellMarkerState, string> = {
   sealed: 'bg-ink/[0.06] text-ink-3',
-  next: 'bg-white text-primary ring-2 ring-primary',
+  next: 'bg-frost text-primary ring-2 ring-primary',
   running: 'bg-accent-soft text-primary',
   survive: 'bg-ok text-white',
   fail: 'bg-bad text-white',
@@ -69,10 +69,10 @@ export function BeliefTrace({
             </linearGradient>
           </defs>
           {[0, 50, 100].map((v) => (
-            <line key={v} x1="0" x2="100" y1={v} y2={v} stroke="rgb(15 24 48 / 0.08)" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray={v === 50 ? '3 3' : undefined} />
+            <line key={v} x1="0" x2="100" y1={v} y2={v} stroke="var(--ink)" strokeOpacity="0.08" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray={v === 50 ? '3 3' : undefined} />
           ))}
           {Array.from({ length: n + 1 }, (_, i) => (
-            <line key={i} x1={x(i)} x2={x(i)} y1="95" y2="100" stroke="rgb(15 24 48 / 0.18)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            <line key={i} x1={x(i)} x2={x(i)} y1="95" y2="100" stroke="var(--ink)" strokeOpacity="0.18" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           ))}
           {area && (
             <motion.path d={area} fill="url(#belief-fill)" initial={false} animate={{ d: area }}
@@ -96,7 +96,7 @@ export function BeliefTrace({
           <motion.span
             key={i}
             className={cn(
-              'absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white',
+              'absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-rim',
               pt.outcome === 'fail' ? 'bg-bad' : pt.outcome === 'survive' ? 'bg-ok' : 'bg-primary',
             )}
             style={{ left: `${x(i)}%`, top: `${y(pt.p)}%` }}

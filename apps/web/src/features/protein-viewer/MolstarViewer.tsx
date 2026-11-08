@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useIsDark } from '@/app/theme';
 import molstarUrl from 'molstar/build/viewer/molstar.js?url';
 import 'molstar/build/viewer/molstar.css';
 
@@ -45,6 +46,7 @@ export function MolstarViewer({ url }: { url: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<MolstarViewerInstance | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const dark = useIsDark();
 
   useEffect(() => {
     let disposed = false;
@@ -55,7 +57,7 @@ export function MolstarViewer({ url }: { url: string }) {
         if (disposed || !window.molstar?.Viewer || !host) return;
         const viewer = await window.molstar.Viewer.create(host, {
           layoutIsExpanded: false,
-          viewportBackgroundColor: '#f6f7f9', // --surface-2: sits in a light panel
+          viewportBackgroundColor: dark ? '#1b1b1e' : '#f6f7f9', // --surface-2 of each theme
           layoutShowControls: false,
           layoutShowLeftPanel: false,
           layoutShowSequence: false,
@@ -91,7 +93,7 @@ export function MolstarViewer({ url }: { url: string }) {
       }
       viewerRef.current = null;
     };
-  }, [url]);
+  }, [url, dark]);
 
   if (error) {
     return (

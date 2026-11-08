@@ -161,7 +161,7 @@ function RankTrack({ rank, total }: { rank: number; total: number }) {
       aria-hidden
     >
       <span
-        className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-[2.5px] ring-white"
+        className="absolute top-1/2 size-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-[2.5px] ring-rim"
         style={{ left: `${at * 100}%` }}
       />
     </span>

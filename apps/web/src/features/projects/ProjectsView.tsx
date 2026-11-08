@@ -46,7 +46,7 @@ const COLS =
 const SELECTED =
   "bg-gradient-to-b from-[#2b6fd3] to-[#1453ad] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]";
 const FIELD =
-  "h-10 rounded-xl border-0 bg-white/70 px-3 text-[13.5px] ring-1 ring-ink/12 backdrop-blur focus-visible:ring-2 focus-visible:ring-primary";
+  "h-10 rounded-xl border-0 bg-frost/70 px-3 text-[13.5px] ring-1 ring-ink/12 backdrop-blur focus-visible:ring-2 focus-visible:ring-primary";
 const GLASS_EMPTY = "";
 
 function PreregBadge({ on }: { on: boolean }) {
@@ -452,7 +452,7 @@ function NewProjectDialog({
                     "flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 [&>svg]:size-4",
                     on
                       ? SELECTED
-                      : "bg-white/55 ring-1 ring-white/80 hover:bg-primary/8",
+                      : "bg-frost/55 ring-1 ring-rim/80 hover:bg-primary/8",
                   )}
                 >
                   <span
@@ -556,7 +556,7 @@ function DeleteProjectDialog({
             Delete {project?.name}?
           </DialogTitle>
         </DialogHeader>
-        <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-xl bg-white/55 px-4 py-3 text-[12.5px] ring-1 ring-white/80">
+        <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 rounded-xl bg-frost/55 px-4 py-3 text-[12.5px] ring-1 ring-rim/80">
           <dt className="text-ink-3">Ranked</dt>
           <dd className="m-0 font-mono text-ink-2">
             {num(project?.n_ranked) ?? "not screened"}
