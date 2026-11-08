@@ -1,6 +1,6 @@
-/** Format a revealed outcome value to 2 decimals; '—' when absent. */
+/** Format a revealed outcome value to 2 decimals; 'n/a' when absent. */
 export function fmt2(x: number | null | undefined): string {
-  if (x === null || x === undefined || !Number.isFinite(x)) return '—';
+  if (x === null || x === undefined || !Number.isFinite(x)) return 'n/a';
   return x.toFixed(2);
 }
 
