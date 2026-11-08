@@ -140,7 +140,8 @@ export function RepurposingView({
               aria-busy={isPending || undefined}
               className="w-full border-separate border-spacing-0 text-[13.5px]"
             >
-              <TableHeader className="sticky top-14 z-10 [&_tr]:border-0 [&_th]:border-b [&_th]:border-line">
+              {/* Below lg the panel scrolls sideways and becomes the sticky container, so the toolbar offset must not apply. */}
+              <TableHeader className="sticky top-0 z-10 lg:top-14 [&_tr]:border-0 [&_th]:border-b [&_th]:border-line">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className={cn(head, "w-11 rounded-tl-lg pl-4")}>
                     <span className="sr-only">Compare</span>
