@@ -59,7 +59,7 @@ const FILTERS: [FilterKey, string, Icon][] = [
   ["approved", "Approved", SealCheckIcon],
   ["brain_cells", "Brain-cell data", BrainIcon],
   ["penetrant", "Brain-penetrant", ArrowsInIcon],
-  ["min_contexts", "≥ 5 contexts", StackIcon],
+  ["min_contexts", "≥ 5 conditions", StackIcon],
 ];
 const MAX_COMPARE = 4;
 const COLUMNS = 8;
@@ -255,7 +255,7 @@ export function RepurposingView({
                   <SortHead k="rank" sort={sort} onSort={onSort} className="w-14 text-right" align="right" tip="poolRank">#</SortHead>
                   <SortHead k="name" sort={sort} onSort={onSort}>Drug</SortHead>
                   <SortHead k="reversal" sort={sort} onSort={onSort} className="w-24 xl:w-36 2xl:w-44" tip="reversal">Reversal</SortHead>
-                  <SortHead k="contexts" sort={sort} onSort={onSort} className="hidden w-20 text-right xl:table-cell" align="right" tip="contexts">Contexts</SortHead>
+                  <SortHead k="contexts" sort={sort} onSort={onSort} className="hidden w-20 text-right xl:table-cell" align="right" tip="contexts">Conditions</SortHead>
                   <th className={cn(head, "hidden w-32 xl:table-cell")}><Term term="brainCells">Brain cells</Term></th>
                   <th className={cn(head, "w-40 2xl:w-44")}><Term term="exposure">Exposure</Term></th>
                   <th className={cn(head, "w-60 pr-3 xl:w-36 2xl:w-60")}><Term term="approval">Approval</Term></th>

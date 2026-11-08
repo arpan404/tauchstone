@@ -23,7 +23,7 @@ import {
   type Project,
 } from "@/api/workspace";
 import { useUi } from "@/store/ui";
-import { EmptyState, NumberTicker, StatusBadge } from "@/components/system";
+import { EmptyState, NumberTicker, StatusBadge, Term } from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -96,7 +96,7 @@ export function ProjectsView() {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <StatusBadge>
                 <FlaskIcon aria-hidden />
-                LINCS L1000 gold
+                LINCS L1000 quality-filtered
               </StatusBadge>
               <StatusBadge>One signature per cohort</StatusBadge>
               {workspaceMock() && (
@@ -164,7 +164,7 @@ export function ProjectsView() {
                   Ranked
                 </span>
                 <span role="columnheader" className="text-right">
-                  Attack-ready
+                  <Term tip="Drugs that have hidden tests, so they can be tested in Attack.">Testable</Term>
                 </span>
                 <span role="columnheader" className="pl-3">
                   Preregistration
@@ -318,7 +318,7 @@ function ProjectRow({
         )}
       </Cell>
       <Cell
-        label="Attack-ready"
+        label="Testable"
         className="font-mono text-ink-2 tabular-nums md:text-right"
       >
         {num(p.n_attack_ready) ?? <span className="text-ink-3">0</span>}
@@ -333,7 +333,7 @@ function ProjectRow({
             title={p.last_screen_id}
           >
             <SnowflakeIcon className="size-3.5 text-primary" aria-hidden />
-            frozen run
+            original run
           </span>
         ) : p.last_screen_id ? (
           <span

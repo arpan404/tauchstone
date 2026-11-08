@@ -78,17 +78,17 @@ type StatusIcon = typeof CircleIcon;
 const STATUS: Record<Screen["status"] | "idle", [string, Tone, StatusIcon, boolean]> = {
   idle: ["Ready", "neutral", CircleIcon, false],
   queued: ["Queued", "neutral", HourglassIcon, false],
-  mapping: ["Mapping genes", "accent", SpinnerGapIcon, true],
+  mapping: ["Matching genes", "accent", SpinnerGapIcon, true],
   scoring: ["Scoring", "accent", SpinnerGapIcon, true],
-  aggregating: ["Aggregating", "accent", SpinnerGapIcon, true],
+  aggregating: ["Combining per drug", "accent", SpinnerGapIcon, true],
   done: ["Done", "ok", CheckCircleIcon, false],
   failed: ["Failed", "bad", XCircleIcon, false],
 };
 const METHOD = [
-  ["Library", "LINCS L1000 gold"],
-  ["Genes", "978 landmark"],
-  ["Scores", "WTCS · KS · cosine"],
-  ["Filter", "Clinical stage"],
+  ["Library", "LINCS L1000, quality-filtered"],
+  ["Genes", "978 measured genes"],
+  ["Scores", "WTCS, KS, cosine"],
+  ["Filter", "Clinical-stage drugs"],
 ] as const;
 /** Selected tile: solid blue pill from the Nov 8 brief (no drop shadow, inner highlight only). */
 const SELECTED =
@@ -377,7 +377,7 @@ export function ScreenView() {
           <Panel
             icon={<FlaskIcon />}
             title="Signature source"
-            caption="AD minus control, one cohort per screen"
+            caption="Alzheimer's vs control, one cohort per screen"
             actions={
               notPreregistered && (
                 <StatusBadge tone="gap">
@@ -552,7 +552,7 @@ export function ScreenView() {
           <Panel
             icon={<CirclesThreeIcon />}
             title="Cell model"
-            caption="Follows the screen state"
+            caption="Moves with screen progress"
             className="max-lg:order-last"
             actions={<StatusBadge>Illustration</StatusBadge>}
             bodyClassName="px-3 pt-2 pb-3"
@@ -577,9 +577,9 @@ export function ScreenView() {
           title="Top hits"
           caption={
             done
-              ? "Consensus reversal score"
+              ? "Reversal score"
               : top.length > 0
-                ? "provisional"
+                ? "Provisional, still scoring"
                 : running
                   ? "Waiting for scores"
                   : "None yet"

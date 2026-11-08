@@ -4,7 +4,7 @@ export const SIGNATURES = [
     id: "GSE132903",
     name: "middle temporal gyrus",
     method: "limma",
-    meta: ["97 AD", "98 control", "16,437 genes"],
+    meta: ["97 Alzheimer's", "98 control", "16,437 genes"],
     badge: { tone: "ok", label: "QC 7/7" },
     warning: null,
   },
@@ -12,8 +12,8 @@ export const SIGNATURES = [
     id: "GSE173955",
     name: "hippocampus",
     method: "RNA-seq",
-    meta: ["8 AD", "10 control", "14,958 genes"],
-    badge: { tone: "gap", label: "held-out" },
+    meta: ["8 Alzheimer's", "10 control", "14,958 genes"],
+    badge: { tone: "gap", label: "Held back for testing" },
     // QC fact (integrity log #6): quantile normalisation left 0 FDR genes. Not recomputed here.
     warning: {
       label: "Weak signature",
