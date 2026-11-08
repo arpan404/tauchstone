@@ -47,8 +47,12 @@ function stubServer(estimate: (ids: string[]) => Response) {
   vi.stubGlobal("fetch", fetch);
   return fetch;
 }
+/** Replace the default chips with a pasted list, then run the lookup. */
 function check(names: string) {
-  fireEvent.change(screen.getByLabelText("Compound names"), { target: { value: names } });
+  fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+  fireEvent.paste(screen.getByLabelText("Compound names"), {
+    clipboardData: { getData: () => names },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Check" }));
 }
 
