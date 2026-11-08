@@ -79,6 +79,7 @@ EVIDENCE_FILES = [
     "withdrawn.parquet",  # ChEMBL 37 withdrawn flag, display only
     "drug_map.parquet",  # candidate pool for live screens + lookup
     "gaps.parquet",
+    "cell_lines.parquet",  # cell-line cards (Cellosaurus CC BY 4.0 + LINCS metadata)
 ]
 
 TAUCHSTONE_FILES = [
@@ -235,6 +236,14 @@ def main() -> None:
             copy_with_sidecar(processed, f"models/exploratory/{name}", demo_processed, copied)
         else:
             print(f"note: no {name}; the AI estimate column stays hidden in this bundle")
+
+    # Cell-line photos (Human Protein Atlas, CC BY 4.0), served by /cell-lines/{id}/image.
+    img_src = processed / "evidence" / "cell_line_images"
+    img_dst = demo_processed / "evidence" / "cell_line_images"
+    img_dst.mkdir(parents=True, exist_ok=True)
+    for img in sorted(img_src.glob("*.jpg")):
+        shutil.copy2(img, img_dst / img.name)
+        copied.append(img_dst / img.name)
 
     mol_src = processed / "evidence" / "molecules"
     mol_dst = demo_processed / "evidence" / "molecules"

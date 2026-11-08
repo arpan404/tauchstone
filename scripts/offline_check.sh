@@ -120,6 +120,15 @@ if pdb_id:
 else:
     check("structure cif (no pdb_id in demo evidence)", False, "no structure served")
 
+s, cl, _ = req("GET", "/api/cell-lines")
+mcf7 = next((c for c in (cl or {}).get("cell_lines", []) if c.get("cell_id") == "MCF7"), {})
+check("cell-line card for MCF7 (Cellosaurus, offline)",
+      s == 200 and mcf7.get("cellosaurus_id") == "CVCL_0031" and "breast" in mcf7.get("summary", "").lower(),
+      f"status={s} card={mcf7.get('summary')}")
+s, _, ct = req("GET", "/api/cell-lines/MCF7/image")
+check("cell-line photo for MCF7 served from the bundle", s == 200 and "image/jpeg" in (ct or ""),
+      f"status={s} ct={ct}")
+
 # ---- MVP flow: projects, live screen, drug page, lookup, resources, report ----
 import time
 
