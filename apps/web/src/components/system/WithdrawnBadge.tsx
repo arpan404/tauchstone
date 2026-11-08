@@ -7,8 +7,11 @@ type Approval = Schema<"ApprovalStatus"> | null | undefined;
 const MAX_COUNTRIES = 3;
 const split = (s?: string) => (s ? s.split(";").map((x) => x.trim()).filter(Boolean) : []);
 
+/** "withdrawn 1980"; a single-country withdrawal names the country so it never reads as worldwide. */
 function withdrawnLabel(a: Approval) {
-  return a?.withdrawn_year ? `withdrawn ${a.withdrawn_year}` : "withdrawn";
+  const countries = split(a?.withdrawn_country);
+  const where = countries.length === 1 && countries[0].toLowerCase() !== "worldwide" ? ` in ${countries[0]}` : "";
+  return `withdrawn${where}${a?.withdrawn_year ? ` ${a.withdrawn_year}` : ""}`;
 }
 
 /** Bad-tone badge when ChEMBL marks the drug withdrawn. Renders nothing otherwise. */
