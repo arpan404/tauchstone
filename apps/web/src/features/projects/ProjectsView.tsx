@@ -47,8 +47,7 @@ const SELECTED =
   "bg-gradient-to-b from-[#2b6fd3] to-[#1453ad] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]";
 const FIELD =
   "h-10 rounded-xl border-0 bg-white/70 px-3 text-[13.5px] ring-1 ring-ink/12 backdrop-blur focus-visible:ring-2 focus-visible:ring-primary";
-const GLASS_EMPTY =
-  "rounded-[18px] border-solid border-white/80 bg-white/70 shadow-[var(--glass-shadow)] backdrop-blur-xl";
+const GLASS_EMPTY = "";
 
 function PreregBadge({ on }: { on: boolean }) {
   return on ? (

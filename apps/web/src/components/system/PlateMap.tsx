@@ -7,7 +7,7 @@ const COLS = 24;
 export const PLATE_WELLS = ROWS.length * COLS; // 384, the LINCS L1000 plate format
 
 const FILL: Record<WellState, string> = {
-  empty: "bg-surface-2 border-line",
+  empty: "bg-ink/[0.06] border-transparent",
   scored: "bg-primary/35 border-transparent",
   hit: "bg-primary border-transparent",
   sealed: "bg-ink/80 border-transparent",
