@@ -62,11 +62,11 @@ it("shows the AI estimate column with basis tags and the measured score beside i
   check("donepezil, galantamine, nepafenac, lithium");
   expect(await screen.findByRole("columnheader", { name: "AI estimate" })).toBeTruthy();
   const donepezil = within(rowFor("donepezil"));
-  expect(donepezil.getByText("in training data")).toBeTruthy();
+  expect(donepezil.getByText("in training")).toBeTruthy();
   expect(donepezil.getByText("measured")).toBeTruthy();
   expect(donepezil.getByLabelText("AI estimate -0.17")).toBeTruthy();
-  expect(within(rowFor("galantamine")).getByText("held out from training")).toBeTruthy();
-  expect(within(rowFor("nepafenac")).getByText("held out from training")).toBeTruthy();
+  expect(within(rowFor("galantamine")).getByText("held out")).toBeTruthy();
+  expect(within(rowFor("nepafenac")).getByText("held out")).toBeTruthy();
   expect(within(rowFor("lithium")).queryByText(/AI /)).toBeNull();
   expect(screen.getByText("Estimated from structure. Exploratory, not part of the ranking.")).toBeTruthy();
   expect(screen.getByText("not preregistered")).toBeTruthy();
@@ -110,7 +110,7 @@ it("leaves the column out quietly when the model is not trained (409)", async ()
 });
 
 it("explains the estimate plainly, with the honest test numbers", () => {
-  for (const label of ["AI estimate", "held out from training", "in training data", "new structure"]) {
+  for (const label of ["AI estimate", "held out", "in training", "new structure"]) {
     const tip = badgeTip(label) ?? "";
     expect(tip, label).toMatch(/random forest/);
     expect(tip, label).toMatch(/barely better than guessing the average/);
@@ -118,7 +118,7 @@ it("explains the estimate plainly, with the honest test numbers", () => {
     expect(tip, label).toMatch(/Never used for ranking or for any hidden test/);
     expect(tip, label).not.toMatch(/[–—]/);
   }
-  expect(badgeTip("in training data")).toMatch(/saw this compound.*looks better than it really is/);
+  expect(badgeTip("in training")).toMatch(/saw this compound.*looks better than it really is/);
   expect(badgeTip("AI estimate")).toMatch(/"In training data" means the model saw this compound while training/);
 });
 

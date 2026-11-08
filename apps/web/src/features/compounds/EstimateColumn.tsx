@@ -7,9 +7,9 @@ import type { Estimate } from "./useEstimates";
 export const ESTIMATE_COLUMN = "AI estimate";
 
 const BASIS: Record<NonNullable<Estimate["basis"]>, { label: string; tone: Tone }> = {
-  held_out: { label: "held out from training", tone: "neutral" },
+  held_out: { label: "held out", tone: "neutral" },
   // Amber: the model saw this compound, so the estimate flatters it.
-  in_training: { label: "in training data", tone: "gap" },
+  in_training: { label: "in training", tone: "gap" },
   new_structure: { label: "new structure", tone: "neutral" },
 };
 

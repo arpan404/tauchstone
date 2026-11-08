@@ -117,7 +117,7 @@ export function CompoundsView({
       <MockRibbon show={mock} />
       <div className="flex-1 overflow-auto p-4 sm:p-6">
         <motion.div
-          className="mx-auto grid max-w-[1360px] items-start gap-4 min-[1400px]:grid-cols-[316px_minmax(0,1fr)]"
+          className="mx-auto grid max-w-[1600px] items-start gap-4 min-[1700px]:grid-cols-[316px_minmax(0,1fr)]"
           initial={reduce ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18 }}
@@ -131,7 +131,7 @@ export function CompoundsView({
                 not preregistered
               </StatusBadge>
             }
-            className="min-[1400px]:sticky min-[1400px]:top-0"
+            className="min-[1700px]:sticky min-[1700px]:top-0"
           >
             <form
               className="space-y-3"
@@ -343,7 +343,7 @@ export function CompoundsView({
             )}
             {estimates.show && results.length > 0 && !lookup.isPending && <EstimateCaption />}
           </Panel>
-          <EstimateAbout className="min-[1400px]:col-start-2" />
+          <EstimateAbout className="min-[1700px]:col-start-2" />
         </motion.div>
       </div>
     </div>
