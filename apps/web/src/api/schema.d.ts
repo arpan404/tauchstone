@@ -293,22 +293,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/lookup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["lookupCompounds"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/compounds/estimate": {
         parameters: {
             query?: never;
@@ -323,6 +307,22 @@ export interface paths {
          * @description Display only. A random forest on Morgan fingerprints guesses the discovery reversal score LINCS would likely measure. It never feeds ranking, thresholds, the truth table or any hidden test. On held-out scaffolds it is barely better than predicting the training mean (MAE 0.472 vs 0.481, R2 0.023, Spearman 0.18). 409 when the model is not trained, still training, or its artifacts fail their provenance checksum.
          */
         post: operations["estimateCompounds"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["lookupCompounds"];
         delete?: never;
         options?: never;
         head?: never;
@@ -870,22 +870,6 @@ export interface components {
             preregistered: boolean;
             provenance?: components["schemas"]["Provenance"];
         };
-        LookupResult: {
-            query: string;
-            /**
-             * @description not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name
-             * @enum {string}
-             */
-            status: "ranked" | "not_rankable" | "not_in_lincs" | "unrecognized";
-            drug_id?: string | null;
-            name?: string | null;
-            pool_rank?: number | null;
-            rank_total?: number | null;
-            consensus?: number | null;
-            n_contexts?: number | null;
-            attack_ready?: boolean;
-            preregistered?: boolean;
-        };
         /** @description Exploratory, not preregistered. Never used for ranking or any hidden test. */
         CompoundEstimate: {
             id: string;
@@ -904,6 +888,22 @@ export interface components {
              */
             status: "stored" | "computed" | "no_structure" | "invalid_structure" | "unknown_id";
             run_id: string;
+        };
+        LookupResult: {
+            query: string;
+            /**
+             * @description not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name
+             * @enum {string}
+             */
+            status: "ranked" | "not_rankable" | "not_in_lincs" | "unrecognized";
+            drug_id?: string | null;
+            name?: string | null;
+            pool_rank?: number | null;
+            rank_total?: number | null;
+            consensus?: number | null;
+            n_contexts?: number | null;
+            attack_ready?: boolean;
+            preregistered?: boolean;
         };
         ResourceAgreement: {
             /** @enum {string} */
@@ -1474,33 +1474,6 @@ export interface operations {
             };
         };
     };
-    lookupCompounds: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    names: string[];
-                    project_id?: string;
-                };
-            };
-        };
-        responses: {
-            /** @description one result per input name, same order */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LookupResult"][];
-                };
-            };
-        };
-    };
     estimateCompounds: {
         parameters: {
             query?: never;
@@ -1532,6 +1505,33 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    lookupCompounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    names: string[];
+                    project_id?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description one result per input name, same order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LookupResult"][];
+                };
             };
         };
     };

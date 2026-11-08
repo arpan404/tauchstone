@@ -354,26 +354,6 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/ResourceAgreement" } }
 
-  /lookup:
-    post:
-      operationId: lookupCompounds
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [names]
-              properties:
-                names: { type: array, items: { type: string }, maxItems: 200 }
-                project_id: { type: string }
-      responses:
-        "200":
-          description: one result per input name, same order
-          content:
-            application/json:
-              schema: { type: array, items: { $ref: "#/components/schemas/LookupResult" } }
-
   /compounds/estimate:
     post:
       operationId: estimateCompounds
@@ -403,6 +383,26 @@ paths:
               schema: { type: array, items: { $ref: "#/components/schemas/CompoundEstimate" } }
         "409":
           description: exploratory model not trained, training, or failing verification
+
+  /lookup:
+    post:
+      operationId: lookupCompounds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [names]
+              properties:
+                names: { type: array, items: { type: string }, maxItems: 200 }
+                project_id: { type: string }
+      responses:
+        "200":
+          description: one result per input name, same order
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/LookupResult" } }
 
   /reports/{drug_id}:
     get:
@@ -994,21 +994,6 @@ components:
         preregistered: { type: boolean, description: "true if the drug is in the sealed benchmark or development pool of the built-in project" }
         provenance: { $ref: "#/components/schemas/Provenance" }
 
-    LookupResult:
-      type: object
-      required: [query, status]
-      properties:
-        query: { type: string }
-        status: { type: string, enum: [ranked, not_rankable, not_in_lincs, unrecognized], description: "not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name" }
-        drug_id: { type: [string, "null"] }
-        name: { type: [string, "null"] }
-        pool_rank: { type: [integer, "null"] }
-        rank_total: { type: [integer, "null"] }
-        consensus: { type: [number, "null"] }
-        n_contexts: { type: [integer, "null"] }
-        attack_ready: { type: boolean }
-        preregistered: { type: boolean }
-
     CompoundEstimate:
       type: object
       required: [id, estimate, basis, measured, status, run_id]
@@ -1023,6 +1008,21 @@ components:
         measured: { type: [number, "null"], description: discovery consensus_median when the compound was scored }
         status: { type: string, enum: [stored, computed, no_structure, invalid_structure, unknown_id], description: "stored: from the trained run's predictions; computed: fresh from SMILES; otherwise why no estimate exists" }
         run_id: { type: string }
+
+    LookupResult:
+      type: object
+      required: [query, status]
+      properties:
+        query: { type: string }
+        status: { type: string, enum: [ranked, not_rankable, not_in_lincs, unrecognized], description: "not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name" }
+        drug_id: { type: [string, "null"] }
+        name: { type: [string, "null"] }
+        pool_rank: { type: [integer, "null"] }
+        rank_total: { type: [integer, "null"] }
+        consensus: { type: [number, "null"] }
+        n_contexts: { type: [integer, "null"] }
+        attack_ready: { type: boolean }
+        preregistered: { type: boolean }
 
     ResourceAgreement:
       type: object
