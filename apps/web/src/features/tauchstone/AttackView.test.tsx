@@ -128,7 +128,7 @@ it('does not render an outcome attached to a hidden context', () => {
   const hidden = screen.getByRole('button', { name: /Held-out cohort A/ });
   expect(hidden.getAttribute('data-outcome')).toBeNull();
   expect(hidden.textContent).not.toContain('Revealed');
-  expect(hidden.textContent).not.toMatch(/(?<!chance to )\bfail(ed)?\b/i);
+  expect(hidden.textContent).not.toMatch(/(?<!to )\bfail(ed)?\b/i);
   expect(screen.queryByText('Failed')).toBeNull();
   expect(screen.getByText('No tests run yet')).toBeTruthy();
   expect(mocks.run).not.toHaveBeenCalled();

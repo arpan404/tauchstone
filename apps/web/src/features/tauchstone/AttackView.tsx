@@ -295,8 +295,8 @@ function AttackSessionView() {
             <ol className="mt-6 grid gap-2 sm:grid-cols-3" aria-label="Steps">
               {[
                 { icon: <LockSimpleIcon />, title: 'Pick a hidden test', text: 'Results stay hidden until run' },
-                { icon: <PlayIcon />, title: 'Run it', text: 'Uses one test from the budget' },
-                { icon: <EyeIcon />, title: 'See the result', text: 'Chance the claim holds updates' },
+                { icon: <PlayIcon />, title: 'Run it', text: 'Uses 1 test of the budget' },
+                { icon: <EyeIcon />, title: 'See the result', text: 'Chance it holds updates' },
               ].map((s, i) => (
                 <li key={s.title} className="flex items-center gap-3 rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-4">{s.icon}</span>
@@ -474,7 +474,7 @@ function AttackSessionView() {
                               ) : (
                                 <>
                                   <span className="block text-[14px] text-ink">{failPct}%</span>
-                                  <span className="block text-[11px] text-ink-3"><HelpLabel text="chance to fail" help={FAIL_RISK_HELP} /></span>
+                                  <span className="block text-[11px] text-ink-3"><HelpLabel text="to fail" help={FAIL_RISK_HELP} /></span>
                                 </>
                               )}
                             </span>
