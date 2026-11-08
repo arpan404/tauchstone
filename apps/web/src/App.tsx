@@ -11,6 +11,9 @@ import { AttackView } from "@/features/tauchstone/AttackView";
 import { ProjectsView } from "@/features/projects/ProjectsView";
 import { ScreenView } from "@/features/screen/ScreenView";
 import { Chip } from "@/components/mvp";
+import { EmptyState } from "@/components/system";
+import { Button } from "@/components/ui/button";
+import { FileTextIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { ShellBoundaryContext } from "@/components/BoundaryBanner";
 import { AppShell } from "@/app/AppShell";
@@ -40,7 +43,7 @@ function optionalView(folder: string, exportName: string) {
       })
     : () => (
         <div className="mvp-view">
-          <Chip>{exportName.replace("View", "")} · pending</Chip>
+          <EmptyState title={`${exportName.replace("View", "")} unavailable`} />
         </div>
       );
 }
@@ -48,12 +51,20 @@ const CompareInner = optionalView("compare", "CompareView") as ComponentType<{ d
 const ReportInner = optionalView("report", "ReportView") as ComponentType<{ drugId: string; projectId?: string }>;
 function Compare() {
   const { compareIds, currentProjectId } = useUi();
-  if (compareIds.length < 2) return <div className="mvp-view"><Chip>Select 2–4 candidates</Chip></div>;
   return <CompareInner drugIds={compareIds} projectId={currentProjectId ?? undefined} />;
 }
 function Report() {
-  const { selectedCandidateId, currentProjectId } = useUi();
-  if (!selectedCandidateId) return <div className="mvp-view"><Chip>Select a candidate</Chip></div>;
+  const { selectedCandidateId, currentProjectId, setStep } = useUi();
+  if (!selectedCandidateId)
+    return (
+      <div className="mvp-view">
+        <EmptyState
+          icon={<FileTextIcon />}
+          title="No candidate selected"
+          action={<Button onClick={() => setStep("candidates")}>Choose candidate</Button>}
+        />
+      </div>
+    );
   return <ReportInner drugId={selectedCandidateId} projectId={currentProjectId ?? undefined} />;
 }
 const Compounds = optionalView("compounds", "CompoundsView");

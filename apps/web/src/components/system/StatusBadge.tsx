@@ -14,13 +14,15 @@ const TONES: Record<Tone, string> = {
 /** Short state label (max 4 words). Square-ish, never a pill. */
 export function StatusBadge({
   tone = "neutral",
+  size = "md",
   className,
   ...props
-}: ComponentProps<"span"> & { tone?: Tone }) {
+}: ComponentProps<"span"> & { tone?: Tone; size?: "sm" | "md" }) {
   return (
     <span
       className={cn(
-        "inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md border px-2 text-[12px] font-medium whitespace-nowrap [&>svg]:size-3.5",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-md border font-medium whitespace-nowrap [&>svg]:size-3.5",
+        size === "sm" ? "h-5 px-1.5 text-[11px]" : "h-6 px-2 text-[12px]",
         TONES[tone],
         className,
       )}
