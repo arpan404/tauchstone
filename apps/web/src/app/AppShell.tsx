@@ -66,7 +66,7 @@ const ICONS: Partial<Record<StepId, Icon>> = {
 };
 
 const navButton =
-  "h-10 gap-3 rounded-xl px-3.5 text-[14.5px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink [&_svg]:size-5 [&_svg]:text-ink-3 hover:[&_svg]:text-primary data-active:bg-gradient-to-b data-active:from-[#2b6fd3] data-active:to-[#1453ad] data-active:text-white data-active:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] data-active:[&_svg]:text-white data-active:hover:from-[#3a7ddd] data-active:hover:to-[#185cbc] data-active:hover:text-white data-active:hover:[&_svg]:text-white";
+  "h-10 gap-3 rounded-xl px-3.5 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-full group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:[&>span]:hidden text-[14.5px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink [&_svg]:size-5 [&_svg]:text-ink-3 hover:[&_svg]:text-primary data-active:bg-gradient-to-b data-active:from-[#2b6fd3] data-active:to-[#1453ad] data-active:text-white data-active:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] data-active:[&_svg]:text-white data-active:hover:from-[#3a7ddd] data-active:hover:to-[#185cbc] data-active:hover:text-white data-active:hover:[&_svg]:text-white";
 
 export function AppShell({
   title,
@@ -96,7 +96,7 @@ export function AppShell({
     <SidebarProvider
       // Full sidebar on laptops and up; an icon rail on tablets and small laptops (expandable).
       defaultOpen={typeof window === "undefined" || window.matchMedia("(min-width: 1280px)").matches}
-      style={{ "--sidebar-width": "16.5rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "16.5rem", "--sidebar-width-icon": "3.5rem" } as React.CSSProperties}
       className="atmosphere h-dvh min-h-0"
     >
       <a className="workspace-skip" href="#workspace">
