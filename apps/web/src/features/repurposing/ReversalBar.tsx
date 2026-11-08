@@ -1,7 +1,7 @@
 import { cn } from "cn";
 import { REVERSAL_SCALE } from "./format";
 
-/** Slim accent bar for reversal magnitude. No background track. */
+/** Rounded gradient pill for reversal magnitude, light blue to primary. No track. */
 export function ReversalBar({
   score,
   className,
@@ -11,9 +11,9 @@ export function ReversalBar({
 }) {
   const width = Math.min(100, Math.max(0, (-score / REVERSAL_SCALE) * 100));
   return (
-    <span aria-hidden className={cn("block h-1 w-28", className)}>
+    <span aria-hidden className={cn("block h-1.5 w-28", className)}>
       <span
-        className="block h-full rounded-[1px] bg-primary"
+        className="block h-full rounded-full bg-gradient-to-r from-[#8db1ea] to-primary"
         style={{ width: `${width}%` }}
       />
     </span>
