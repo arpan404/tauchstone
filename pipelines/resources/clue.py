@@ -12,6 +12,7 @@ import h5py
 import httpx
 import numpy as np
 
+from pipelines.resources.cache import redact
 from pipelines.resources.perturbseqr import normalize_name, rank_compounds
 
 URL = "https://api.clue.io/api/jobs"
@@ -82,17 +83,18 @@ def fetch(up: list[str], down: list[str], key: str, cache) -> list[dict]:
     result = cache.post(URL, payload, headers={"user_key": key})
     result = result.get("result", result)
     job_id = result["job_id"]
-    deadline = time.monotonic() + 600
+    # CLUE queues jobs; 45 minutes covers a busy queue. Re-running reuses the cached job.
+    deadline = time.monotonic() + 2700
     with httpx.Client(headers={"user_key": key}, timeout=180) as client:
         while result.get("download_status") != "completed":
             if time.monotonic() >= deadline:
-                raise TimeoutError(f"CLUE job {job_id} still pending after 600 seconds")
+                raise TimeoutError(f"CLUE job {job_id} still pending after 2700 seconds")
             if result.get("status") in {"failed", "error"}:
                 raise ValueError(f"CLUE job {job_id} failed")
             time.sleep(5)
             url = f"{URL}/findByJobId/{job_id}"
             response = client.get(url)
-            cache.record("poll.json", response.content, url)
+            cache.record("poll.json", redact(response.content, {"user_key": key}), url)
             response.raise_for_status()
             body = response.json()
             result = body.get("result", body)

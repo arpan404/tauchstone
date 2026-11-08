@@ -14,6 +14,14 @@ def now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
+
+def redact(content: bytes, headers: dict | None) -> bytes:
+    """Remove any header value (API keys) that a response echoes back."""
+    for value in (headers or {}).values():
+        if value and len(value) >= 8:
+            content = content.replace(value.encode(), b"[redacted]")
+    return content
+
 class Cache:
     def __init__(self, root: Path, *, offline: bool = False):
         self.root = root
@@ -35,7 +43,8 @@ class Cache:
             if self.offline:
                 raise FileNotFoundError(f"No cached response for request {key}")
             response = httpx.post(url, json=payload, headers=headers, timeout=180, follow_redirects=True)
-            content = response.content
+            # Services may echo credentials back (CLUE returns user_key); never store them.
+            content = redact(response.content, headers)
             timestamp = now()
             digest = hashlib.sha256(content).hexdigest()
             folder.mkdir(parents=True, exist_ok=True)
