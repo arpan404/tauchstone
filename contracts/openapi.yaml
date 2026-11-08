@@ -354,6 +354,36 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/ResourceAgreement" } }
 
+  /compounds/estimate:
+    post:
+      operationId: estimateCompounds
+      summary: Exploratory structure-only estimate of the GSE132903 discovery score (not preregistered)
+      description: >
+        Display only. A random forest on Morgan fingerprints guesses the discovery reversal score
+        LINCS would likely measure. It never feeds ranking, thresholds, the truth table or any
+        hidden test. On held-out scaffolds it is barely better than predicting the training mean
+        (MAE 0.472 vs 0.481, R2 0.023, Spearman 0.18). 409 when the model is not trained, still
+        training, or its artifacts fail their provenance checksum.
+      tags: [exploratory lab]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              additionalProperties: false
+              properties:
+                ids: { type: array, items: { type: string, minLength: 1, maxLength: 64 }, maxItems: 50, description: LINCS pert_ids }
+      responses:
+        "200":
+          description: one estimate per input id, same order
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CompoundEstimate" } }
+        "409":
+          description: exploratory model not trained, training, or failing verification
+
   /lookup:
     post:
       operationId: lookupCompounds
@@ -983,6 +1013,21 @@ components:
         attack_ready: { type: boolean }
         preregistered: { type: boolean, description: "true if the drug is in the sealed benchmark or development pool of the built-in project" }
         provenance: { $ref: "#/components/schemas/Provenance" }
+
+    CompoundEstimate:
+      type: object
+      required: [id, estimate, basis, measured, status, run_id]
+      description: Exploratory, not preregistered. Never used for ranking or any hidden test.
+      properties:
+        id: { type: string }
+        estimate: { type: [number, "null"], description: structure-only estimate of the discovery consensus_median }
+        basis:
+          type: [string, "null"]
+          enum: [held_out, in_training, new_structure, null]
+          description: "held_out: scaffold-grouped internal test, unseen in training; in_training: the model saw this compound (or an identical fingerprint) while training, so the estimate flatters it; new_structure: fingerprint absent from the trained run"
+        measured: { type: [number, "null"], description: discovery consensus_median when the compound was scored }
+        status: { type: string, enum: [stored, computed, no_structure, invalid_structure, unknown_id], description: "stored: from the trained run's predictions; computed: fresh from SMILES; otherwise why no estimate exists" }
+        run_id: { type: string }
 
     LookupResult:
       type: object

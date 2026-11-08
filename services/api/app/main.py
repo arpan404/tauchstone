@@ -15,6 +15,7 @@ from app.routes import (
     benchmark,
     candidates,
     compounds,
+    compounds_estimate,
     drugs,
     lab,
     lookup,
@@ -56,6 +57,7 @@ app.include_router(benchmark.router)
 app.include_router(structures.router)
 app.include_router(single_cell.router)
 app.include_router(lab.router)
+app.include_router(compounds_estimate.router)
 app.include_router(projects.router)
 app.include_router(screens.router)
 app.include_router(drugs.router)

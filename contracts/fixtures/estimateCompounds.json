@@ -1,0 +1,18 @@
+{
+  "run_id": "MOCK-structure-model",
+  "note": "Mock values for offline demos. Not model output.",
+  "estimates": {
+    "BRD-A49160188": { "estimate": -0.17, "basis": "in_training", "measured": -0.24, "status": "stored" },
+    "BRD-A79803969": { "estimate": -0.21, "basis": "in_training", "measured": -0.36, "status": "stored" },
+    "BRD-A49148672": { "estimate": -0.07, "basis": "held_out", "measured": 0.21, "status": "stored" },
+    "BRD-K10706131": { "estimate": -0.12, "basis": "new_structure", "measured": null, "status": "computed" },
+    "BRD-K04112579": { "estimate": -0.09, "basis": "held_out", "measured": -2.03, "status": "stored" },
+    "BRD-K86873305": { "estimate": -0.31, "basis": "in_training", "measured": -1.79, "status": "stored" },
+    "MOCK-LOOKUP-donepezil": { "estimate": -0.17, "basis": "in_training", "measured": -0.24, "status": "stored" },
+    "MOCK-LOOKUP-memantine": { "estimate": -0.21, "basis": "in_training", "measured": -0.36, "status": "stored" },
+    "MOCK-LOOKUP-galantamine": { "estimate": -0.07, "basis": "held_out", "measured": 0.21, "status": "stored" },
+    "MOCK-0002": { "estimate": -0.09, "basis": "held_out", "measured": -2.03, "status": "stored" },
+    "MOCK-0005": { "estimate": -0.31, "basis": "in_training", "measured": -1.79, "status": "stored" },
+    "MOCK-0003": { "estimate": null, "basis": null, "measured": null, "status": "no_structure" }
+  }
+}

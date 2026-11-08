@@ -75,7 +75,8 @@ it("renders the supplied pool ranks, positive score, unavailable statuses and At
     "2 / 1,816",
   ])
     expect(await screen.findByText(rank)).toBeTruthy();
-  expect(screen.getByText("+0.21")).toBeTruthy();
+  // Also shown as the measured score beside the AI estimate.
+  expect(screen.getAllByText("+0.21").length).toBeGreaterThan(0);
   expect(within(rowFor("rivastigmine")).getByText("not rankable")).toBeTruthy();
   expect(within(rowFor("lithium")).getByText("not in LINCS")).toBeTruthy();
   for (const q of ["rivastigmine", "lithium"])
