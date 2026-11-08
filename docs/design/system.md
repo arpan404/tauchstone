@@ -133,7 +133,8 @@ section conflicts with the sections above, this section wins.
   - Active/selected controls (nav item, segmented control, active filter pill, selected tab):
     solid blue pill `bg-gradient-to-b from-[#2b6fd3] to-[#1453ad] text-white` with inner
     highlight `shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]`;
-    icons white. Hover = `bg-primary/8`.
+    icons white, and they stay white on hover (active hover only brightens the gradient). Hover on
+    inactive items = `bg-primary/8` with a blue icon. Never let a hover colour match the fill.
   - Floating panels keep the soft glass drop shadow (depth). Inner tiles inside a panel are
     frosted (`bg-white/55 ring-1 ring-white/80`), never plain white cards.
   - Inputs and textareas: `bg-white/70 ring-1 ring-ink/12 backdrop-blur`, blue focus ring.
