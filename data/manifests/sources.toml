@@ -2,6 +2,7 @@
 # $TS_DATA_DIR/raw/<group>/ and records its SHA-256 in data/manifests/checksums.json.
 # `sha512_list` points at an upstream checksum file to verify against, when GEO publishes one.
 # `tier`: core (Tier 1-3) or stretch (Tier 4). `make data` fetches both; `--tier core` for core only.
+# `opt_in = true`: never fetched by `make data` or any --tier; only with `--group <group>`.
 
 [[source]]
 group = "lincs/GSE92742"
@@ -169,4 +170,42 @@ files = [
   "samples/GSM8392nnn/GSM8392692/suppl/GSM8392692_UT09_filtered_feature_bc_matrix.h5",
   "samples/GSM8392nnn/GSM8392693/suppl/GSM8392693_UT2105_filtered_feature_bc_matrix.h5",
   "samples/GSM9294nnn/GSM9294031/suppl/GSM9294031_NIH30_filtered_feature_bc_matrix.h5",
+]
+
+# ---- Post-expo, opt-in: CMap LINCS 2020 beta release (Dec 2020), Broad's public S3 bucket.
+# NOT part of the preregistered analysis; feeds no frozen artifact. See docs/lincs2020.md.
+# clue.io retired 2026-01-31; these S3 objects still resolve without a key (HEAD-checked
+# 2026-11-08). No upstream checksum file is published (md5sums/checksums names return 403);
+# verify with `python -m pipelines.lincs.lincs2020 verify`, which checks the S3 multipart ETags.
+# Bucket listing is forbidden, so every name below was confirmed one by one.
+# Compound signatures (trt_cp) + metadata: 36.7 GB total.
+[[source]]
+group = "lincs/LINCS2020"
+tier = "stretch"
+opt_in = true
+base = "https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/"
+files = [
+  "level5/level5_beta_trt_cp_n720216x12328.gctx",  # 35.52 GB, 720,216 x 12,328
+  "siginfo_beta.txt",                              # 465 MB, Level 5 signature metadata (all types)
+  "geneinfo_beta.txt",                             # 1.1 MB
+  "compoundinfo_beta.txt",                         # 4.6 MB, one row per compound/moa/target
+  "cellinfo_beta.txt",                             # 38 KB
+  "README.txt",                                    # 2 KB
+  { name = "LINCS2020_Release_Metadata_Field_Definitions.xlsx", path = "LINCS2020%20Release%20Metadata%20Field%20Definitions.xlsx" },
+]
+
+# The other Level 5 perturbation types (23.2 GB). Verified, not downloaded: not needed for drug
+# ranking, and the 2026-11-08 disk could not hold them comfortably. The single all-types file
+# level5/level5_beta_all_n1201944x12328.gctx (53.7 GB) is the union of both groups.
+[[source]]
+group = "lincs/LINCS2020_other"
+tier = "stretch"
+opt_in = true
+base = "https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/level5/"
+files = [
+  "level5_beta_ctl_n58022x12328.gctx",       # 2.86 GB, negative controls
+  "level5_beta_trt_sh_n238351x12328.gctx",   # 11.75 GB, shRNA
+  "level5_beta_trt_oe_n34171x12328.gctx",    # 1.69 GB, over-expression
+  "level5_beta_trt_xpr_n142901x12328.gctx",  # 6.52 GB, CRISPR
+  "level5_beta_trt_misc_n8283x12328.gctx",   # 0.41 GB, ligands, siRNA, other
 ]
