@@ -56,10 +56,10 @@ function Metric({ label, children, sub }: { label: ReactNode; children: ReactNod
 function CoverageMap({ groups, focus, onFocus }: { groups: ColumnGroup[]; focus: Focus; onFocus: (f: Focus) => void }) {
   const cellTypes = groups.reduce((m, g) => Math.max(m, g.signatures.length), 0);
   return (
-    <div className="min-w-0 self-center rounded-2xl bg-frost/45 p-4 ring-1 ring-rim/70">
+    <div className="min-w-0 self-center rounded-2xl bg-frost/45 p-4 ring-1 ring-rim/70 max-md:p-3">
       <div
         className="grid items-center gap-x-1.5 gap-y-1.5"
-        style={{ gridTemplateColumns: `minmax(7rem, 9.5rem) repeat(${cellTypes}, minmax(1.75rem, 2.5rem))` }}
+        style={{ gridTemplateColumns: `minmax(5.5rem, 9.5rem) repeat(${cellTypes}, minmax(1.5rem, 2.5rem))` }}
       >
         <span className="text-[11.5px] text-ink-3">Dataset · region</span>
         {groups[0]?.signatures.map((s) => (
@@ -159,7 +159,7 @@ function SignatureTable({ data, rows, focus, onFocus }: { data: Data; rows: Data
                 <td className={cn(CELL, 'text-ink-2')}>
                   {!isScored(s) || !q ? <span className="text-ink-3">n/a</span> : q.fallback ? 'top-ranked genes' : 'FDR < 0.05 genes'}
                 </td>
-                <td className={cn(CELL, isScored(s) ? 'text-ink-2' : 'text-ink-3')}>{isScored(s) ? 'scored' : notScored}</td>
+                <td className={cn(CELL, 'min-w-[11rem] whitespace-normal', isScored(s) ? 'text-ink-2' : 'text-ink-3')}>{isScored(s) ? 'scored' : notScored}</td>
               </tr>
             );
           })}

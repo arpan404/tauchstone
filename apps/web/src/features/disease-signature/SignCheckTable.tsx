@@ -8,7 +8,7 @@ type Row = NonNullable<Schema<'Signature'>['sign_check']>[number];
 const HEAD = 'h-8 px-3 text-left text-[11.5px] font-medium text-ink-3';
 /** Row colour lives on the cells so the rounded ends clip it (WebKit ignores radius on <tr>). */
 const CELL =
-  'px-3 py-2.5 transition-colors first:rounded-l-xl last:rounded-r-xl group-hover:bg-primary/6 group-aria-[current=true]:bg-primary/10';
+  'px-3 py-2.5 max-sm:px-2 transition-colors first:rounded-l-xl last:rounded-r-xl group-hover:bg-primary/6 group-aria-[current=true]:bg-primary/10';
 
 /** Observed t statistic as a bar from zero: warm right = higher in Alzheimer's, blue left = lower. */
 function StatBar({ stat, max }: { stat: number; max: number }) {
@@ -44,7 +44,7 @@ export function SignCheckTable({
         <tr>
           <th className={HEAD}>Gene</th>
           <th className={HEAD}>Expected</th>
-          <th className={cn(HEAD, 'text-right')}>Observed t</th>
+          <th className={cn(HEAD, 'text-right whitespace-nowrap')}>Observed t</th>
           <th className={cn(HEAD, 'max-sm:hidden')}>
             <span className="sr-only">Direction bar</span>
           </th>
@@ -77,7 +77,8 @@ export function SignCheckTable({
                   ) : (
                     <ArrowDownIcon aria-hidden className="size-3.5 text-primary" />
                   )}
-                  {r.expected === 'up' ? "up in Alzheimer's" : "down in Alzheimer's"}
+                  {r.expected === 'up' ? 'up' : 'down'}
+                  <span className="max-sm:sr-only">&nbsp;in Alzheimer's</span>
                 </span>
               </td>
               <td className={cn(CELL, 'text-right font-mono text-ink tabular-nums')}>

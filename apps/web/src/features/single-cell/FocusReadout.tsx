@@ -33,7 +33,7 @@ function Fact({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-1">
       <dt className="text-[12px] text-ink-3">{label}</dt>
-      <dd className="m-0 text-right font-mono text-[13px] text-ink tabular-nums">{children}</dd>
+      <dd className="m-0 shrink-0 text-right font-mono text-[13px] whitespace-nowrap text-ink tabular-nums">{children}</dd>
     </div>
   );
 }
@@ -56,7 +56,7 @@ function ScoreBars({
             type="button"
             onClick={() => onPick(r.focus)}
             title={r.title}
-            className="grid w-full grid-cols-[minmax(0,1fr)_4.5rem_3.25rem] items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors outline-none hover:bg-primary/6 focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="grid w-full grid-cols-[minmax(0,1fr)_3.25rem_2.75rem] items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors outline-none hover:bg-primary/6 focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <span className="truncate text-[12.5px] text-ink-2">{r.label}</span>
             <span aria-hidden className="relative h-2 rounded-full bg-ink/[0.05]">

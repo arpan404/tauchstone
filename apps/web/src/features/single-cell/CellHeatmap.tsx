@@ -38,9 +38,9 @@ export function CellHeatmap({
   onFocus: (f: Focus) => void;
 }) {
   const template = [
-    'minmax(10.5rem,15rem)',
+    'minmax(9rem,15rem)',
     ...groups.map((g) =>
-      g.scored === 0 ? '0.625rem minmax(5.5rem, 7.5rem)' : `0.625rem repeat(${g.signatures.length}, minmax(1.375rem, 1fr))`,
+      g.scored === 0 ? '0.375rem minmax(4.5rem, 7.5rem)' : `0.375rem repeat(${g.signatures.length}, minmax(1.375rem, 1fr))`,
     ),
   ].join(' ');
   // Grid line where each group's first data column starts (1-based; label column is 1).
@@ -58,7 +58,7 @@ export function CellHeatmap({
       <div
         role="group"
         aria-label="Reversal score heatmap, drugs by cell type"
-        className="grid min-w-[36rem] items-stretch gap-y-[3px]"
+        className="grid min-w-[38rem] items-stretch gap-y-[3px]"
         style={{ gridTemplateColumns: template }}
       >
         {/* Group header: dataset and region */}
@@ -145,7 +145,7 @@ export function CellHeatmap({
                 <span className={cn('min-w-0 flex-1 truncate', rowOn ? 'font-medium text-ink' : 'text-ink')}>{d.name}</span>
                 {bulk != null && (
                   <span className="flex shrink-0 items-center gap-1.5" title={`Bulk score ${fmt3(bulk)}`}>
-                    <span aria-hidden className="relative h-1 w-6 rounded-full bg-ink/[0.07] max-sm:hidden">
+                    <span aria-hidden className="relative hidden h-1 w-6 rounded-full bg-ink/[0.07] min-[1400px]:block">
                       <span
                         className="absolute inset-y-0 right-0 rounded-full bg-primary"
                         style={{ width: `${Math.round((Math.abs(bulk) / bulkMax) * 100)}%` }}

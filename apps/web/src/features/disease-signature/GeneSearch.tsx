@@ -78,7 +78,7 @@ export function GeneSearch({
 
 const HEAD = 'h-8 px-3 text-left text-[11.5px] font-medium text-ink-3';
 /** Row colour lives on the cells so the rounded ends clip it (WebKit ignores radius on <tr>). */
-const CELL = 'px-3 py-2 transition-colors first:rounded-l-xl last:rounded-r-xl group-hover:bg-primary/6 group-aria-[current=true]:bg-primary/10';
+const CELL = 'px-3 py-2 whitespace-nowrap transition-colors first:rounded-l-xl last:rounded-r-xl group-hover:bg-primary/6 group-aria-[current=true]:bg-primary/10';
 
 /** Matching genes as quiet rounded rows; the focused gene is selected and scrolled into view. */
 export function GeneMatchTable({
