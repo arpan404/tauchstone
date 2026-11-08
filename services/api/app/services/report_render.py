@@ -180,8 +180,8 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))
     view['title'] = title or f'{view["name"]} | Tauchstone evidence report'
-    return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback, fonts=font_faces_css(),
-                                                  session=session)
+    return env.get_template('report.html').render(
+        report=view, boundary=BOUNDARY, fallback=fallback, fonts=font_faces_css(), session=session)
 
 
 FONTS = APP / 'static' / 'fonts'
