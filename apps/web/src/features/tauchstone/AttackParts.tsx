@@ -5,15 +5,15 @@ import { cn } from 'cn';
 export type WellMarkerState = 'sealed' | 'next' | 'running' | 'survive' | 'fail';
 
 const WELL: Record<WellMarkerState, string> = {
-  sealed: 'border-line-strong bg-surface-2 text-ink-3',
-  next: 'border-primary border-2 bg-surface text-primary',
-  running: 'border-primary/30 border-2 bg-accent-soft text-primary',
-  survive: 'border-transparent bg-ok text-white',
-  fail: 'border-transparent bg-bad text-white',
+  sealed: 'bg-ink/[0.06] text-ink-3',
+  next: 'bg-white text-primary ring-2 ring-primary',
+  running: 'bg-accent-soft text-primary',
+  survive: 'bg-ok text-white',
+  fail: 'bg-bad text-white',
 };
 
 /** Plate-well marker for one hidden test. The outcome glyph only exists after a server reveal. */
-export function WellMarker({ state, size = 28 }: { state: WellMarkerState; size?: number }) {
+export function WellMarker({ state, size = 30 }: { state: WellMarkerState; size?: number }) {
   const reduce = useReducedMotion();
   const revealed = state === 'survive' || state === 'fail';
   return (
@@ -23,16 +23,15 @@ export function WellMarker({ state, size = 28 }: { state: WellMarkerState; size?
         initial={reduce || !revealed ? false : { scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-        className={cn('grid size-full place-items-center rounded-full border transition-colors duration-300 motion-reduce:transition-none', WELL[state])}
+        className={cn('grid size-full place-items-center rounded-full transition-colors duration-300 motion-reduce:transition-none', WELL[state])}
       >
         {state === 'survive' && <CheckIcon weight="bold" className="size-3.5" />}
         {state === 'fail' && <XIcon weight="bold" className="size-3.5" />}
-        {state === 'sealed' && <LockSimpleIcon className="size-3" />}
-        {state === 'next' && <span className="size-2 rounded-full bg-primary" />}
+        {(state === 'sealed' || state === 'next') && <LockSimpleIcon weight={state === 'next' ? 'fill' : 'regular'} className="size-3.5" />}
       </motion.span>
       {state === 'running' && (
         <motion.span
-          className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary"
+          className="absolute inset-0 rounded-full border-2 border-primary/15 border-t-primary"
           animate={reduce ? undefined : { rotate: 360 }}
           transition={{ duration: 0.9, ease: 'linear', repeat: Infinity }}
         />
@@ -46,28 +45,39 @@ export function WellMarker({ state, size = 28 }: { state: WellMarkerState; size?
  * of the session is spent. Dots after the first carry the reveal outcome.
  */
 export function BeliefTrace({
-  points, slots,
-}: { points: { p: number; outcome?: 'survive' | 'fail' }[]; slots: number }) {
+  points, slots, className,
+}: { points: { p: number; outcome?: 'survive' | 'fail' }[]; slots: number; className?: string }) {
   const reduce = useReducedMotion();
   const n = Math.max(1, slots);
   const x = (i: number) => (i / n) * 100;
   const y = (p: number) => (1 - Math.min(1, Math.max(0, p))) * 100;
   const line = points.map((pt, i) => `${i === 0 ? 'M' : 'L'}${x(i)} ${y(pt.p)}`).join(' ');
+  const area = points.length > 1 ? `${line} L${x(points.length - 1)} 100 L0 100 Z` : '';
   return (
-    <div className="flex items-stretch gap-2" aria-hidden>
-      <div className="flex flex-col justify-between py-0 font-mono text-[10px] leading-none text-ink-3">
+    <div className={cn('flex items-stretch gap-2', className)} aria-hidden>
+      <div className="flex flex-col justify-between font-mono text-[10px] leading-none text-ink-3">
         <span>1.0</span>
         <span>0.5</span>
         <span>0.0</span>
       </div>
-      <div className="relative h-16 flex-1">
+      <div className="relative h-full min-h-16 flex-1">
         <svg className="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="belief-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
           {[0, 50, 100].map((v) => (
-            <line key={v} x1="0" x2="100" y1={v} y2={v} className="stroke-line" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray={v === 50 ? '3 3' : undefined} />
+            <line key={v} x1="0" x2="100" y1={v} y2={v} stroke="rgb(15 24 48 / 0.08)" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray={v === 50 ? '3 3' : undefined} />
           ))}
           {Array.from({ length: n + 1 }, (_, i) => (
-            <line key={i} x1={x(i)} x2={x(i)} y1="96" y2="100" className="stroke-line-strong" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+            <line key={i} x1={x(i)} x2={x(i)} y1="95" y2="100" stroke="rgb(15 24 48 / 0.18)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           ))}
+          {area && (
+            <motion.path d={area} fill="url(#belief-fill)" initial={false} animate={{ d: area }}
+              transition={{ duration: reduce ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }} />
+          )}
           {points.length > 1 && (
             <motion.path
               d={line}
@@ -86,7 +96,7 @@ export function BeliefTrace({
           <motion.span
             key={i}
             className={cn(
-              'absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface',
+              'absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white',
               pt.outcome === 'fail' ? 'bg-bad' : pt.outcome === 'survive' ? 'bg-ok' : 'bg-primary',
             )}
             style={{ left: `${x(i)}%`, top: `${y(pt.p)}%` }}
