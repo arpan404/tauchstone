@@ -108,6 +108,64 @@ the app keeps serving the gold-label model unchanged (same run, same artifacts, 
 No preregistered artifact changed: `preregistration.yaml` is still `21f7460e…bb8a3` and the
 frozen GSE132903 ranking is still sha256 `34c1a646…afe4`.
 
+- **Structure model bake-off: a neural network against the random forest** (Nov 8). Exploratory,
+  not preregistered. Run under the replacement rule frozen in
+  `data/manifests/preregistration_v2.yaml` (sha256 `26aec26d...70f17b0`, section `structure_model`),
+  which was written before any of these models existed. Code:
+  `pipelines/lincs/structure_bakeoff.py`, scored with the existing
+  `pipelines/lincs/exploratory_compare.py` metrics and bootstrap; artifacts in
+  `processed/models/v2_candidates/`. Every model uses the served model's inputs (gold-signature
+  GSE132903 ranking labels, `compounds.parquet`), its scaffold split (GroupShuffleSplit, test_size
+  0.2, seed 20261105) and the same 1,123 held-out compounds in 687 scaffold groups. Early stopping
+  and hyperparameter choice used an inner split of the TRAINING groups only (GroupShuffleSplit,
+  test_size 0.15, seed 20261106: 3,826 fit, 684 validation); the test compounds were never used to
+  choose anything. Seeds: split 20261105, inner 20261106, network weights and batch order 20261107,
+  bootstrap 20261108. PyTorch 2.15.0 on the Apple MPS device; torch is an opt-in `ml` dependency
+  group, so the expo API image still installs without it.
+
+  What was trained:
+  - **Neural network**: 1024 -> 512 -> 256 -> 1 MLP, ReLU, dropout 0.3, Adam (lr 1e-3, weight decay
+    1e-4), batch 256, early stopping on inner validation loss (patience 20; stopped at epoch 22,
+    best epoch 2). Same fingerprints and labels as the served model. 1.7 s to train.
+  - **Neural network, one output per cell line**: the same network with 82 outputs, trained on the
+    per compound and cell line median of ranking-context scores from
+    `GSE132903__main__context_scores.parquet` (ranking rows only; held-out rows never read, asserted
+    in code), missing cells masked out of the loss. Its consensus is the median over each compound's
+    own ranking contexts of the predicted score for that context's cell line, the same aggregation
+    the pipeline uses for `consensus_median`. 0.7 s to train.
+  - **Random forest with chemistry descriptors**: the served model's class on the same fingerprints
+    plus ten RDKit descriptors (MolWt, LogP, TPSA, rotatable bonds, HBD, HBA, ring count, aromatic
+    rings, fraction sp3 carbon, heavy atoms). `min_samples_leaf` and `max_features` chosen by
+    highest inner-validation Spearman over a 4 x 3 grid, then refit on all training groups; chosen
+    `min_samples_leaf` 10, `max_features` 1.0 (inner validation Spearman 0.269). 28 s to train.
+
+  On the shared held-out compounds (n = 1,123), against always predicting the training mean
+  (MAE 0.4815):
+
+| model | MAE | R2 | Spearman | Spearman minus served (95%) | MAE minus served (95%) |
+|---|---|---|---|---|---|
+| random forest (served) | 0.4720 | 0.023 | 0.180 | - | - |
+| neural network | 0.4671 | 0.029 | 0.175 | -0.005 (-0.069 to +0.062) | -0.005 (-0.017 to +0.005) |
+| neural network, one output per cell line | 0.4627 | 0.057 | 0.239 | +0.060 (-0.008 to +0.129) | -0.009 (-0.021 to +0.001) |
+| random forest with descriptors | 0.4675 | 0.056 | 0.223 | +0.044 (-0.012 to +0.100) | -0.004 (-0.012 to +0.003) |
+
+  Intervals are 2,000 bootstrap resamples of the 687 scaffold groups, seed 20261108, paired on the
+  same compounds. The rule applied mechanically: the plain neural network ranked unseen structures
+  no better than the random forest; the multi-task network and the descriptor forest both ranked
+  them better on the point estimate, but their intervals include zero, so neither passes. **Nothing
+  served changed**: the app still serves the same random forest run `85eff9eb`, same artifacts, same
+  numbers. The three candidates are stored unserved in `processed/models/v2_candidates/` with
+  provenance for each file. The comparison is shown in the app in the closed-by-default "About this
+  estimate" disclosure on My compounds, read from the stored file by
+  `GET /compounds/estimate/models`; nothing is computed at request time.
+
+  Worth saying plainly: the two models that look better are the two that use more information (per
+  cell line labels, physicochemical descriptors), and both point the same way. The honest reading is
+  that this test set cannot tell them apart from the random forest, not that they are equal. A
+  larger held-out set would settle it; that is for after the expo. No preregistered artifact
+  changed: `preregistration.yaml` is still `21f7460e...bb8a3`, `preregistration_v2.yaml` is still
+  `26aec26d...70f17b0`, and the frozen GSE132903 ranking is still sha256 `34c1a646...afe4`.
+
 ## Amendments after the freeze
 
 The preregistration (`data/manifests/preregistration.yaml`, sha256 `21f7460e…bb8a3`) was frozen on
@@ -126,6 +184,7 @@ the frozen ranking, θ, λ, the truth table, the benchmark or any verdict, and e
 | Nov 8 | My compounds search over all LINCS compounds | No: same lookup, more names | Exploratory |
 | Nov 8 | AI estimate from structure | No: never used for ranking or tests | Exploratory, with test numbers |
 | Nov 8 | Structure model trained on all-signature labels | No: did not beat the served model, so not used | Logged above |
+| Nov 8 | Neural network and descriptor forest tried against the structure model | No: none passed the frozen v2 replacement rule, so the served model is unchanged | Logged above |
 | Nov 8 | LINCS 2020 beta downloaded (compound signatures) | No: opt-in, separate folder, not read by any v1 code | Not shown in the app |
 | Nov 8 | Live cell-line panel on Screen | No: counts from the frozen scoring, held-out scores never sent | Shown during a screen |
 | Nov 8 | Boundary sentence moved from every page to the PDF report | No | AGENTS.md rule 7 updated |
