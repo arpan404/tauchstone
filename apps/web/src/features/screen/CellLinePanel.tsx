@@ -13,21 +13,28 @@ type CellLine = NonNullable<Screen["cell_lines"]>[number];
 export function CellLinePanel({
   job,
   running,
+  fromSaved = false,
   className,
 }: {
   job: Screen | null;
   running: boolean;
+  /** Showing the project's last saved run, not one started on this visit. */
+  fromSaved?: boolean;
   className?: string;
 }) {
   const reduce = useReducedMotion();
   const lines = job?.cell_lines ?? [];
   const max = Math.max(1, ...lines.map((c) => c.n_scored));
   const neural = lines.filter((c) => c.neural).length;
+  // A finished run saved before cell lines were tracked has none to show.
+  const untracked = !running && job?.status === "done" && !lines.length;
   const caption = lines.length
-    ? `Top ${lines.length} of ${job?.n_cell_lines ?? lines.length} lines by signatures scored`
+    ? `${fromSaved ? "Last run: top" : "Top"} ${lines.length} of ${job?.n_cell_lines ?? lines.length} lines by signatures scored`
     : running
       ? "Waiting for the first block"
-      : "Appears when a screen runs";
+      : untracked
+        ? "Not recorded for this run"
+        : "Appears when a screen runs";
   return (
     <Panel
       icon={<GridFourIcon />}
@@ -84,7 +91,9 @@ export function CellLinePanel({
           <p className="m-0 max-w-[30ch] text-[14px] text-ink-2">
             {running
               ? "Cell lines fill in as each block of signatures is scored"
-              : "Run a screen to see each LINCS cell line as it is scored"}
+              : untracked
+                ? "This result was saved before cell lines were tracked. Run the screen again to see them."
+                : "Run a screen to see each LINCS cell line as it is scored"}
           </p>
         </div>
       )}

@@ -15,6 +15,7 @@ const { start, create, watch } = vi.hoisted(() => ({
   watch: vi.fn(),
 }));
 vi.mock("@/api/workspace", () => ({
+  useSavedScreen: () => ({ data: undefined }),
   useProjects: () => ({
     data: [
       {

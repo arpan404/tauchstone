@@ -48,3 +48,16 @@ it("renders one tile per API cell line in API order with neural marker", () => {
   expect(screen.getByText("Top 3 of 40 lines by signatures scored")).toBeTruthy();
   expect(screen.getByText("1 neural")).toBeTruthy();
 });
+
+it("shows the project's last saved run after a reload, labelled as such", () => {
+  const saved = { ...job([{ cell_id: "VCAP", n_scored: 11966, best_consensus: -3.3, neural: false }]), status: "done" as const };
+  render(<CellLinePanel job={saved} running={false} fromSaved />);
+  expect(screen.getByText(/^Last run: top 1 of 40 lines/)).toBeTruthy();
+  expect(within(screen.getByRole("list")).getAllByRole("listitem")).toHaveLength(1);
+});
+
+it("says a finished run saved without cell lines needs a re-run", () => {
+  render(<CellLinePanel job={{ ...job([]), status: "done" }} running={false} fromSaved />);
+  expect(screen.getByText("Not recorded for this run")).toBeTruthy();
+  expect(screen.getByText(/Run the screen again to see them/)).toBeTruthy();
+});

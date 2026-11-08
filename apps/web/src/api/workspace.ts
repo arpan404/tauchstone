@@ -110,6 +110,16 @@ export function useProjects() {
     retry: false,
   });
 }
+/** The project's last saved screen, so its results survive a reload. */
+export function useSavedScreen(id?: string | null) {
+  return useQuery({
+    queryKey: ["screen", id],
+    enabled: !!id && !isMockMode(),
+    queryFn: () => request<Screen>(`/screens/${id}`),
+    retry: false,
+    staleTime: 60_000,
+  });
+}
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({

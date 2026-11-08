@@ -24,6 +24,7 @@ import {
   TEMPLATE_CSV_URL,
   useProjects,
   useCreateProject,
+  useSavedScreen,
   watchScreen,
   workspaceMock,
   type Screen,
@@ -88,6 +89,7 @@ export function ScreenView() {
   const [source, setSource] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [job, setJob] = useState<Screen | null>(null);
+  const saved = useSavedScreen(project?.last_screen_id).data ?? null;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [drag, setDrag] = useState(false);
@@ -522,7 +524,7 @@ export function ScreenView() {
               </div>
             </div>
           </Panel>
-          <CellLinePanel job={job} running={running} className="max-lg:order-last" />
+          <CellLinePanel job={job ?? (running ? null : saved)} fromSaved={!job && !running && !!saved} running={running} className="max-lg:order-last" />
         </div>
 
         <Panel
