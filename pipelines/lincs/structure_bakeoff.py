@@ -52,7 +52,7 @@ NET = {'hidden': [512, 256], 'activation': 'ReLU', 'dropout': 0.3, 'optimizer': 
 RF_GRID = {'min_samples_leaf': [1, 3, 5, 10], 'max_features': ['sqrt', 0.3, 1.0]}
 DESCRIPTORS = ['MolWt', 'MolLogP', 'TPSA', 'NumRotatableBonds', 'NumHDonors', 'NumHAcceptors',
                'RingCount', 'NumAromaticRings', 'FractionCSP3', 'HeavyAtomCount']
-LABELS = {'rf_served': 'Random forest (served)', 'mlp': 'Neural network',
+LABELS = {'rf_served': 'Random forest', 'mlp': 'Neural network',
           'multitask': 'Neural network, one output per cell line',
           'rf_desc': 'Random forest with chemistry descriptors'}
 

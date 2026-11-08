@@ -226,3 +226,72 @@ def estimate_compounds(body: EstimateRequest) -> list[dict]:
     except ModelNotReady as exc:
         log.warning("Structure estimate unavailable: %s", exc)
         raise HTTPException(409, "Exploratory model is not ready.") from exc
+
+
+# ---- Model comparison (GET /compounds/estimate/models) ----------------------------------------
+# Read-only view of the stored structure model bake-off (pipelines/lincs/structure_bakeoff.py).
+# Nothing is computed per request; the file must match its provenance sidecar.
+COMPARISON = "processed/models/v2_candidates/comparison.json"
+COMPARISON_FIXTURE = REPO_ROOT / "contracts/fixtures/getEstimateModels.json"
+
+
+class EstimateModelRow(BaseModel):
+    name: str
+    label: str
+    served: bool
+    spearman: float
+    mae: float
+    baseline_mae: float
+    r2: float | None
+    spearman_vs_served: float | None
+    spearman_vs_served_ci95: list[float] | None
+    passes_rule: bool | None
+
+
+class EstimateModels(BaseModel):
+    served: str
+    outcome: str
+    n_test: int
+    n_test_groups: int
+    bootstrap: dict
+    rule: str
+    preregistered: bool
+    models: list[EstimateModelRow]
+
+
+def comparison_view(result: dict) -> dict:
+    """Trim the stored comparison to what the page shows."""
+    rows = []
+    for row in result["models"]:
+        diff = row.get("vs_served") or {}
+        rows.append({"name": row["name"], "label": row["label"], "served": row["name"] == result["served"],
+                     "spearman": row["spearman"], "mae": row["mae"], "baseline_mae": row["baseline_mae"],
+                     "r2": row["r2"], "spearman_vs_served": diff.get("spearman"),
+                     "spearman_vs_served_ci95": diff.get("spearman_ci95"), "passes_rule": row.get("passes_rule")})
+    return {"served": result["served"], "outcome": result["outcome"],
+            "n_test": result["test_set"]["n_compounds"], "n_test_groups": result["test_set"]["n_groups"],
+            "bootstrap": result["bootstrap"], "rule": result["rule"],
+            "preregistered": bool(result.get("preregistered", False)), "models": rows}
+
+
+def load_comparison(data_dir: Path) -> dict:
+    from pipelines.common.provenance import sha256_file
+
+    path = Path(data_dir) / COMPARISON
+    sidecar = path.with_name(path.name + ".provenance.json")
+    if not path.is_file() or not sidecar.is_file():
+        raise ModelNotReady("No stored model comparison.")
+    if json.loads(sidecar.read_text()).get("output_sha256") != sha256_file(path):
+        raise ModelNotReady("Model comparison checksum mismatch.")
+    return comparison_view(json.loads(path.read_text()))
+
+
+@router.get("/compounds/estimate/models", response_model=EstimateModels, tags=["exploratory lab"])
+def estimate_models() -> dict:
+    if settings.mock:
+        return json.loads(COMPARISON_FIXTURE.read_text())
+    try:
+        return load_comparison(settings.data_dir)
+    except ModelNotReady as exc:
+        log.warning("Model comparison unavailable: %s", exc)
+        raise HTTPException(404, "No stored model comparison.") from exc

@@ -384,6 +384,27 @@ paths:
         "409":
           description: exploratory model not trained, training, or failing verification
 
+  /compounds/estimate/models:
+    get:
+      operationId: getEstimateModels
+      summary: Stored comparison of structure models behind the AI estimate (exploratory, not preregistered)
+      description: >
+        Read-only. Every model is scored on the same scaffold-held-out compounds as the served
+        random forest. A model replaces the served one only under the preregistration v2
+        structure_model rule (higher held-out Spearman and a 95% scaffold-group bootstrap interval
+        of the difference above zero). Read from a stored file; nothing is computed per request.
+        Never feeds ranking, thresholds, the truth table or any hidden test. 404 when no verified
+        comparison is stored.
+      tags: [exploratory lab]
+      responses:
+        "200":
+          description: one row per model and the outcome of the rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EstimateModels" }
+        "404":
+          description: no stored comparison, or it fails its provenance checksum
+
   /lookup:
     post:
       operationId: lookupCompounds
@@ -1111,6 +1132,37 @@ components:
         measured: { type: [number, "null"], description: discovery consensus_median when the compound was scored }
         status: { type: string, enum: [stored, computed, no_structure, invalid_structure, unknown_id], description: "stored: from the trained run's predictions; computed: fresh from SMILES; otherwise why no estimate exists" }
         run_id: { type: string }
+
+    EstimateModels:
+      type: object
+      required: [served, outcome, n_test, n_test_groups, bootstrap, rule, preregistered, models]
+      description: Exploratory, not preregistered. Never used for ranking or any hidden test.
+      properties:
+        served: { type: string, description: name of the model behind the AI estimate }
+        outcome: { type: string, description: one plain sentence stating the result of the rule }
+        n_test: { type: integer, description: shared held-out compounds every model is scored on }
+        n_test_groups: { type: integer, description: scaffold groups among those compounds }
+        bootstrap: { type: object, description: "unit, n and seed of the scaffold-group bootstrap" }
+        rule: { type: string }
+        preregistered: { type: boolean }
+        models:
+          type: array
+          items: { $ref: "#/components/schemas/EstimateModelRow" }
+
+    EstimateModelRow:
+      type: object
+      required: [name, label, served, spearman, mae, baseline_mae, r2, spearman_vs_served, spearman_vs_served_ci95, passes_rule]
+      properties:
+        name: { type: string }
+        label: { type: string }
+        served: { type: boolean }
+        spearman: { type: number, description: held-out rank correlation with the discovery score }
+        mae: { type: number, description: held-out mean absolute error }
+        baseline_mae: { type: number, description: held-out error of always predicting the training mean }
+        r2: { type: [number, "null"] }
+        spearman_vs_served: { type: [number, "null"], description: this model minus the served model; null for the served model }
+        spearman_vs_served_ci95: { type: [array, "null"], items: { type: number }, minItems: 2, maxItems: 2 }
+        passes_rule: { type: [boolean, "null"], description: null for the served model itself }
 
     LookupResult:
       type: object

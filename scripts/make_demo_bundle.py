@@ -236,6 +236,9 @@ def main() -> None:
             copy_with_sidecar(processed, f"models/exploratory/{name}", demo_processed, copied)
         else:
             print(f"note: no {name}; the AI estimate column stays hidden in this bundle")
+    # Stored structure model comparison (GET /compounds/estimate/models). Optional.
+    if (processed / "models/v2_candidates/comparison.json").is_file():
+        copy_with_sidecar(processed, "models/v2_candidates/comparison.json", demo_processed, copied)
 
     # Cell-line photos (Human Protein Atlas, CC BY 4.0), served by /cell-lines/{id}/image.
     img_src = processed / "evidence" / "cell_line_images"

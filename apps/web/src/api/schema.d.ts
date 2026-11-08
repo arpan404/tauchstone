@@ -313,6 +313,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/compounds/estimate/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stored comparison of structure models behind the AI estimate (exploratory, not preregistered)
+         * @description Read-only. Every model is scored on the same scaffold-held-out compounds as the served random forest. A model replaces the served one only under the preregistration v2 structure_model rule (higher held-out Spearman and a 95% scaffold-group bootstrap interval of the difference above zero). Read from a stored file; nothing is computed per request. Never feeds ranking, thresholds, the truth table or any hidden test. 404 when no verified comparison is stored.
+         */
+        get: operations["getEstimateModels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/lookup": {
         parameters: {
             query?: never;
@@ -1009,6 +1029,39 @@ export interface components {
             status: "stored" | "computed" | "no_structure" | "invalid_structure" | "unknown_id";
             run_id: string;
         };
+        /** @description Exploratory, not preregistered. Never used for ranking or any hidden test. */
+        EstimateModels: {
+            /** @description name of the model behind the AI estimate */
+            served: string;
+            /** @description one plain sentence stating the result of the rule */
+            outcome: string;
+            /** @description shared held-out compounds every model is scored on */
+            n_test: number;
+            /** @description scaffold groups among those compounds */
+            n_test_groups: number;
+            /** @description unit, n and seed of the scaffold-group bootstrap */
+            bootstrap: Record<string, never>;
+            rule: string;
+            preregistered: boolean;
+            models: components["schemas"]["EstimateModelRow"][];
+        };
+        EstimateModelRow: {
+            name: string;
+            label: string;
+            served: boolean;
+            /** @description held-out rank correlation with the discovery score */
+            spearman: number;
+            /** @description held-out mean absolute error */
+            mae: number;
+            /** @description held-out error of always predicting the training mean */
+            baseline_mae: number;
+            r2: number | null;
+            /** @description this model minus the served model; null for the served model */
+            spearman_vs_served: number | null;
+            spearman_vs_served_ci95: number[] | null;
+            /** @description null for the served model itself */
+            passes_rule: boolean | null;
+        };
         LookupResult: {
             query: string;
             /**
@@ -1636,6 +1689,33 @@ export interface operations {
             };
             /** @description exploratory model not trained, training, or failing verification */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getEstimateModels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description one row per model and the outcome of the rule */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstimateModels"];
+                };
+            };
+            /** @description no stored comparison, or it fails its provenance checksum */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
