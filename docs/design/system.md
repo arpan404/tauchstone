@@ -76,7 +76,7 @@ The page title lives in the top bar. Views never render their own page title.
 - `Panel` (title?, actions?, children, flush?) : the only container.
 - `StatusBadge` tones: `neutral | accent | ok | bad | gap`. Short labels only (max 4 words). Legacy `Chip` from `@/components/mvp` now renders it.
 - `Readout` (label, value, unit?, size `sm|md|lg|xl`, tone?) : mono value over a 12px label.
-- `PlateMap` : 16×24 well plate; the signature element. Screen progress and hidden tests use it.
+- `PlateMap` : 16×24 well plate; the signature element. On Screen it shows progress only (1 well ≈ 295 gold signatures in scoring order). Never place drugs or hits on wells: a well is not a drug.
 - `EmptyState` (icon, title, action?) : one line plus one action. No paragraphs.
 - `Toolbar` : row of filters/actions above a table.
 - shadcn primitives in `src/components/ui/` (Button, Table, Tabs, Tooltip, Select, Dialog,
