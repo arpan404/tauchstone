@@ -28,8 +28,11 @@ function Plain({ children }: { children: string }) {
   return <p className="m-0 text-[13px] text-ink-2">{children}</p>;
 }
 
+/** Two decimals with an explicit sign; values that round to zero show as 0.00. */
 function signed(value: number) {
-  return (value > 0 ? "+" : "") + value.toFixed(2);
+  const text = Math.abs(value).toFixed(2);
+  if (Number(text) === 0) return "0.00";
+  return (value > 0 ? "+" : "-") + text;
 }
 
 /** One row per model on the same held-out compounds, which one is used, and the outcome. */
@@ -41,7 +44,7 @@ function Comparison({ enabled }: { enabled: boolean }) {
     <div>
       <p className="m-0 mb-1 text-[12px] font-medium text-ink-3">How it compares</p>
       <div className="overflow-x-auto rounded-xl ring-1 ring-rim/80">
-        <table className="w-full border-separate border-spacing-0 text-[12px]">
+        <table className="w-full min-w-[36rem] border-separate border-spacing-0 text-[12px]">
           <thead className="bg-frost/55 text-left text-ink-3">
             <tr>
               <th scope="col" className="px-3 py-2 font-normal">Model</th>
