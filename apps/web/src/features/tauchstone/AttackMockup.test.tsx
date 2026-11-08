@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { Schema } from '@/api/types';
 import { useUi } from '@/store/ui';
@@ -34,8 +34,8 @@ afterEach(cleanup);
 it('shows the verdict pill and seals the event log on start', () => {
   mocks.snapshot = base;
   render(<AttackView />);
-  expect(screen.getByRole('status', { name: 'Verdict: Supported' }).textContent).toBe('Supported');
-  expect(screen.getByText(/session start · 2 hidden tests sealed/)).toBeTruthy();
+  expect(screen.getByRole('status', { name: 'Verdict: SUPPORTED SO FAR' }).textContent).toBe('SUPPORTED SO FAR');
+  expect(screen.getByText('2 hidden tests sealed')).toBeTruthy();
   expect(screen.queryByText(/not preregistered/)).toBeNull();
 });
 
@@ -72,7 +72,9 @@ it('logs each reveal with consensus, outcome and belief move', () => {
     history: [revealed],
   };
   render(<AttackView />);
-  expect(screen.getByRole('status', { name: 'Verdict: Fragile' })).toBeTruthy();
-  expect(screen.getByText(/Held-out cohort A · consensus 0.17 · fail/)).toBeTruthy();
-  expect(screen.getByText(/P\(claim\) 0.60 → 0.20/)).toBeTruthy();
+  expect(screen.getByRole('status', { name: 'Verdict: FRAGILE / CONTEXT-DEPENDENT' })).toBeTruthy();
+  const lines = within(screen.getByRole('list', { name: 'Session event log' })).getAllByRole('listitem').map((li) => li.textContent ?? '');
+  expect(lines).toHaveLength(3);
+  expect(lines[1]).toMatch(/REVEAL.*Held-out cohort A.*consensus 0\.17 fail/);
+  expect(lines[2]).toMatch(/BELIEF.*P\(claim\) 0\.60 → 0\.20/);
 });

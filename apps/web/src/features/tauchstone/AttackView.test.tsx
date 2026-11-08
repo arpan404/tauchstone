@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { Schema } from '@/api/types';
 import { useUi } from '@/store/ui';
@@ -58,7 +58,7 @@ it('restores continuity and reveals only the committed server result', () => {
   fireEvent.click(screen.getByRole('button', { name: /Held-out cohort B/ }));
   expect(mocks.run).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: /Held-out cohort B/ }).getAttribute('aria-pressed')).toBe('true');
-  expect(screen.getByText(/Next experiment:/).textContent).toContain('Held-out cohort B');
+  expect(screen.getByLabelText('Next experiment').textContent).toContain('Held-out cohort B');
   vi.useFakeTimers();
   try {
     fireEvent.click(screen.getByRole('button', { name: 'Commit & run test' }));
@@ -72,13 +72,17 @@ it('restores continuity and reveals only the committed server result', () => {
   // Mutation completion is the only source of observed values.
   mocks.run.mock.calls[0][1].onSuccess(result);
   view.rerender(<AttackView />);
-  expect(screen.getByText('Failed · Held-out cohort B')).toBeTruthy();
+  const latest = () => within(screen.getByRole('region', { name: 'Latest result' }));
+  expect(latest().getByText('Failed')).toBeTruthy();
+  expect(latest().getByText('Held-out cohort B')).toBeTruthy();
+  expect(latest().getByText('0.12')).toBeTruthy();
   expect(screen.getByRole('button', { name: /Held-out cohort A/ }).textContent).toContain('Hidden');
   expect(screen.getByRole('button', { name: /Held-out cohort B/ }).hasAttribute('disabled')).toBe(true);
   view.unmount();
   mocks.snapshot = result;
   render(<AttackView />);
-  expect(screen.getByText('Failed · Held-out cohort B')).toBeTruthy();
+  expect(latest().getByText('Held-out cohort B')).toBeTruthy();
+  expect(screen.getByRole('button', { name: /Held-out cohort B/ }).getAttribute('data-outcome')).toBe('fail');
 });
 it('never presents another candidate session as the current candidate', () => {
   restore();
@@ -93,7 +97,7 @@ it('starts a fresh session only when requested and retains history until success
   fireEvent.click(screen.getByRole('button', { name: 'Start new session' }));
   expect(mocks.start.mock.calls[0][0].candidateId).toBe('drug-a');
   expect(useUi.getState().sessionId).toBe('session-a');
-  expect(screen.getByText(/Claim under test:/)).toBeTruthy();
+  expect(screen.getByLabelText('Claim under test').textContent).toBe('Drug A reverses the signature');
 });
 it('does not render an outcome attached to a hidden context', () => {
   mocks.snapshot = { ...initial, contexts: initial.contexts.map(c => ({ ...c, outcome: 'fail' })) };
@@ -103,7 +107,8 @@ it('does not render an outcome attached to a hidden context', () => {
   expect(hidden.getAttribute('data-outcome')).toBeNull();
   expect(hidden.textContent).not.toContain('Revealed');
   expect(hidden.textContent).not.toMatch(/\bfail\b(?! risk)/i);
-  expect(screen.queryByText(/Failed ·/)).toBeNull();
+  expect(screen.queryByText('Failed')).toBeNull();
+  expect(screen.getByText('No reveals yet')).toBeTruthy();
   expect(mocks.run).not.toHaveBeenCalled();
 });
 it('cannot commit after budget is exhausted', () => {

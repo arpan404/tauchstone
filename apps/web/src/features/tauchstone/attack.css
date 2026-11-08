@@ -1,60 +1,9 @@
+/* The Attack view is styled with Tailwind tokens. These global rules stay only because other
+   views (BenchmarkView) still use the legacy `.chip` / `.mono` classes and got them from here. */
 .attack { min-height: 0; }
-.attack-body { display: grid; gap: 16px; align-content: start; }
-.attack-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 900px) { .attack-grid { grid-template-columns: 1fr; } }
-.attack-card { background: var(--s1, #fff); border: 1px solid var(--line, #e6e2d8); border-radius: 14px; padding: 18px; }
-.attack-kicker { font-size: 12px; color: var(--mu, #6c6a74); }
-.attack-empty { max-width: 560px; display: grid; gap: 12px; justify-items: start; }
-.attack-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.attack-stats { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 13px; }
-.attack-stats .num, .attack-log .mono, .attack-test .num { font-variant-numeric: tabular-nums; }
-.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; }
-
-.gauge { position: relative; width: 200px; height: 200px; margin: 4px 0 12px; }
-.gauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.gauge .ring-bg { fill: none; stroke: var(--s2, #f0eee8); stroke-width: 9; }
-.gauge .ring-fg { fill: none; stroke: var(--ac, #5b3df5); stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 0.9s ease, stroke 0.4s ease; }
-.gauge .c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.gauge .v { font-size: 48px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.gauge .k { font-size: 12px; color: var(--mu, #6c6a74); }
-
-.verd { font-size: 12.5px; padding: 5px 11px; border-radius: 999px; background: rgba(242, 155, 56, 0.13); color: #9a5a0d; font-weight: 600; }
-.verd.ok { background: rgba(18, 163, 106, 0.1); color: var(--ok, #12a36a); }
-.verd.bad { background: rgba(239, 75, 63, 0.09); color: var(--bad, #ef4b3f); }
-
-.attack-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.btn { cursor: pointer; display: inline-flex; align-items: center; gap: 8px; background: var(--ac, #5b3df5); color: #fff; font-weight: 600; font-size: 13.5px; padding: 9px 15px; border-radius: 10px; border: 0; box-shadow: 0 6px 16px -8px rgba(91, 61, 245, 0.6); }
-.btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
-.btn2 { cursor: pointer; font-size: 13px; border: 1px solid var(--line, #e6e2d8); background: var(--s1, #fff); color: var(--ink, #14131a); padding: 8px 13px; border-radius: 10px; }
-.btn2:disabled { opacity: 0.4; cursor: default; }
-.btn2[aria-pressed="true"] { border-color: var(--ac, #5b3df5); box-shadow: 0 0 0 3px rgba(91, 61, 245, 0.1); color: var(--ac, #5b3df5); font-weight: 600; }
-
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 5px 10px; border-radius: 999px; background: var(--s2, #f0eee8); color: var(--ink, #14131a); white-space: nowrap; }
-.chip.gap { background: rgba(242, 155, 56, 0.13); color: #9a5a0d; }
-.chip.bad { background: rgba(239, 75, 63, 0.09); color: var(--bad, #ef4b3f); }
-.chip.ok { background: rgba(18, 163, 106, 0.1); color: var(--ok, #12a36a); }
-.chip.ac { background: rgba(91, 61, 245, 0.1); color: var(--ac, #5b3df5); }
-
-.attack-log { margin-top: 12px; font-size: 12px; color: var(--mu, #6c6a74); display: grid; gap: 3px; list-style: none; padding: 0; }
-.attack-log .mono { margin-right: 6px; }
-
-.attack-h { font-size: 13px; font-weight: 650; margin: 0 0 10px; color: var(--ink, #14131a); }
-.attack-test { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 11px 13px; border-radius: 13px; background: var(--s1, #fff); border: 1px solid var(--line, #e6e2d8); margin-bottom: 9px; transition: border-color 0.3s, box-shadow 0.3s; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit; }
-.attack-test:disabled { cursor: default; }
-.attack-test.next { border-color: var(--ac, #5b3df5); box-shadow: 0 0 0 3px rgba(91, 61, 245, 0.1); }
-.attack-test .t { font-size: 14px; font-weight: 600; }
-.attack-test .s { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--mu, #6c6a74); }
-.attack-test .pc { font-size: 13px; font-weight: 600; }
-.attack-test .tag { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 600; color: var(--ac, #5b3df5); }
-.cell { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line, #e6e2d8); background: var(--s2, #f0eee8); flex: none; }
-.cell[data-state="next"] { border-color: var(--ac, #5b3df5); box-shadow: 0 0 0 3px rgba(91, 61, 245, 0.15); }
-.cell[data-state="running"] { border-color: var(--ac, #5b3df5); animation: pulse 1s ease-in-out infinite; }
-.cell[data-state="survive"] { border-color: var(--ok, #12a36a); background: rgba(18, 163, 106, 0.15); }
-.cell[data-state="fail"] { border-color: var(--bad, #ef4b3f); background: rgba(239, 75, 63, 0.15); }
-@keyframes pulse { 50% { box-shadow: 0 0 0 6px rgba(91, 61, 245, 0.15); } }
-@media (prefers-reduced-motion: reduce) { .cell[data-state="running"] { animation: none; } .gauge .ring-fg { transition: none; } }
-
-.attack-latest { margin-top: 14px; border-top: 1px solid var(--line, #e6e2d8); padding-top: 12px; font-size: 13px; display: grid; gap: 4px; }
-.attack-latest .muted { color: var(--mu, #6c6a74); font-size: 12px; }
-.attack-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; font-size: 12px; padding: 0 8px; border-radius: 6px; background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); white-space: nowrap; }
+.chip.gap { background: var(--gap-soft); color: var(--gap); border-color: transparent; }
+.chip.bad { background: var(--bad-soft); color: var(--bad); border-color: transparent; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+.chip.ac { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; }

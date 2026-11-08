@@ -1,28 +1,25 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import type { Schema } from '@/api/types';
+import { StatusBadge } from '@/components/system';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { rationaleCopy } from './rationale';
 
 type Mode = Schema<'AttackSession'>['mode'];
-const modeName = (mode: Mode) => mode === 'learn' ? 'Learn' : 'Attack';
 
-/** A mode toggle does not fetch a recommendation; attribute the last API response. */
-export function RecommendationRationale({
+/** Small 'Recommended' badge on a hidden-test row; the server rationale lives in its tooltip. */
+export function RecommendedBadge({
   responseMode, selectedMode, rationale,
 }: { responseMode: Mode; selectedMode: Mode; rationale: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const long = rationale.length > 180;
-  const stale = responseMode !== selectedMode;
+  const copy = rationaleCopy(responseMode, selectedMode, rationale);
   return (
-    <div className="space-y-1 text-xs text-muted-foreground" aria-live="polite">
-      <p className={long && !expanded ? 'line-clamp-2' : undefined}>
-        {stale ? `Last server recommendation (${modeName(responseMode)})` : `${modeName(responseMode)} recommendation`}: {rationale}
-      </p>
-      {long && <Button variant="ghost" size="sm" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Collapse rationale' : 'Read full rationale'}</Button>}
-      {stale && (
-        <p className="text-muted-foreground">
-          {modeName(selectedMode)} is selected for the next validation. The highlighted experiment is still the last {modeName(responseMode)} recommendation; it refreshes after a reveal. You can also select an experiment manually.
-        </p>
-      )}
-    </div>
+    <Tooltip>
+      <TooltipTrigger render={<span />} className="inline-flex">
+        <StatusBadge tone={copy.stale ? 'neutral' : 'accent'}>Recommended</StatusBadge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-72 flex-col items-start gap-1 text-left">
+        <span className="font-medium">{copy.title}</span>
+        <span className="opacity-80">{copy.body}</span>
+        {copy.note && <span className="opacity-80">{copy.note}</span>}
+      </TooltipContent>
+    </Tooltip>
   );
 }

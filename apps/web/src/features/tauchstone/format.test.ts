@@ -5,14 +5,14 @@ describe('outcome formatting', () => {
   it('formats long decimals to 2 places', () => {
     expect(fmt2(0.16590164851619668)).toBe('0.17');
     expect(fmt2(-2.386)).toBe('-2.39');
-    expect(fmt2(null)).toBe('—');
-    expect(fmt2(undefined)).toBe('—');
+    expect(fmt2(null)).toBe('n/a');
+    expect(fmt2(undefined)).toBe('n/a');
   });
 
   it('omits the threshold clause for rank-based (null threshold) rules', () => {
     expect(observedText(0.16590164851619668, null)).toBe('Observed consensus 0.17');
     expect(observedText(-2.386, -1.8)).toBe('Observed -2.39 vs threshold -1.80');
-    expect(observedText(null, null)).toBe('Observed consensus —');
+    expect(observedText(null, null)).toBe('Observed consensus n/a');
   });
 
   it('hides zero-width engine intervals', () => {
