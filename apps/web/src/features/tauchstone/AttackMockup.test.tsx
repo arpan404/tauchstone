@@ -97,5 +97,5 @@ it('logs each reveal with consensus, outcome and belief move', () => {
   const lines = within(screen.getByRole('list', { name: 'Session event log' })).getAllByRole('listitem').map((li) => li.textContent ?? '');
   expect(lines).toHaveLength(3);
   expect(lines[1]).toMatch(/RESULT.*Held-out cohort A.*score 0\.17 failed/);
-  expect(lines[2]).toMatch(/UPDATE.*Chance claim holds 0\.60 → 0\.20/);
+  expect(lines[2]).toMatch(/UPDATE.*Chance the claim holds 60% → 20%/);
 });

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { CandidatePicker } from "@/app/CandidatePicker";
+import { CandidatePicker } from '@/app/CandidatePicker';
 import {
-  ArrowCounterClockwiseIcon, ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, CheckCircleIcon, CircleDashedIcon, CircleNotchIcon,
-  ClockCounterClockwiseIcon, CrosshairIcon, EyeIcon, EyeSlashIcon, FlaskIcon, LightbulbIcon, ListBulletsIcon, LockIcon,
-  LockSimpleIcon, PlayIcon, QuestionIcon, SealCheckIcon, WarningCircleIcon, WarningIcon, XCircleIcon,
+  ArrowCounterClockwiseIcon, ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, CircleDashedIcon, ClockCounterClockwiseIcon,
+  CrosshairIcon, FileTextIcon, FlaskIcon, LightbulbIcon, ListBulletsIcon, LockSimpleIcon, PlayIcon, TargetIcon,
+  WarningCircleIcon,
 } from '@phosphor-icons/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
@@ -15,38 +15,30 @@ import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
-import { EmptyState, NumberTicker, Panel, Readout, StatusBadge, type Tone } from '@/components/system';
+import { EmptyState, NumberTicker, Panel, StatusBadge } from '@/components/system';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useUi, type AttackMode } from '@/store/ui';
-import { fmt2, testsLeftText } from './format';
-import { RecommendedBadge } from './RecommendationRationale';
+import { fmt2 } from './format';
 import { rationaleCopy } from './rationale';
-import { BeliefTrace, WellMarker, type WellMarkerState } from './AttackParts';
+import { ChanceMeter, ResultDetail, StateBadge, TestHeading, type CardState } from './AttackParts';
+import { unit, VERDICT_ICON, VERDICT_TEXT, VERDICT_TONE } from './attackMeta';
 import { useDrugGaps } from './useDrugGaps';
-import { drugDisplayName, FAIL_RISK_HELP, joinSentences, MODE_HELP, P_CLAIM_HELP } from './attackCopy';
+import {
+  budgetFor, budgetText, claimSentence, drugDisplayName, FAIL_RISK_HELP, joinSentences, kindOf, MODE_HELP, MODE_LINE,
+  cannotHoldLine, P_CLAIM_HELP, pct, PREREG_BUDGET, summarySentence, WHY_LINE,
+} from './attackCopy';
 import './attack.css';
 
 type Session = Schema<'AttackSession'>;
-type Verdict = Schema<'Verdict'>;
 
-/** Verdict names are verbatim from AGENTS.md. */
-const VERDICT: Record<Verdict, { text: string; tone: Tone; icon: ReactNode }> = {
-  INSUFFICIENT_EVIDENCE: { text: 'INSUFFICIENT EVIDENCE', tone: 'neutral', icon: <QuestionIcon weight="bold" /> },
-  FRAGILE_CONTEXT_DEPENDENT: { text: 'FRAGILE / CONTEXT-DEPENDENT', tone: 'bad', icon: <WarningIcon weight="bold" /> },
-  SUPPORTED_SO_FAR: { text: 'SUPPORTED SO FAR', tone: 'ok', icon: <SealCheckIcon weight="bold" /> },
-};
+/** Kinds shown on the start screen when the drug's own tests are not listed yet. */
+const GENERIC_KINDS = ['held_out_cohort', 'composition_adjusted', 'lincs_context', 'brain_exposure'] as const;
 
-const TYPE_LABEL: Record<string, string> = {
-  held_out_cohort: 'Independent cohort',
-  composition_adjusted: 'Cell-mix adjusted',
-  lincs_context: 'Held-back LINCS condition',
-  brain_exposure: 'Brain exposure',
-  cell_type: 'Cell type',
-};
+const SEALED_LINE =
+  'Results were computed before anyone looked and stay sealed. You see one only when you spend a test on it, so nobody can tune the method after seeing answers.';
 
 function mmss(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -56,9 +48,6 @@ function mmss(ms: number): string {
 function reducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
-
-/** Sealed labels spell micromolar as 'uM'; display it properly without touching the data. */
-const unit = (label: string) => label.replace(/(\d)\s*uM\b/g, '$1 µM');
 
 function HelpLabel({ text, help, className }: { text: string; help: string; className?: string }) {
   return (
@@ -124,28 +113,46 @@ function AttackSessionView() {
     drug.data?.name,
     candidates.data?.candidates.find((c) => c.id === selectedCandidateId)?.name,
   );
-  const claimText = session && candidateName && session.candidate_id !== candidateName
-    ? session.claim.text.split(session.candidate_id).join(candidateName)
-    : session?.claim.text;
   // A new session starts in Attack unless the user chose a mode during this one.
   const modeTouched = useRef(false);
   const [confirmNew, setConfirmNew] = useState<AttackMode | null>(null);
-  const [budget, setBudget] = useState(5);
   const mockData = useMockStatus(session?.history?.[session.history.length - 1]?.provenance ?? null);
   const [picked, setPicked] = useState<string | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
   const timer = useRef<number | null>(null);
   const start = useStartAttack();
+  const preview = useStartAttack();
   const run = useRunExperiment(session?.session_id ?? null);
   const gaps = useDrugGaps(session ? selectedCandidateId : null);
   const reduce = useReducedMotion();
 
+  // Start screen: for a drug in the sealed set, open a session in the background so the screen can
+  // list its own hidden tests and starting chance. Nothing is revealed and nothing is stored outside
+  // the in-memory session; 'Start test session' adopts it. Drugs outside the sealed set are never
+  // previewed, because starting one builds its tests.
+  const nTests = drug.data?.n_hidden_tests ?? null;
+  const sealedDrug = drug.data?.preregistered === true && drug.data.attack_ready === true && (nTests ?? 0) > 0;
+  const [previewSession, setPreviewSession] = useState<Session | null>(null);
+  const previewFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (session || !sealedDrug || !selectedCandidateId || previewFor.current === selectedCandidateId) return;
+    previewFor.current = selectedCandidateId;
+    preview.mutate(
+      { candidateId: selectedCandidateId, mode, budget: budgetFor(nTests ?? 0) },
+      { onSuccess: (s) => setPreviewSession(s) },
+    );
+  }, [session, sealedDrug, selectedCandidateId, mode, nTests, preview]);
+  const shownPreview = !session && previewSession?.candidate_id === selectedCandidateId && !previewSession.history?.length
+    ? previewSession : null;
+  const view = session ?? shownPreview;
+
   const effectivePicked = picked ?? session?.recommended_context_id ?? null;
   const selectedContext = session?.contexts.find((c) => c.context_id === effectivePicked && c.status === 'hidden');
-  const nextId = runningId ?? effectivePicked;
   const hiddenCount = session ? session.contexts.filter((c) => c.status === 'hidden').length : 0;
   const revealedCount = session ? session.contexts.length - hiddenCount : 0;
-  const verdict = session ? VERDICT[session.verdict] : null;
+  const slots = session ? Math.min(session.budget, session.contexts.length) : 0;
+  const testsLeft = session ? Math.min(session.budget_remaining, hiddenCount) : 0;
+  const ended = !!session && testsLeft <= 0;
 
   // Event-log clock: session start + one stamp per reveal.
   const [t0, setT0] = useState<number | null>(null);
@@ -176,23 +183,19 @@ function AttackSessionView() {
   const history = useMemo(() => session?.history ?? [], [session]);
   const lastRevealed = history[history.length - 1] ?? null;
   const revealedById = useMemo(() => new Map(history.map((h) => [h.context_id, h])), [history]);
+  const passed = history.filter((h) => h.outcome === 'survive').length;
+  const failed = history.length - passed;
 
   const log = useMemo<LogLine[]>(() => {
     if (!session) return [];
     const lines: LogLine[] = [{ kind: 'SETUP', text: `${session.contexts.length} hidden tests set up`, at: t0 }];
     for (const h of history) {
       const at = revealAt[h.context_id] ?? null;
-      lines.push({ kind: 'RESULT', text: unit(h.label), detail: `score ${fmt2(h.value)} ${h.outcome === 'fail' ? 'failed' : 'passed'}`, tone: h.outcome === 'fail' ? 'bad' : 'ok', at });
-      lines.push({ kind: 'UPDATE', text: `Chance claim holds ${h.belief_before.toFixed(2)} → ${h.belief_after.toFixed(2)}`, at });
+      lines.push({ kind: 'RESULT', text: `${kindOf(h.type).title}: ${unit(h.label)}`, detail: `score ${fmt2(h.value)} ${h.outcome === 'fail' ? 'failed' : 'passed'}`, tone: h.outcome === 'fail' ? 'bad' : 'ok', at });
+      lines.push({ kind: 'UPDATE', text: `Chance the claim holds ${pct(h.belief_before)} → ${pct(h.belief_after)}`, at });
     }
     return lines;
   }, [session, history, t0, revealAt]);
-
-  const trace = useMemo(() => {
-    if (!session) return [];
-    if (!history.length) return [{ p: session.belief.p_claim_holds }];
-    return [{ p: history[0].belief_before }, ...history.map((h) => ({ p: h.belief_after, outcome: h.outcome }))];
-  }, [session, history]);
 
   function clearTimer() {
     if (timer.current !== null) {
@@ -216,6 +219,16 @@ function AttackSessionView() {
     );
   }
 
+  function adopt(s: Session) {
+    setSession(s);
+    setSessionId(s.session_id);
+    setPreviewSession(null);
+    // Tests built on the fly change the drug's hidden-test count and attack readiness.
+    void qc.invalidateQueries({ queryKey: ['drug'] });
+    void qc.invalidateQueries({ queryKey: ['project-candidates'] });
+    void qc.invalidateQueries({ queryKey: ['candidates'] });
+  }
+
   function handleStart(nextMode: AttackMode = mode) {
     if (!selectedCandidateId || start.isPending || run.isPending) return;
     clearTimer();
@@ -224,19 +237,12 @@ function AttackSessionView() {
     setConfirmNew(null);
     modeTouched.current = false;
     if (nextMode !== mode) setMode(nextMode);
-    start.mutate(
-      { candidateId: selectedCandidateId, mode: nextMode, budget },
-      {
-        onSuccess: (s) => {
-          setSession(s);
-          setSessionId(s.session_id);
-          // Tests built on the fly change the drug's hidden-test count and attack readiness.
-          void qc.invalidateQueries({ queryKey: ['drug'] });
-          void qc.invalidateQueries({ queryKey: ['project-candidates'] });
-          void qc.invalidateQueries({ queryKey: ['candidates'] });
-        },
-      },
-    );
+    if (shownPreview && shownPreview.mode === nextMode) {
+      adopt(shownPreview);
+      return;
+    }
+    const n = session?.contexts.length ?? nTests ?? PREREG_BUDGET;
+    start.mutate({ candidateId: selectedCandidateId, mode: nextMode, budget: budgetFor(n) }, { onSuccess: adopt });
   }
 
   function handleNewSession() {
@@ -254,24 +260,16 @@ function AttackSessionView() {
   }
 
   const busy = run.isPending || start.isPending || runningId !== null;
-  const budgetSelect = (
-    <Select value={budget} onValueChange={(value) => value !== null && setBudget(value)} disabled={busy}>
-      <SelectTrigger aria-labelledby="session-budget-label" className="h-9 min-w-40 rounded-full border-0 bg-frost/70 pr-3 pl-3.5 font-mono text-[12.5px] ring-1 ring-ink/12 backdrop-blur hover:bg-frost/90">
-        <SelectValue><FlaskIcon className="text-ink-3" />{budget} test{budget === 1 ? '' : 's'}</SelectValue>
-      </SelectTrigger>
-      <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} test{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
-    </Select>
-  );
-
-  const delta = lastRevealed ? lastRevealed.belief_after - lastRevealed.belief_before : 0;
   const rec = session ? rationaleCopy(session.mode, mode, session.rationale) : null;
+  const delta = lastRevealed ? lastRevealed.belief_after - lastRevealed.belief_before : 0;
+  const notPrereg = session?.preregistered === false || (!session && drug.data?.preregistered === false);
+  const nShown = view?.contexts.length ?? nTests;
 
-  return (
-    <div className="attack flex h-full flex-col">
-      <BoundaryBanner />
-      <MockRibbon show={mockData} />
-      <div className="flex-1 overflow-auto p-4 md:p-6">
-        {!session && (!selectedCandidateId ? (
+  if (!selectedCandidateId && !session) {
+    return (
+      <div className="attack flex h-full flex-col">
+        <BoundaryBanner />
+        <div className="flex-1 overflow-auto p-4 md:p-6">
           <div className="mx-auto mt-[8vh] max-w-xl">
             <EmptyState
               icon={<CrosshairIcon weight="duotone" />}
@@ -287,267 +285,268 @@ function AttackSessionView() {
               }
             />
           </div>
-        ) : (
-          <section className="glass mx-auto mt-[4vh] max-w-3xl p-5 md:p-8" aria-label="New test session">
-            <Eyebrow />
-            <h2 className="mt-2 font-heading text-[34px] leading-[1.05] font-normal tracking-[-0.035em] text-ink md:text-[44px]">{candidateName}</h2>
-            <p className="mt-2 text-[13.5px] text-ink-2">Run hidden tests on this drug one at a time and see whether its claim holds.</p>
-            <ol className="mt-6 grid gap-2 sm:grid-cols-3" aria-label="Steps">
-              {[
-                { icon: <LockSimpleIcon />, title: 'Pick a hidden test', text: 'Results stay hidden until run' },
-                { icon: <PlayIcon />, title: 'Run it', text: 'Uses 1 test of the budget' },
-                { icon: <EyeIcon />, title: 'See the result', text: 'Chance it holds updates' },
-              ].map((s, i) => (
-                <li key={s.title} className="flex items-center gap-3 rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
-                  <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-4">{s.icon}</span>
-                  <span className="min-w-0">
-                    <span className="block text-[13px] font-medium text-ink"><span className="mr-1.5 font-mono text-[11px] text-ink-3">{i + 1}</span>{s.title}</span>
-                    <span className="block truncate text-[12px] text-ink-3">{s.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-            <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
-              <div className="grid gap-2">
-                <label id="session-budget-label" className="text-[12px] text-ink-3">Tests to run</label>
-                <div className="flex items-center gap-3">
-                  {budgetSelect}
-                  <span className="flex gap-1.5" aria-hidden>
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <span key={i} className={cn('size-3.5 rounded-full transition-colors duration-200 motion-reduce:transition-none', i < budget ? 'bg-primary/70' : 'bg-ink/[0.08]')} />
-                    ))}
-                  </span>
-                </div>
-              </div>
-              <Button size="lg" className="h-11 w-full px-6 text-[13.5px] sm:w-auto" onClick={() => handleStart()} disabled={busy}>
-                <PlayIcon weight="fill" />
-                {start.isPending ? 'Starting…' : 'Start test session'}
-              </Button>
-            </div>
-            {start.isError && <p role="alert" className="mt-3 text-[12.5px] text-bad">Could not start the session. Retry.</p>}
-          </section>
-        ))}
+        </div>
+      </div>
+    );
+  }
 
-        {session && verdict && (
-          <div className="mx-auto grid max-w-[1280px] gap-4">
-            <section aria-label="Claim and result" className="glass p-5 md:p-7">
-              <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-                <div className="min-w-0 flex-1 basis-80">
-                  <Eyebrow session={session.session_id} />
-                  <h2 className="mt-2 font-heading text-[34px] leading-[1.05] font-normal tracking-[-0.035em] text-ink md:text-[46px]">{candidateName}</h2>
-                  <p className="mt-2 max-w-3xl text-[13.5px] leading-snug text-ink-2" aria-label="Claim under test">{claimText}</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {session.preregistered === false && <StatusBadge tone="gap"><WarningCircleIcon />not preregistered</StatusBadge>}
-                  <StatusBadge tone={verdict.tone} role="status" aria-label={`Verdict: ${verdict.text}`} className="h-8 gap-2 px-3.5 font-mono text-[12px] tracking-wide [&>svg]:size-4">
-                    {verdict.icon}
-                    {verdict.text}
-                  </StatusBadge>
-                </div>
-              </div>
+  const runButton = (
+    <Button size="lg" className={cn('mt-3 h-10 w-full text-[13px]', busy && 'disabled:opacity-100')} onClick={handleRunNext}
+      disabled={!selectedContext || busy || session?.budget_remaining === undefined || session.budget_remaining <= 0}>
+      {busy ? <span className="size-3.5 animate-spin rounded-full border-2 border-on-ink/40 border-t-on-ink motion-reduce:animate-none" aria-hidden /> : <PlayIcon weight="fill" />}
+      {run.isPending ? 'Waiting for result…' : runningId ? 'Running…' : 'Run test'}
+    </Button>
+  );
 
-              <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:items-end">
-                <div className="grid gap-5">
-                  <div className="grid items-end gap-5 sm:grid-cols-[auto_minmax(0,1fr)]">
-                    <div role="img" aria-label={`Chance the claim holds ${session.belief.p_claim_holds.toFixed(2)}`}>
-                      <p className="text-[12px] text-ink-3"><HelpLabel text="Chance the claim holds" help={P_CLAIM_HELP} /></p>
-                      <div className="mt-1 flex items-end gap-3">
-                        <span className="font-mono text-[52px] leading-none font-light tracking-[-0.05em] text-primary tabular-nums md:text-[58px]">
-                          <NumberTicker value={session.belief.p_claim_holds} format={(v) => v.toFixed(2)} duration={0.9} />
-                        </span>
-                        {lastRevealed && Math.abs(delta) >= 0.005 && (
-                          <span className={cn('mb-1.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[12px] tabular-nums', delta < 0 ? 'bg-bad/10 text-bad' : 'bg-ok/10 text-ok')}>
-                            {delta < 0 ? <ArrowDownIcon weight="bold" className="size-3" /> : <ArrowUpIcon weight="bold" className="size-3" />}
-                            {Math.abs(delta).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="h-[104px] w-full max-w-lg rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
-                      <BeliefTrace points={trace} slots={Math.min(session.budget, session.contexts.length)} className="h-full" />
-                    </div>
+  return (
+    <div className="attack flex h-full flex-col">
+      <BoundaryBanner />
+      <MockRibbon show={mockData} />
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="mx-auto grid max-w-[1280px] gap-4">
+          <section aria-label={session ? 'Claim and result' : 'New test session'} className="glass min-w-0 p-5 md:p-7">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)]">
+              {/* Claim */}
+              <div className="min-w-0">
+                <p className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[12px] text-ink-3">
+                  <CrosshairIcon weight="duotone" className="size-4 text-primary" />
+                  <span className="text-ink-2">Attack</span>
+                  {session && <><span aria-hidden className="text-ink/25">·</span><span>session {session.session_id.slice(0, 8)}</span></>}
+                </p>
+                <h2 className="mt-3 font-heading text-[30px] leading-[1.08] font-normal tracking-[-0.035em] text-ink md:text-[42px]">
+                  Can we break the claim about {candidateName}?
+                </h2>
+                <blockquote className="m-0 mt-4 rounded-xl bg-primary/[0.07] px-4 py-3 ring-1 ring-primary/15">
+                  <p className="m-0 text-[11.5px] font-medium text-primary">The claim</p>
+                  <p className="m-0 mt-1 text-[16px] leading-snug text-ink md:text-[17px]" aria-label="Claim under test">
+                    {claimSentence(candidateName ?? 'This drug', view?.claim.q ?? 0.7)}
+                  </p>
+                </blockquote>
+                <p className="m-0 mt-3 max-w-2xl text-[13.5px] leading-snug text-ink-2">
+                  The ranking found this in one Alzheimer's brain dataset (GSE132903). {WHY_LINE}
+                </p>
+                {notPrereg && (
+                  <p className="m-0 mt-3 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-2">
+                    <StatusBadge tone="gap"><WarningCircleIcon />not preregistered</StatusBadge>
+                    This drug is outside the sealed set. Its hidden tests are built under the same frozen rules.
+                  </p>
+                )}
+                {/* Hidden tests */}
+                <div className="mt-7">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <h3 className="m-0 flex items-center gap-2 text-[15px] font-medium text-ink">
+                      <LockSimpleIcon className="size-4 text-primary" />
+                      {view ? 'The hidden tests' : 'Kinds of hidden test'}
+                    </h3>
+                    {session && (
+                      <span className="font-mono text-[12px] text-ink-3 tabular-nums">{hiddenCount} sealed · {revealedCount} run</span>
+                    )}
                   </div>
-
-                  <dl className="m-0 flex flex-wrap gap-x-8 gap-y-3">
-                    <div role="group" aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden tests; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}>
-                      <Stat icon={<FlaskIcon />} label="Budget left" value={<>{session.budget_remaining}<span className="text-ink-3">/{session.budget}</span></>} />
-                    </div>
-                    <Stat icon={<LockSimpleIcon />} label="Not run" value={hiddenCount} />
-                    <Stat icon={<EyeIcon />} label="Done" value={revealedCount} />
-                  </dl>
-                </div>
-
-                <div className="grid gap-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[12px] text-ink-3">Suggest</span>
-                    <ModeToggle
-                      label="How to suggest the next test" value={mode} disabled={busy} withHelp
-                      onChange={(m) => { modeTouched.current = true; setMode(m); }}
-                    />
-                  </div>
-                  {rec?.stale && (
-                    <p className="-mt-1 text-right font-mono text-[11px] text-ink-3" aria-live="polite">
-                      {rec.note}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between gap-3 rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80">
-                    <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-ink-3"><ArrowRightIcon className="size-3.5" />Next test</span>
-                    <p className="m-0 min-w-0 truncate font-mono text-[12.5px] text-ink" aria-label="Next experiment" aria-live="polite">
-                      {selectedContext ? unit(selectedContext.label) : 'None picked'}
-                    </p>
-                  </div>
-                  <Button size="lg" className={cn('h-11 w-full text-[13.5px]', busy && 'disabled:opacity-100')} onClick={handleRunNext} disabled={!selectedContext || busy || session.budget_remaining <= 0}>
-                    {busy ? <span className="size-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" aria-hidden /> : <PlayIcon weight="fill" />}
-                    {run.isPending ? 'Waiting for result…' : runningId ? 'Running…' : 'Run test'}
-                  </Button>
-                  {run.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">No result was returned. Retry.</p>}
-                  {session.budget_remaining <= 0 && <p className="m-0 text-center font-mono text-[12px] text-ink-3">No tests left in budget</p>}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <label id="session-budget-label" className="sr-only">Tests to run</label>
-                    <Button variant="outline" className="h-9 flex-1" onClick={handleNewSession} disabled={busy}>
-                      <ArrowCounterClockwiseIcon />
-                      {start.isPending ? 'Starting…' : 'Start new session'}
-                    </Button>
-                    {budgetSelect}
-                    {start.isError && <p role="alert" className="m-0 w-full text-[12.5px] text-bad">Could not start a new session. Retry.</p>}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-              <div className="grid min-w-0 gap-4">
-                <Panel aria-label="Hidden tests" title="Hidden tests" icon={<LockIcon />} caption="Results hidden until run" flush bodyClassName="px-3 pt-2 pb-3"
-                  actions={<span className="font-mono text-[12px] whitespace-nowrap text-ink-3 tabular-nums">{hiddenCount} to run · {revealedCount} done</span>}>
+                  <p className="m-0 mt-1 max-w-3xl text-[12.5px] leading-snug text-ink-3">
+                    {!view && (nTests
+                      ? `${nTests} hidden ${nTests === 1 ? 'test is' : 'tests are'} set aside for this drug. Each is one of these kinds. `
+                      : 'Each hidden test is one of these kinds. ')}
+                    {SEALED_LINE}
+                  </p>
                   {rec && <span id="attack-rec-rationale" className="sr-only">{rec.title}: {joinSentences(rec.body, rec.note)}</span>}
-                  <ul className="m-0 grid list-none gap-1.5 p-0">
-                    {session.contexts.map((c) => {
-                      const revealed = c.status === 'revealed';
+
+                  <ul className="m-0 mt-4 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    {!view && GENERIC_KINDS.map((t) => (
+                      <li key={t} className="rounded-xl bg-frost/55 p-3.5 ring-1 ring-rim/80">
+                        <TestHeading type={t} badge={<StateBadge state="sealed" />} />
+                        <p className="m-0 mt-2 pl-12 text-[12px] leading-snug text-ink-3">{kindOf(t).passRule}</p>
+                      </li>
+                    ))}
+                    {view?.contexts.map((c) => {
+                      const revealed = !!session && c.status === 'revealed';
                       const outcome = revealed ? revealedById.get(c.context_id) : undefined;
-                      const state: WellMarkerState = revealed
-                        ? (c.outcome === 'fail' ? 'fail' : 'survive')
-                        : c.context_id === runningId
-                          ? 'running'
-                          : c.context_id === nextId
-                            ? 'next'
-                            : 'sealed';
-                      const isRec = c.context_id === session.recommended_context_id && c.status === 'hidden';
-                      const isPicked = c.context_id === effectivePicked && c.status === 'hidden';
-                      const failPct = Math.round((1 - (c.p_survive ?? 0)) * 100);
+                      const hidden = c.status === 'hidden';
+                      const isRec = !!session && hidden && c.context_id === session.recommended_context_id;
+                      const isSelected = !!session && hidden && c.context_id === effectivePicked;
+                      const state: CardState = revealed && outcome
+                        ? (outcome.outcome === 'fail' ? 'failed' : 'passed')
+                        : c.context_id === runningId ? 'running' : isRec ? 'suggested' : 'sealed';
+                      const badge = <StateBadge state={state} text={state === 'suggested' && rec?.stale ? rec.badge : undefined} />;
+                      const pickable = !!session && hidden && !busy && session.budget_remaining >= 1;
                       return (
-                        <li key={c.context_id}>
-                          <button type="button"
-                            data-recommended={isRec} data-outcome={revealed ? c.outcome : undefined}
-                            disabled={c.status !== 'hidden' || busy || session.budget_remaining < 1}
-                            onClick={() => setPicked(c.context_id)} aria-pressed={isPicked}
-                            aria-describedby={isRec ? 'attack-rec-rationale' : undefined}
-                            className={cn(
-                              'grid w-full grid-cols-[30px_minmax(0,1fr)_68px] items-center gap-3 rounded-xl px-3 py-2.5 text-left ring-1 transition-colors duration-200 outline-none motion-reduce:transition-none',
-                              'focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-default',
-                              isPicked
-                                ? 'bg-primary/10 ring-primary/25'
-                                : revealed
-                                  ? 'bg-frost/35 ring-rim/60'
-                                  : 'bg-frost/55 ring-rim/80 enabled:hover:bg-primary/[0.06]',
-                            )}>
-                            <WellMarker state={state} />
-                            <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-                              <span className="min-w-0 flex-1 basis-44">
-                                <span className={cn('block truncate text-[13.5px] font-medium', revealed ? 'text-ink-2' : 'text-ink')}>{unit(c.label)}</span>
-                                <span className="mt-0.5 block truncate text-[12px] text-ink-3">{revealed ? 'Done' : 'Hidden'} · {TYPE_LABEL[c.type] ?? c.type}</span>
-                              </span>
-                              {state === 'running' && <StatusBadge tone="accent"><CircleNotchIcon className="animate-spin motion-reduce:animate-none" />Running</StatusBadge>}
-                              {revealed && (
-                                <StatusBadge tone={c.outcome === 'fail' ? 'bad' : 'ok'}>
-                                  {c.outcome === 'fail' ? <XCircleIcon /> : <CheckCircleIcon />}
-                                  {c.outcome === 'fail' ? 'Failed' : 'Passed'}
-                                </StatusBadge>
-                              )}
-                              {isRec && state !== 'running' && <RecommendedBadge responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />}
-                            </span>
-                            <span className="text-right font-mono tabular-nums">
-                              {revealed ? (
-                                <>
-                                  <span className="block text-[14px] text-ink">{fmt2(outcome?.value)}</span>
-                                  <span className="block text-[11px] text-ink-3">{outcome?.threshold == null ? 'score' : `vs ${fmt2(outcome.threshold)}`}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="block text-[14px] text-ink">{failPct}%</span>
-                                  <span className="block text-[11px] text-ink-3"><HelpLabel text="to fail" help={FAIL_RISK_HELP} /></span>
-                                </>
-                              )}
-                            </span>
-                          </button>
+                        <li key={c.context_id}
+                          data-state={state} data-recommended={isRec || undefined} data-outcome={revealed ? outcome?.outcome : undefined}
+                          className={cn(
+                            'flex min-w-0 flex-col rounded-xl p-3.5 ring-1 transition-colors duration-200 motion-reduce:transition-none',
+                            isSelected ? 'bg-primary/[0.07] ring-2 ring-primary/45'
+                              : isRec ? 'bg-primary/[0.04] ring-primary/30'
+                                : revealed ? 'bg-frost/40 ring-rim/60' : 'bg-frost/55 ring-rim/80',
+                          )}>
+                          {session ? (
+                            <button type="button" aria-pressed={hidden ? isSelected : undefined} disabled={!pickable}
+                              onClick={() => setPicked(c.context_id)} aria-describedby={isRec ? 'attack-rec-rationale' : undefined}
+                              className="-m-1 rounded-lg p-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary enabled:cursor-pointer disabled:cursor-default">
+                              <TestHeading type={c.type} label={c.label} badge={badge} />
+                            </button>
+                          ) : (
+                            <TestHeading type={c.type} label={c.label} badge={badge} />
+                          )}
+                          {!revealed && <p className="m-0 mt-2 pl-12 text-[12px] leading-snug text-ink-3">{kindOf(c.type).passRule}</p>}
+                          {isRec && (
+                            <p className="m-0 mt-2 ml-12 flex items-start gap-1.5 rounded-lg bg-primary/[0.07] px-2.5 py-1.5 text-[12px] leading-snug text-ink-2">
+                              <TargetIcon className="mt-0.5 size-3.5 shrink-0 text-primary" />
+                              <span><span className="font-medium text-ink">Why this one:</span> {session?.rationale}</span>
+                            </p>
+                          )}
+                          {session && hidden && !isRec && c.p_survive != null && (
+                            <p className="m-0 mt-2 pl-12 text-[11.5px] text-ink-3">
+                              <HelpLabel text="Estimated chance to fail" help={FAIL_RISK_HELP} />: <span className="font-mono tabular-nums">{pct(1 - c.p_survive)}</span>
+                            </p>
+                          )}
+                          {isSelected && !ended && <div className="mt-auto pl-12">{runButton}</div>}
+                          {outcome && <div className="mt-3"><ResultDetail r={outcome} /></div>}
                         </li>
                       );
                     })}
                   </ul>
-                </Panel>
-
-                <Panel aria-label="Session log" title="Session log" icon={<ClockCounterClockwiseIcon />} flush bodyClassName="px-3 pt-2 pb-3">
-                  <ol className="m-0 grid max-h-64 list-none gap-1 overflow-auto p-0 font-mono text-[12px]" aria-live="polite" aria-label="Session event log">
-                    <AnimatePresence initial={false}>
-                      {log.map((line, i) => (
-                        <motion.li key={`${line.kind}-${i}`}
-                          initial={reduce ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
-                          className={cn('grid grid-cols-[40px_58px_minmax(0,1fr)] items-baseline gap-x-3 gap-y-0.5 rounded-lg px-3 py-1.5 sm:grid-cols-[44px_62px_minmax(0,1fr)_auto]', LOG_TINT[logTint(line)])}>
-                          <span className="text-ink-3 tabular-nums">{line.at ? mmss(line.at - (t0 ?? line.at)) : '00:00'}</span>
-                          <span className={cn('text-[10.5px] tracking-wide', LOG_KIND_TEXT[logTint(line)])}>{line.kind}</span>
-                          <span className="truncate text-ink-2">{line.text}</span>
-                          {line.detail
-                            ? <span className={cn('col-start-3 tabular-nums sm:col-start-auto', line.tone === 'bad' ? 'text-bad' : 'text-ok')}>{line.detail}</span>
-                            : <span className="hidden sm:block" />}
-                        </motion.li>
-                      ))}
-                    </AnimatePresence>
-                  </ol>
-                </Panel>
-              </div>
-
-              <div className="grid min-w-0 gap-4">
-                <Panel aria-label="Latest result" title="Latest result" icon={<EyeIcon />} aria-live="polite">
-                  {lastRevealed ? (
-                    <div className="grid gap-3">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <StatusBadge tone={lastRevealed.outcome === 'survive' ? 'ok' : 'bad'}>
-                          {lastRevealed.outcome === 'survive' ? <CheckCircleIcon /> : <XCircleIcon />}
-                          {lastRevealed.outcome === 'survive' ? 'Passed' : 'Failed'}
-                        </StatusBadge>
-                        <span className="truncate text-[13px] font-medium text-ink">{unit(lastRevealed.label)}</span>
-                      </div>
-                      <dl className="m-0 grid grid-cols-3 gap-2">
-                        <Readout label="Score" size="sm" value={fmt2(lastRevealed.value)} className={TILE} />
-                        <Readout label="Threshold" size="sm" value={lastRevealed.threshold == null ? 'rank rule' : fmt2(lastRevealed.threshold)} className={TILE} />
-                        <Readout label="Chance holds" size="sm" className={TILE} value={
-                          <span className="inline-flex items-center gap-1">
-                            {lastRevealed.belief_before.toFixed(2)}
-                            <ArrowRightIcon className="size-3 text-ink-3" />
-                            <span className={lastRevealed.belief_after < lastRevealed.belief_before ? 'text-bad' : 'text-ok'}>{lastRevealed.belief_after.toFixed(2)}</span>
-                          </span>
-                        } />
-                      </dl>
-                      <p className="m-0 text-[12px] leading-snug text-ink-3">{lastRevealed.rule}</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2.5 rounded-xl bg-ink/[0.035] px-3 py-3 text-ink-3">
-                      <EyeSlashIcon className="size-4" />
-                      <span className="font-mono text-[12px]">No tests run yet</span>
-                    </div>
+                  {ended && session && session.budget_remaining <= 0 && hiddenCount > 0 && (
+                    <p className="m-0 mt-3 font-mono text-[12px] text-ink-3">No tests left in budget</p>
                   )}
-                </Panel>
-
-                {gaps && gaps.length > 0 && (
-                  <Panel aria-label="Evidence gaps" title="Evidence gaps" icon={<CircleDashedIcon />} caption="What this evidence does not cover">
-                    <div className="flex flex-wrap gap-1.5">
-                      {gaps.map((g) => <StatusBadge key={g.text} tone={g.tone}>{g.text}</StatusBadge>)}
-                    </div>
-                  </Panel>
-                )}
+                </div>
               </div>
+
+              {/* Chance, verdict, budget and the main action */}
+              <aside aria-label="Chance and verdict" className="grid content-start gap-4 self-start rounded-xl lg:sticky lg:top-0 bg-frost/55 p-4 ring-1 ring-rim/80 md:p-5">
+                {ended && session && (
+                  <p className="m-0 rounded-lg bg-primary/[0.08] px-3 py-2.5 text-[13.5px] leading-snug font-medium text-ink" aria-live="polite">
+                    {summarySentence(passed, failed, session.belief.p_claim_holds, '').replace(/ Verdict: \.$/, '')}{' '}
+                    Verdict: <span className="whitespace-nowrap">{VERDICT_TEXT[session.verdict]}</span>.
+                    {hiddenCount > 0 && <span className="font-normal text-ink-2"> {hiddenCount} {hiddenCount === 1 ? 'test stays' : 'tests stay'} sealed.</span>}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0" role="img" aria-label={view ? `Chance the claim holds ${pct(view.belief.p_claim_holds)}` : 'Chance the claim holds: shown when the session starts'}>
+                    <p className="m-0 text-[12px] text-ink-3">Chance the claim holds</p>
+                    <div className="mt-1 flex items-end gap-2">
+                      <span className="font-mono text-[48px] leading-none font-light tracking-[-0.05em] text-primary tabular-nums md:text-[54px]">
+                        {view ? <NumberTicker value={view.belief.p_claim_holds * 100} format={(v) => `${Math.round(v)}%`} duration={0.9} /> : '?'}
+                      </span>
+                      {lastRevealed && Math.round(Math.abs(delta) * 100) >= 1 && (
+                        <span className={cn('mb-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[11.5px] tabular-nums', delta < 0 ? 'bg-bad/10 text-bad' : 'bg-ok/10 text-ok')}>
+                          {delta < 0 ? <ArrowDownIcon weight="bold" className="size-3" /> : <ArrowUpIcon weight="bold" className="size-3" />}
+                          from {pct(lastRevealed.belief_before)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {view && (
+                    <StatusBadge tone={VERDICT_TONE[view.verdict]} tip={false}
+                      role={session ? 'status' : undefined} aria-label={session ? `Verdict: ${VERDICT_TEXT[view.verdict]}` : undefined}
+                      className="h-7 max-w-full gap-1.5 px-3 font-mono text-[11.5px] tracking-wide whitespace-normal [&>svg]:size-3.5">
+                      {VERDICT_ICON[view.verdict]}
+                      {VERDICT_TEXT[view.verdict]}
+                    </StatusBadge>
+                  )}
+                </div>
+                <ChanceMeter p={view ? view.belief.p_claim_holds : null} verdict={view?.verdict ?? null} />
+                {session && cannotHoldLine(failed, session.claim.n_contexts, session.claim.q) && (
+                  <p className="m-0 rounded-lg bg-bad/[0.07] px-3 py-2 text-[12.5px] leading-snug text-ink-2">{cannotHoldLine(failed, session.claim.n_contexts, session.claim.q)}</p>
+                )}
+                <p className="m-0 text-[12px] leading-snug text-ink-3">{P_CLAIM_HELP}</p>
+
+                {!session && (
+                  <div className="grid gap-3 border-t border-ink/[0.07] pt-4">
+                    <p className="m-0 flex items-start gap-2 text-[13px] text-ink">
+                      <FlaskIcon className="mt-0.5 size-4 shrink-0 text-primary" />
+                      <span>
+                        {nShown != null ? budgetText(nShown) : `Up to ${PREREG_BUDGET} tests can be run (budget fixed in advance)`}
+                        <span className="block text-[12px] text-ink-3">Like a real lab, you cannot run every experiment. Each test you run uses one.</span>
+                      </span>
+                    </p>
+                    <Button size="lg" className="h-11 w-full text-[13.5px]" onClick={() => handleStart()} disabled={busy}>
+                      <PlayIcon weight="fill" />
+                      {start.isPending ? 'Starting…' : 'Start test session'}
+                    </Button>
+                    {start.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">Could not start the session. Retry.</p>}
+                  </div>
+                )}
+
+                {session && (
+                  <div className="grid gap-3 border-t border-ink/[0.07] pt-4">
+                    <div role="group" aria-label={`${revealedCount} of ${slots} tests run; ${testsLeft} left`} className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[13px] text-ink">
+                        <span className="font-mono tabular-nums">{Math.min(revealedCount, slots)} of {slots}</span> tests run
+                        <span className="text-ink-3"> · {testsLeft} left</span>
+                      </span>
+                      <span className="flex gap-1.5" aria-hidden>
+                        {Array.from({ length: slots }, (_, i) => {
+                          const h = history[i];
+                          return <span key={i} className={cn('size-3 rounded-full', h ? (h.outcome === 'fail' ? 'bg-bad' : 'bg-ok') : 'bg-ink/[0.1]')} />;
+                        })}
+                      </span>
+                    </div>
+                    {run.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">No result was returned. Retry.</p>}
+                    {!ended && <p className="m-0 text-[12.5px] text-ink-2">Run the suggested test below, or choose any sealed test.</p>}
+                    <div className="flex flex-wrap gap-2">
+                      {ended && (
+                        <Button className="h-9 flex-1" onClick={() => setStep('report')}>
+                          <FileTextIcon />
+                          Open report
+                        </Button>
+                      )}
+                      <Button variant="outline" className="h-9 flex-1" onClick={handleNewSession} disabled={busy}>
+                        <ArrowCounterClockwiseIcon />
+                        {start.isPending ? 'Starting…' : 'Start new session'}
+                      </Button>
+                    </div>
+                    {start.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">Could not start a new session. Retry.</p>}
+                    {!ended && (
+                      <div className="grid gap-2 rounded-lg bg-ink/[0.03] p-2.5">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="text-[11.5px] text-ink-3">How the next test is suggested</span>
+                          <ModeToggle label="How to suggest the next test" value={mode} disabled={busy} withHelp
+                            onChange={(m) => { modeTouched.current = true; setMode(m); }} />
+                        </div>
+                        <ul className="m-0 grid list-none gap-1 p-0 text-[11.5px] leading-snug text-ink-3">
+                          {(['attack', 'learn'] as const).map((m) => (
+                            <li key={m} className={cn(mode === m && 'text-ink-2')}>{MODE_LINE[m]}</li>
+                          ))}
+                        </ul>
+                        {rec?.stale && <p className="m-0 font-mono text-[11px] text-ink-3" aria-live="polite">{rec.note}</p>}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </aside>
             </div>
-          </div>
-        )}
+
+          </section>
+
+          {session && (
+            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+              <Panel aria-label="Session log" title="Session log" icon={<ClockCounterClockwiseIcon />} caption="Every step, in order" flush bodyClassName="px-3 pt-2 pb-3">
+                <ol className="m-0 grid max-h-64 list-none gap-1 overflow-auto p-0 font-mono text-[12px]" aria-live="polite" aria-label="Session event log">
+                  <AnimatePresence initial={false}>
+                    {log.map((line, i) => (
+                      <motion.li key={`${line.kind}-${i}`}
+                        initial={reduce ? false : { opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
+                        className={cn('grid grid-cols-[40px_58px_minmax(0,1fr)] items-baseline gap-x-3 gap-y-0.5 rounded-lg px-3 py-1.5 sm:grid-cols-[44px_62px_minmax(0,1fr)_auto]', LOG_TINT[logTint(line)])}>
+                        <span className="text-ink-3 tabular-nums">{line.at ? mmss(line.at - (t0 ?? line.at)) : '00:00'}</span>
+                        <span className={cn('text-[10.5px] tracking-wide', LOG_KIND_TEXT[logTint(line)])}>{line.kind}</span>
+                        <span className="break-words text-ink-2">{line.text}</span>
+                        {line.detail
+                          ? <span className={cn('col-start-3 tabular-nums sm:col-start-auto', line.tone === 'bad' ? 'text-bad' : 'text-ok')}>{line.detail}</span>
+                          : <span className="hidden sm:block" />}
+                      </motion.li>
+                    ))}
+                  </AnimatePresence>
+                </ol>
+              </Panel>
+              {gaps && gaps.length > 0 && (
+                <Panel aria-label="Evidence gaps" title="Evidence gaps" icon={<CircleDashedIcon />} caption="What this evidence does not cover">
+                  <div className="flex flex-wrap gap-1.5">
+                    {gaps.map((g) => <StatusBadge key={g.text} tone={g.tone}>{g.text}</StatusBadge>)}
+                  </div>
+                </Panel>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       <Dialog open={confirmNew !== null} onOpenChange={(v) => { if (!v) setConfirmNew(null); }}>
         <DialogContent className="gap-5 rounded-[18px] p-5 sm:max-w-[400px]">
@@ -559,7 +558,7 @@ function AttackSessionView() {
           </DialogHeader>
           <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 text-[12.5px]">
             <dt className="text-ink-3">Current</dt>
-            <dd className="m-0 font-mono text-ink-2">{revealedCount} run · {verdict?.text}</dd>
+            <dd className="m-0 font-mono text-ink-2">{revealedCount} run · {session ? VERDICT_TEXT[session.verdict] : ''}</dd>
             <dt className="text-ink-3">Suggest</dt>
             <dd className="m-0">
               <ModeToggle label="How to suggest the next test" value={confirmNew ?? 'attack'} onChange={(m) => setConfirmNew(m)} />
@@ -576,9 +575,6 @@ function AttackSessionView() {
   );
 }
 
-/** Frosted inner tile for readouts inside a panel. */
-const TILE = 'rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80';
-
 type LogTint = 'seal' | 'ok' | 'bad' | 'belief';
 const logTint = (line: LogLine): LogTint => (line.kind === 'SETUP' ? 'seal' : line.kind === 'UPDATE' ? 'belief' : line.tone === 'bad' ? 'bad' : 'ok');
 const LOG_TINT: Record<LogTint, string> = {
@@ -594,27 +590,8 @@ const LOG_KIND_TEXT: Record<LogTint, string> = {
   belief: 'text-primary',
 };
 
-function Eyebrow({ session }: { session?: string }) {
-  return (
-    <p className="m-0 flex items-center gap-2 font-mono text-[12px] text-ink-3">
-      <CrosshairIcon weight="duotone" className="size-4 text-primary" />
-      <span className="text-ink-2">Attack</span>
-      {session && <><span aria-hidden className="text-ink/25">·</span><span>session {session.slice(0, 8)}</span></>}
-    </p>
-  );
-}
-
-function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <dt className="flex items-center gap-1.5 text-[12px] text-ink-3 [&>svg]:size-3.5">{icon}{label}</dt>
-      <dd className="m-0 mt-0.5 font-mono text-[20px] leading-tight font-normal tracking-tight text-ink tabular-nums">{value}</dd>
-    </div>
-  );
-}
-
 const SEG_ITEM = cn(
-  'h-7 gap-1.5 rounded-full px-3 font-mono text-[12px] font-medium text-ink-2 hover:bg-primary/8 hover:text-ink [&_svg]:text-ink-3 hover:[&_svg]:text-primary',
+  'h-6 gap-1 rounded-full px-2.5 font-mono text-[11.5px] font-medium text-ink-2 hover:bg-primary/8 hover:text-ink [&_svg]:size-3.5 [&_svg]:text-ink-3 hover:[&_svg]:text-primary',
   'aria-pressed:bg-gradient-to-b aria-pressed:from-[#2b6fd3] aria-pressed:to-[#1453ad] aria-pressed:text-white aria-pressed:[&_svg]:text-white',
   'aria-pressed:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]',
   'aria-pressed:hover:from-[#3a7ddd] aria-pressed:hover:to-[#185cbc] aria-pressed:hover:text-white aria-pressed:hover:[&_svg]:text-white',
