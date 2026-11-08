@@ -126,3 +126,27 @@ it("posts comma/newline parsed names in order with project scope and clears stal
   fireEvent.change(textarea, { target: { value: "lithium" } });
   expect(screen.queryByText("502 / 1,816")).toBeNull();
 });
+
+it("labels names the lookup cannot resolve apart from compounds missing from LINCS", async () => {
+  vi.stubEnv("VITE_USE_MOCK", "0");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => ({
+      ok: true,
+      json: async () => [
+        { query: "Aricept", status: "ranked", drug_id: "BRD-A49160188", name: "Donepezil", pool_rank: 684,
+          rank_total: 1816, consensus: -0.24, n_contexts: 6, attack_ready: false, preregistered: false },
+        { query: "lithium", status: "not_in_lincs", attack_ready: false, preregistered: false },
+        { query: "zzqx", status: "unrecognized", attack_ready: false, preregistered: false },
+      ],
+    })),
+  );
+  setup();
+  fireEvent.change(screen.getByLabelText("Compound names"), { target: { value: "Aricept, lithium, zzqx" } });
+  fireEvent.click(screen.getByRole("button", { name: "Check" }));
+  const unknown = await findRowFor("zzqx");
+  expect(within(unknown).getByText("name not recognised")).toBeTruthy();
+  expect(within(rowFor("lithium")).getByText("not in LINCS")).toBeTruthy();
+  expect(within(rowFor("Aricept")).getByText("684 / 1,816")).toBeTruthy();
+  expect(within(unknown).queryAllByRole("button")).toHaveLength(0);
+});

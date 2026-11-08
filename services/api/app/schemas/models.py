@@ -411,7 +411,7 @@ class DrugDetail(BaseModel):
 
 class LookupResult(BaseModel):
     query: str
-    status: Literal["ranked", "not_rankable", "not_in_lincs"]
+    status: Literal["ranked", "not_rankable", "not_in_lincs", "unrecognized"]
     drug_id: str | None = None
     name: str | None = None
     pool_rank: int | None = None

@@ -1,5 +1,4 @@
 import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
-import { useCandidates } from "@/api/hooks";
 import { About } from "@/features/about";
 import { LabView } from "@/features/lab";
 import { BenchmarkView } from "@/features/benchmark/BenchmarkView";
@@ -17,11 +16,10 @@ import { FileTextIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { ShellBoundaryContext } from "@/components/BoundaryBanner";
 import { AppShell } from "@/app/AppShell";
-import { CandidatePicker } from "@/app/CandidatePicker";
+import { CandidatePicker, DrugSearchGroups } from "@/app/CandidatePicker";
 import {
   Command,
   CommandDialog,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
@@ -90,8 +88,9 @@ const VIEWS: Record<StepId, ComponentType> = {
 import { NAV_ITEMS as ITEMS } from "@/app/nav";
 export default function App() {
   const { step, setStep, selectCandidate } = useUi();
-  const { data } = useCandidates();
   const [search, setSearch] = useState(false);
+  const [query, setQuery] = useState("");
+  const views = ITEMS.filter(([, label]) => label.toLowerCase().includes(query.trim().toLowerCase()));
   const [extra, setExtra] = useState<"about" | "cells" | null>(null);
   const reduce = useReducedMotion();
   const title =
@@ -150,36 +149,34 @@ export default function App() {
       </AppShell>
       <CommandDialog
         open={search}
-        onOpenChange={setSearch}
+        onOpenChange={(open) => {
+          setSearch(open);
+          if (!open) setQuery("");
+        }}
         title="Search workspace"
         description="Views and candidates"
       >
-        <Command filter={(value, search) => (value.toLowerCase().includes(search.trim().toLowerCase()) ? 1 : 0)}>
-          <CommandInput placeholder="Go to a view or candidate" />
+        <Command shouldFilter={false}>
+          <CommandInput placeholder="Go to a view, drug or brand name" value={query} onValueChange={setQuery} />
           <CommandList>
-            <CommandEmpty>No matches</CommandEmpty>
-            <CommandGroup heading="Workspace">
-              {ITEMS.map(([id, label]) => (
-                <CommandItem key={id} onSelect={() => navigate(id)}>
-                  {label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-            <CommandGroup heading="Candidates">
-              {data?.candidates.map((c) => (
-                <CommandItem
-                  key={c.id}
-                  value={`${c.name} ${c.id}`}
-                  onSelect={() => {
-                    selectCandidate(c.id);
-                    navigate("evidence");
-                  }}
-                >
-                  {c.name}
-                  <span className="ml-auto font-mono text-[11px] text-ink-3">#{c.rank}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+            {views.length > 0 && (
+              <CommandGroup heading="Workspace">
+                {views.map(([id, label]) => (
+                  <CommandItem key={id} value={`view:${id}`} onSelect={() => navigate(id)}>
+                    {label}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            <DrugSearchGroups
+              query={query}
+              quiet={views.length > 0}
+              onSelect={(id) => {
+                selectCandidate(id);
+                setQuery("");
+                navigate("evidence");
+              }}
+            />
           </CommandList>
         </Command>
       </CommandDialog>

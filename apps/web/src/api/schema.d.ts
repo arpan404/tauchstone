@@ -801,8 +801,11 @@ export interface components {
         };
         LookupResult: {
             query: string;
-            /** @enum {string} */
-            status: "ranked" | "not_rankable" | "not_in_lincs";
+            /**
+             * @description not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name
+             * @enum {string}
+             */
+            status: "ranked" | "not_rankable" | "not_in_lincs" | "unrecognized";
             drug_id?: string | null;
             name?: string | null;
             pool_rank?: number | null;
@@ -1347,6 +1350,8 @@ export interface operations {
         parameters: {
             query?: {
                 project_id?: string;
+                /** @description attack session for this drug; adds a snapshot with revealed tests only */
+                session_id?: string;
             };
             header?: never;
             path: {
@@ -1372,6 +1377,8 @@ export interface operations {
         parameters: {
             query?: {
                 project_id?: string;
+                /** @description attack session for this drug; adds a snapshot with revealed tests only */
+                session_id?: string;
             };
             header?: never;
             path: {

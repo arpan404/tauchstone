@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
+import unicodedata
+from datetime import date
 from hashlib import sha256
 from pathlib import Path
 from typing import Protocol
@@ -56,7 +59,69 @@ def next_experiment(gaps: dict) -> str:
     return 'Replicate reversal in an independent neural model'
 
 
-def render_html(detail: dict, project_id: str | None = None, *, fallback: bool = False) -> str:
+VERDICT_LABEL = {
+    'SUPPORTED_SO_FAR': 'SUPPORTED SO FAR',
+    'FRAGILE_CONTEXT_DEPENDENT': 'FRAGILE / CONTEXT-DEPENDENT',
+    'INSUFFICIENT_EVIDENCE': 'INSUFFICIENT EVIDENCE',
+}
+TYPE_LABEL = {
+    'held_out_cohort': 'Held-out cohort',
+    'composition_adjusted': 'Composition-adjusted',
+    'lincs_context': 'LINCS held-out',
+    'brain_exposure': 'Brain exposure',
+    'cell_type': 'Cell type',
+}
+
+
+def _num(value: object) -> float | None:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+
+
+def session_snapshot(state: dict, preregistered: bool = True) -> dict:
+    """Report view of an attack session: revealed tests in reveal order, hidden tests as a count.
+
+    Built from the engine's public state(); every field is allowlisted, so an unrevealed
+    outcome, value or label can never reach the template.
+    """
+    history = list(state.get('history') or [])
+    revealed = []
+    for h in history:
+        value, threshold = _num(h.get('value')), _num(h.get('threshold'))
+        revealed.append({
+            'label': re.sub(r'(\d)\s*uM\b', r'\1 µM', str(h.get('label', 'unspecified'))),
+            'type': TYPE_LABEL.get(str(h.get('type')), str(h.get('type', 'unspecified'))),
+            'outcome': 'Survived' if h.get('outcome') == 'survive' else 'Failed',
+            'value': value, 'threshold': threshold,
+            'rule': str(h.get('rule') or '') if threshold is None else '',
+            'before': _num(h.get('belief_before')), 'after': _num(h.get('belief_after')),
+        })
+    current = _num((state.get('belief') or {}).get('p_claim_holds'))
+    start = revealed[0]['before'] if revealed and revealed[0]['before'] is not None else current
+    contexts = state.get('contexts') or []
+    budget = int(state.get('budget') or 0)
+    return {
+        'verdict': VERDICT_LABEL.get(str(state.get('verdict')), 'INSUFFICIENT EVIDENCE'),
+        'claim': (state.get('claim') or {}).get('text'),
+        'p_start': start, 'p_current': current,
+        'budget': budget, 'budget_used': budget - int(state.get('budget_remaining') or 0),
+        'revealed': revealed,
+        'n_hidden': sum(1 for c in contexts if c.get('status') == 'hidden'),
+        'preregistered': preregistered,
+    }
+
+
+def slug(name: object) -> str:
+    ascii_name = unicodedata.normalize('NFKD', str(name or '')).encode('ascii', 'ignore').decode()
+    return re.sub(r'[^a-z0-9]+', '-', ascii_name.lower()).strip('-') or 'drug'
+
+
+def report_filename(detail: dict, drug_id: str, today: date | None = None) -> str:
+    """tauchstone-<drug-name-slug>-<YYYY-MM-DD>, without extension."""
+    return f'tauchstone-{slug(detail.get("name") or drug_id)}-{(today or date.today()).isoformat()}'
+
+
+def render_html(detail: dict, project_id: str | None = None, *, fallback: bool = False,
+                session: dict | None = None, title: str | None = None) -> str:
     gaps = detail.get('gaps', {})
     provenance = detail.get('provenance') or {}
     # Never pass the original detail object: hidden fields and arbitrary nested data stay out.
@@ -101,7 +166,9 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['project'] = project_id
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))
-    return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback)
+    view['title'] = title or f'{view["name"]} | Tauchstone evidence report'
+    return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback,
+                                                  session=session)
 
 
 def render_pdf(html: str) -> bytes:
