@@ -66,8 +66,8 @@ lists the frozen-schema notes. The main ones:
 
 - 2020 column renames are mapped back to the frozen names (`cmap_name` → `pert_iname`,
   `cell_iname` → `cell_id`, `cc_q75` → `distil_cc_q75`, `nsample` → `distil_nsample`).
-- nM doses are converted to uM. Other units (`ug/ml` and `%`, 84 signatures) are kept as given.
-  Missing doses (102 signatures) are `unspecified`, never imputed.
+- nM concentrations are converted to uM. Other units (`ug/ml` and `%`, 84 signatures) are kept as given.
+  Missing concentrations (102 signatures) are `unspecified`, never imputed.
 - `frozen_split` tags each row `ranking`, `held_out` or `not_in_frozen_split`, using the frozen
   2017 context split. Because the 2020 data re-contains the held-out contexts, anything built
   on it must drop `held_out` rows or be labelled exploratory. On the real metadata the tag gives
