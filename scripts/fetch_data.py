@@ -4,7 +4,10 @@ Standard library only, so it runs before the Python environment exists.
 Downloads resume if interrupted (curl -C -). Re-running skips files that already
 have a recorded checksum matching what is on disk.
 
-Usage: python3 scripts/fetch_data.py [--tier core] [--jobs 4] [--group lincs/GSE92742]
+Sources marked `opt_in = true` (very large, post-expo) are skipped unless their group is
+named with --group, even under --tier all.
+
+Usage: python3 scripts/fetch_data.py [--tier core] [--jobs 4] [--group lincs/GSE92742] [--dry-run]
 """
 
 from __future__ import annotations
@@ -130,6 +133,8 @@ def main() -> int:
     ap.add_argument("--tier", default="core", help="comma list of tiers, or 'all'")
     ap.add_argument("--group", action="append", help="only these groups (repeatable)")
     ap.add_argument("--jobs", type=int, default=4)
+    ap.add_argument("--dry-run", action="store_true",
+                    help="print the selected groups and files, download nothing")
     args = ap.parse_args()
 
     sources = tomllib.loads(MANIFEST.read_text())["source"]
@@ -137,6 +142,14 @@ def main() -> int:
     jobs = []
     for s in sources:
         if (tiers and s["tier"] not in tiers) or (args.group and s["group"] not in args.group):
+            continue
+        if s.get("opt_in") and not (args.group and s["group"] in args.group):
+            continue
+        if args.dry_run:
+            for f in s.get("files", []):
+                print(f"{s['group']}\t{s['base'] + (f if isinstance(f, str) else f['path'])}")
+            for sub in s.get("listing", []):
+                print(f"{s['group']}\t{s['base'] + sub} (directory listing)")
             continue
         sums = upstream_sha512(s["sha512_list"]) if s.get("sha512_list") else {}
         single = s.get("single_connection", False)
@@ -150,6 +163,8 @@ def main() -> int:
                 group = f"{s['group']}/{sub.strip('/')}"
                 jobs.append((group, s["base"] + sub + fname, None, None, single))
 
+    if args.dry_run:
+        return 0
     log(f"{len(jobs)} files -> {RAW}")
     # Largest files first so they start immediately.
     jobs.sort(key=lambda j: "gctx" not in j[1])
