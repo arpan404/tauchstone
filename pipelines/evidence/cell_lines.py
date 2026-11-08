@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import time
 import urllib.parse
 import urllib.request
@@ -39,6 +40,8 @@ GEO_INFO = [
 BETA_INFO = LINCS / "LINCS2020" / "cellinfo_beta.txt"
 SIG_INFO = PROCESSED / "lincs" / "sig_info.parquet"
 CELLO_DIR = RAW / "resources" / "cellosaurus"
+HPA_DIR = RAW / "resources" / "hpa_images"  # built by pipelines/evidence/cell_line_images.py
+IMAGE_DIR = PROCESSED / "evidence" / "cell_line_images"
 API = "https://api.cellosaurus.org"
 LICENCE = "CC BY 4.0"
 LICENCE_URL = "https://creativecommons.org/licenses/by/4.0/"
@@ -291,6 +294,32 @@ def build(cell_ids: list[str], geo: pd.DataFrame, beta: pd.DataFrame,
     return pd.DataFrame(rows)
 
 
+def add_images(df: pd.DataFrame, manifest: list[dict]) -> pd.DataFrame:
+    """Join the HPA image manifest; lines without an image get has_image False."""
+    by_id = {m["cell_id"]: m for m in manifest}
+    df = df.copy()
+    df["has_image"] = df.cell_id.isin(by_id)
+    for col, key in [("image_caption", "caption"), ("image_credit", "credit"),
+                     ("image_page_url", "page_url"), ("image_licence", "licence"),
+                     ("image_gene", "gene"), ("image_sha256", "sha256")]:
+        df[col] = [by_id[c][key] if c in by_id else U for c in df.cell_id]
+    return df
+
+
+def copy_images(manifest: list[dict], src: Path = HPA_DIR, dst: Path = IMAGE_DIR) -> list[Path]:
+    """Copy each cached image into processed/ after checking it against the manifest."""
+    dst.mkdir(parents=True, exist_ok=True)
+    out = []
+    for m in manifest:
+        path = src / m["file"]
+        if sha256_file(path) != m["sha256"]:
+            raise SystemExit(f"checksum mismatch for {path}")
+        target = dst / f"{m['cell_id']}.jpg"
+        shutil.copy2(path, target)
+        out.append(target)
+    return out
+
+
 def map_accessions(cell_ids: list[str], geo: pd.DataFrame, beta: pd.DataFrame,
                    offline: bool = False) -> dict[str, tuple[str, str]]:
     out: dict[str, tuple[str, str]] = {}
@@ -319,19 +348,25 @@ def main(argv: list[str] | None = None) -> Path:
     accession = map_accessions(cell_ids, geo, beta, offline=args.offline)
     records = {ac: r for ac, _ in set(accession.values()) if ac != U
                and (r := fetch_record(ac, offline=args.offline))}
-    df = build(cell_ids, geo, beta, accession, records)
+    manifest_path = HPA_DIR / "manifest.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else []
+    df = add_images(build(cell_ids, geo, beta, accession, records), manifest)
+    copy_images(manifest)
     out = processed("evidence", "cell_lines.parquet")
     df.to_parquet(out, index=False)
     cached = sorted(CELLO_DIR.glob("CVCL_*.json"))
     Provenance(
         step="evidence.cell_lines",
         dataset_accession=["GSE92742", "GSE70138", "LINCS2020", "Cellosaurus"],
-        inputs={str(p.relative_to(RAW)): sha256_file(p) for p in [*GEO_INFO, BETA_INFO, *cached]},
+        inputs={str(p.relative_to(RAW)): sha256_file(p)
+            for p in [*GEO_INFO, BETA_INFO, *cached, *([manifest_path] if manifest else [])]},
         sample_filter="cell_ids present in processed/lincs/sig_info.parquet",
         model="rule-based field precedence: Cellosaurus, then GEO cell_info, then LINCS 2020",
         parameters={"cellosaurus_api": API, "licence": LICENCE, "licence_url": LICENCE_URL,
                     "n_cell_lines": len(df),
-                    "n_cellosaurus": int((df.cellosaurus_id != U).sum())},
+                    "n_cellosaurus": int((df.cellosaurus_id != U).sum()),
+                    "n_images": int(df.has_image.sum()),
+                    "images": "Human Protein Atlas, CC BY 4.0; copied to evidence/cell_line_images"},
     ).write(out)
     print(f"{len(df)} cell lines, {(df.cellosaurus_id != U).sum()} with Cellosaurus -> {out}")
     return out

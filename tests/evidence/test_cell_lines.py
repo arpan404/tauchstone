@@ -95,3 +95,13 @@ def test_built_table_covers_every_lincs_cell():
     mcf7 = df.set_index("cell_id").loc["MCF7"]
     assert mcf7.cellosaurus_id == "CVCL_0031" and mcf7.sex == "female" and mcf7.age == "69 years"
     assert (PROCESSED / "evidence" / "cell_lines.parquet.provenance.json").exists()
+
+
+def test_images_join_and_missing_is_unspecified():
+    df = cl.add_images(_built().reset_index(), [
+        {"cell_id": "HELA", "caption": "HeLa cells.", "credit": "Image: Human Protein Atlas",
+         "page_url": "https://v25.proteinatlas.org/x", "licence": "CC BY 4.0", "gene": "X",
+         "sha256": "0" * 64}])
+    df = df.set_index("cell_id")
+    assert df.loc["HELA"].has_image and df.loc["HELA"].image_licence == "CC BY 4.0"
+    assert not df.loc["NPC"].has_image and df.loc["NPC"].image_credit == "unspecified"
