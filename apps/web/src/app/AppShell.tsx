@@ -87,7 +87,6 @@ export function AppShell({
   const health = useHealth();
   const mock = useMockStatus(frozen?.provenance);
   const project = projects?.find((p) => p.id === currentProjectId) ?? projects?.[0];
-  const expo = import.meta.env.VITE_EXPO === "1";
   const engine = health.isError ? "offline" : health.isPending ? "connecting" : "online";
 
   return (
@@ -185,39 +184,37 @@ export function AppShell({
                 </SidebarMenu>
               </SidebarGroup>
             ))}
-            {!expo && (
-              <SidebarGroup className="py-1.5">
-                <SidebarGroupLabel className="h-8 px-3 text-[12px] font-medium text-ink-3">
-                  Lab
-                </SidebarGroupLabel>
-                <SidebarMenu className="gap-0.5">
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={active === "signature"}
-                      aria-current={active === "signature" ? "page" : undefined}
-                      className={navButton}
-                      tooltip="Disease signature"
-                      onClick={() => onNavigate("signature")}
-                    >
-                      <FlowArrowIcon weight={active === "signature" ? "fill" : "regular"} />{" "}
-                      <span>Disease signature</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      isActive={active === "cells"}
-                      aria-current={active === "cells" ? "page" : undefined}
-                      className={navButton}
-                      tooltip="Cell types"
-                      onClick={() => onExtra("cells")}
-                    >
-                      <GridFourIcon weight={active === "cells" ? "fill" : "regular"} />{" "}
-                      <span>Cell types</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
+            <SidebarGroup className="py-1.5">
+              <SidebarGroupLabel className="h-8 px-3 text-[12px] font-medium text-ink-3">
+                Lab
+              </SidebarGroupLabel>
+              <SidebarMenu className="gap-0.5">
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={active === "signature"}
+                    aria-current={active === "signature" ? "page" : undefined}
+                    className={navButton}
+                    tooltip="Disease signature"
+                    onClick={() => onNavigate("signature")}
+                  >
+                    <FlowArrowIcon weight={active === "signature" ? "fill" : "regular"} />{" "}
+                    <span>Disease signature</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={active === "cells"}
+                    aria-current={active === "cells" ? "page" : undefined}
+                    className={navButton}
+                    tooltip="Cell types"
+                    onClick={() => onExtra("cells")}
+                  >
+                    <GridFourIcon weight={active === "cells" ? "fill" : "regular"} />{" "}
+                    <span>Cell types</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroup>
           </SidebarContent>
           <SidebarFooter className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
             <SidebarMenuButton

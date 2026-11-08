@@ -7,7 +7,7 @@ COPY apps/web ./
 # Real environment wins over .env.development (which sets VITE_USE_MOCK=1).
 ARG VITE_USE_MOCK=0
 ENV VITE_USE_MOCK=${VITE_USE_MOCK}
-# VITE_EXPO=1 hides the development-only Lab views.
+# VITE_EXPO is kept as a build switch; every view now ships in the expo image.
 ARG VITE_EXPO=0
 ENV VITE_EXPO=${VITE_EXPO}
 RUN bun run build
