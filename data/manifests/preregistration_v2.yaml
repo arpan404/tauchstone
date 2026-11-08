@@ -1,0 +1,74 @@
+# Pre-registration v2: analyses AFTER the expo.
+#
+# Written and frozen on 2026-11-08, before any v2 analysis below was run. Its sha256 is
+# recorded in docs/integrity_log.md ("Amendments after the freeze").
+#
+# v1 (data/manifests/preregistration.yaml, sha256 21f7460e...) stays frozen and unchanged. Every
+# result shown at the expo comes from v1. Nothing here may change a v1 file, ranking, threshold,
+# truth table, benchmark result or verdict; v2 outputs go to their own folders (below).
+#
+# What had been looked at in v2 data when this was written (disclosed in full):
+#   - LINCS 2020 beta: file sizes, column names and row counts only (720,216 compound
+#     signatures, 34,418 compounds, 290,925 signature IDs shared with the v1 releases,
+#     91,033 rows tagged as overlapping v1 held-out contexts). No expression value was read,
+#     scored or ranked.
+#   - AMP-AD (ROSMAP, MSBB, Mayo) and SEA-AD: nothing; access not yet requested or granted.
+#   - Structure model: the v1-era comparison of gold versus all-signature labels
+#     (docs/integrity_log.md, Nov 8). Its numbers set the bar in section 3 and are not re-tuned.
+status: frozen  # frozen 2026-11-08 with Arpan's sign-off (project lead); do not edit
+
+inherits_from_v1:
+  # Taken unchanged from v1, so v2 cannot drift by re-choosing them.
+  file: data/manifests/preregistration.yaml
+  sha256_prefix: 21f7460e
+  unchanged: [signature, ranking.methods, ranking.weights, ranking.gene_space, ranking.signature_set,
+              ranking.candidate_pool, ranking.min_contexts_to_rank, claim, cohort_qc_gate,
+              tauchstone_engine.budget, tauchstone_engine.verdict_thresholds,
+              tauchstone_engine.type_priors, tauchstone_engine.theta_value]
+
+# 1. Does the v1 ranking replicate on new LINCS measurements?
+lincs2020_replication:
+  source: lincs/LINCS2020 (level5_beta_trt_cp_n720216x12328.gctx)   # see docs/lincs2020.md
+  signature: GSE132903 main, exactly as v1 (no rebuild)
+  rows_used: new_only        # only signatures whose sig_id is absent from GSE92742 and GSE70138
+  rows_excluded:
+    - any row whose (compound, cell line, concentration, time) matches a v1 held-out context
+    - any row the ingest cannot place as ranking, held-out or new (counted, not imputed)
+  signature_quality_filter: same gold rule as v1 (cc_q75 >= 0.2, 0 <= pct_self_rank_q25 <= 5, >= 2 replicates)
+  drugs: v1 clinical-stage pool members with >= 3 new_only contexts after exclusions
+  primary_endpoint: Spearman correlation between v1 consensus and new_only consensus
+  primary_test: {direction: "rho > 0", method: permutation of drug labels, permutations: 10000, seed: 20261108, alpha: 0.05}
+  secondary_endpoints:
+    - overlap of the v1 top 50 with the new_only top 50, hypergeometric p, reported without a threshold
+    - share of the v1 top 20 that keep a negative new_only consensus
+  minimum_sample: 30 drugs   # below this the analysis is reported as underpowered, with no verdict
+  report_whatever_the_result: true
+  outputs: $TS_DATA_DIR/processed/lincs2020/replication/
+
+# 2. New held-out patient cohorts, once access is granted.
+new_cohorts:
+  candidates: [ROSMAP, MSBB, Mayo RNAseq (AMP-AD, via Synapse), SEA-AD]
+  per_cohort_rules:
+    - each cohort gets its own signature; cohorts are never merged (AGENTS.md rule 2)
+    - same contrast (Alzheimer's minus control), same 150 up / 150 down query, same BH FDR
+    - same QC gate as v1: Spearman >= 0.2 with the GSE132903 signature, else excluded and reported
+    - missing covariates recorded as unspecified, never imputed
+  use: extra held_out_cohort tests with the v1 survive rule (drug in the top 25% of compounds)
+  scope: the 50 sealed v1 benchmark drugs; v2 verdicts reported beside v1 verdicts, never replacing them
+  engine: v1 tauchstone_engine settings unchanged (priors, kappa, budget 5, thresholds 0.8 / 0.2)
+  outputs: $TS_DATA_DIR/processed/v2/cohorts/
+
+# 3. When the AI estimate may be replaced.
+structure_model:
+  current: processed/models/exploratory (gold labels, run 85eff9eb; held-out Spearman 0.18, MAE 0.472 vs 0.481 baseline)
+  replacement_rule: >
+    A new model replaces the served one only if, on the same scaffold-grouped split procedure
+    (GroupShuffleSplit, test_size 0.2, seed 20261105), its held-out Spearman exceeds the current
+    model's on the shared test compounds and the 95% bootstrap interval of the difference
+    (2,000 resamples of scaffold groups, seed 20261108) excludes zero. Otherwise the current model stays.
+  never: [ranking input, hidden test input, threshold or verdict input]
+  outputs: $TS_DATA_DIR/processed/models/v2_candidates/
+
+reporting:
+  every_v2_result_is_labelled: "v2"
+  deviations: any departure from this file is logged in docs/integrity_log.md with date, reason and who decided, before results are shown

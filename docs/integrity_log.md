@@ -107,3 +107,35 @@ includes zero. About three times more labels did not make the model better on un
 the app keeps serving the gold-label model unchanged (same run, same artifacts, same numbers).
 No preregistered artifact changed: `preregistration.yaml` is still `21f7460e…bb8a3` and the
 frozen GSE132903 ranking is still sha256 `34c1a646…afe4`.
+
+## Amendments after the freeze
+
+The preregistration (`data/manifests/preregistration.yaml`, sha256 `21f7460e…bb8a3`) was frozen on
+Nov 5 and has not been edited since. Everything below was added afterwards. None of it changes
+the frozen ranking, θ, λ, the truth table, the benchmark or any verdict, and each item is labelled
+**Exploratory** in the app (the label read "not preregistered" until Nov 8).
+
+| Date | Added | Touches a preregistered result? | How it is labelled |
+|---|---|---|---|
+| Nov 6 | Live screens of other signatures and uploads | No: re-screening GSE132903 reproduces the frozen ranking | Exploratory, per project |
+| Nov 6 | Hidden tests built on the fly for drugs outside the sealed set | No: refuses sealed drugs, never writes the truth table | Exploratory on Attack |
+| Nov 7 | Resource agreement (Perturb-Seqr, CLUE) | No: report only | Report only |
+| Nov 7 | Evidence gaps (cell lines, concentration, time, brain exposure label) | No: display only | Shown on the Drug page |
+| Nov 7 | GSE173955 hippocampus as a separate project | No: its ranking is never used for hidden tests | Exploratory |
+| Nov 8 | Single-cell reversal by cell type | No | Exploratory |
+| Nov 8 | My compounds search over all LINCS compounds | No: same lookup, more names | Exploratory |
+| Nov 8 | AI estimate from structure | No: never used for ranking or tests | Exploratory, with test numbers |
+| Nov 8 | Structure model trained on all-signature labels | No: did not beat the served model, so not used | Logged above |
+| Nov 8 | LINCS 2020 beta downloaded (compound signatures) | No: opt-in, separate folder, not read by any v1 code | Not shown in the app |
+| Nov 8 | Live cell-line panel on Screen | No: counts from the frozen scoring, held-out scores never sent | Shown during a screen |
+| Nov 8 | Boundary sentence moved from every page to the PDF report | No | AGENTS.md rule 7 updated |
+
+### Preregistration v2 (Nov 8)
+
+`data/manifests/preregistration_v2.yaml`, sha256 `26aec26ded3eae4a940fcb3e9aa592dd6d8b3a4b98ffd42f64db27d3870f17b0`,
+frozen on Nov 8 with Arpan's sign-off, before any v2 analysis was run. It fixes in advance three
+analyses for after the expo: whether the ranking replicates on LINCS 2020 measurements that are
+new since the v1 releases, extra held-out patient cohorts (AMP-AD, SEA-AD) once access is granted,
+and the rule for replacing the AI estimate's model. It inherits every v1 setting it names
+unchanged and cannot alter a v1 result. The file lists exactly what had been looked at in v2 data
+when it was written: LINCS 2020 file sizes, columns and row counts only, no expression values.
