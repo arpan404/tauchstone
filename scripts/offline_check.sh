@@ -174,6 +174,19 @@ check("lookup: donepezil ranked, brand names resolve offline",
       and "donepezil" in (st.get("Aricept", ("", ""))[1] or "").lower(),
       f"status={s} {st}")
 
+s, srch, _ = req("GET", "/api/compounds/search?q=aric&limit=5")
+hit = next((r for r in (srch or []) if (r.get("name") or "").lower() == "donepezil"), None)
+check("compound search resolves a brand name offline",
+      s == 200 and hit is not None and hit.get("matched_alias", "").lower() == "aricept",
+      f"status={s} n={len(srch or [])}")
+
+s, est, _ = req("POST", "/api/compounds/estimate", {"ids": ["BRD-A49160188"]})
+row = (est or [{}])[0] if isinstance(est, list) else {}
+check("AI estimate served from the bundled model",
+      s == 200 and isinstance(row.get("estimate"), float) and row.get("basis") in
+      ("held_out", "in_training", "new_structure"),
+      f"status={s} basis={row.get('basis')}")
+
 s, pc1, _ = req("GET", "/api/projects/GSE132903/candidates?limit=1")
 top = ((pc1 or {}).get("candidates") or [{}])[0]
 check("withdrawn flag served (ChEMBL 37)", s == 200 and "withdrawn" in (top.get("approval_status") or {}),

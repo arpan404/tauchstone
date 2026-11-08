@@ -86,6 +86,10 @@ TAUCHSTONE_FILES = [
     "benchmark_summary.json",
 ]
 
+# Exploratory structure model: predictions.parquet answers stored lookups, model.joblib
+# estimates structures outside it, report.json feeds the "About this estimate" panel.
+MODEL_FILES = ["predictions.parquet", "model.joblib", "report.json"]
+
 # Only the theta sidecar: the API reads parameters.theta from this provenance file,
 # never the 26 MB permutation_null.parquet itself.
 PERM_THETA_SIDECAR = (
@@ -221,6 +225,16 @@ def main() -> None:
 
     if (processed / "resources/agreement.parquet").is_file():
         copy_with_sidecar(processed, "resources/agreement.parquet", demo_processed, copied)
+
+    # Structure model behind the AI estimate on My compounds (GET /lab/model,
+    # POST /compounds/estimate). Checksums are verified against the sidecars at
+    # load time, so the sidecars travel with the files.
+    for name in MODEL_FILES:
+        src = processed / f"models/exploratory/{name}"
+        if src.is_file():
+            copy_with_sidecar(processed, f"models/exploratory/{name}", demo_processed, copied)
+        else:
+            print(f"note: no {name}; the AI estimate column stays hidden in this bundle")
 
     mol_src = processed / "evidence" / "molecules"
     mol_dst = demo_processed / "evidence" / "molecules"
