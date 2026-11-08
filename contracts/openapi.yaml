@@ -1142,7 +1142,14 @@ components:
         outcome: { type: string, description: one plain sentence stating the result of the rule }
         n_test: { type: integer, description: shared held-out compounds every model is scored on }
         n_test_groups: { type: integer, description: scaffold groups among those compounds }
-        bootstrap: { type: object, description: "unit, n and seed of the scaffold-group bootstrap" }
+        bootstrap:
+          type: object
+          required: [unit, n, seed]
+          description: scaffold-group bootstrap of the Spearman difference
+          properties:
+            unit: { type: string }
+            n: { type: integer }
+            seed: { type: integer }
         rule: { type: string }
         preregistered: { type: boolean }
         models:

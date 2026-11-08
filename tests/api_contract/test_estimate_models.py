@@ -57,3 +57,8 @@ def test_404_when_missing_or_tampered(monkeypatch, tmp_path):
     path = stored(tmp_path)
     path.write_text(path.read_text().replace('kept', 'won'))
     assert client.get('/compounds/estimate/models').status_code == 404
+
+
+def test_web_copy_of_fixture_is_identical():
+    web = route.REPO_ROOT / 'apps/web/src/features/compounds/estimateModelsFixture.json'
+    assert json.loads(web.read_text()) == FIXTURE

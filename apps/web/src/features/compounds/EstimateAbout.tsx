@@ -4,6 +4,7 @@ import { Panel, Readout, StatusBadge, type Tone } from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "cn";
+import { useEstimateModels, type EstimateModels } from "./useEstimateModels";
 import { useStructureModel, type StructureModel } from "./useStructureModel";
 
 const STATUS: Record<StructureModel["status"], { label: string; tone: Tone }> = {
@@ -25,6 +26,65 @@ function fixed(value: number | null | undefined, digits: number) {
 
 function Plain({ children }: { children: string }) {
   return <p className="m-0 text-[13px] text-ink-2">{children}</p>;
+}
+
+function signed(value: number) {
+  return (value > 0 ? "+" : "") + value.toFixed(2);
+}
+
+/** One row per model on the same held-out compounds, which one is used, and the outcome. */
+function Comparison({ enabled }: { enabled: boolean }) {
+  const query = useEstimateModels(enabled);
+  const data: EstimateModels | undefined = query.data;
+  if (!data || !Array.isArray(data.models) || data.models.length < 2) return null;
+  return (
+    <div>
+      <p className="m-0 mb-1 text-[12px] font-medium text-ink-3">How it compares</p>
+      <div className="overflow-x-auto rounded-xl ring-1 ring-rim/80">
+        <table className="w-full border-separate border-spacing-0 text-[12px]">
+          <thead className="bg-frost/55 text-left text-ink-3">
+            <tr>
+              <th scope="col" className="px-3 py-2 font-normal">Model</th>
+              <th scope="col" className="px-3 py-2 text-right font-normal">Spearman</th>
+              <th scope="col" className="px-3 py-2 text-right font-normal">Change vs current (95% range)</th>
+              <th scope="col" className="px-3 py-2 text-right font-normal">Error (guessing the mean)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.models.map((row) => (
+              <tr key={row.name} className="align-top">
+                <th scope="row" className="border-t border-rim/60 px-3 py-2 text-left font-normal text-ink">
+                  <span className="mr-2">{row.label}</span>
+                  {row.served && (
+                    <StatusBadge size="sm" tone="ok" tip="This model gives the AI estimate shown on this page.">
+                      in use
+                    </StatusBadge>
+                  )}
+                </th>
+                <td className="border-t border-rim/60 px-3 py-2 text-right font-mono tabular-nums">
+                  {fixed(row.spearman, 2)}
+                </td>
+                <td className="border-t border-rim/60 px-3 py-2 text-right font-mono whitespace-nowrap tabular-nums">
+                  {row.spearman_vs_served == null || !row.spearman_vs_served_ci95
+                    ? "current"
+                    : `${signed(row.spearman_vs_served)} (${signed(row.spearman_vs_served_ci95[0])} to ${signed(row.spearman_vs_served_ci95[1])})`}
+                </td>
+                <td className="border-t border-rim/60 px-3 py-2 text-right font-mono whitespace-nowrap tabular-nums">
+                  {fixed(row.mae, 3)} ({fixed(row.baseline_mae, 3)})
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="m-0 mt-2 text-ink">{data.outcome}</p>
+      <p className="m-0 mt-1 text-[12px] text-ink-3">
+        All scored on the same {data.n_test.toLocaleString("en-US")} held-out compounds. A new model is used only if
+        it ranks them better and the whole 95% range of the change is above zero, a rule written down before these
+        models were trained.
+      </p>
+    </div>
+  );
 }
 
 function Body({ enabled }: { enabled: boolean }) {
@@ -59,6 +119,7 @@ function Body({ enabled }: { enabled: boolean }) {
           Lower error is better; the model is barely better than always guessing the training mean.
         </p>
       </div>
+      <Comparison enabled={enabled} />
       {report.limitations.length > 0 && (
         <div>
           <p className="m-0 mb-1 text-[12px] font-medium text-ink-3">Limitations</p>

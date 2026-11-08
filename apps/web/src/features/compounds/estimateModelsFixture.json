@@ -1,0 +1,72 @@
+{
+  "served": "rf_served",
+  "outcome": "None of the new models beat the random forest on structures they had not seen, so the random forest is still used.",
+  "n_test": 1123,
+  "n_test_groups": 687,
+  "bootstrap": {
+    "unit": "scaffold group",
+    "n": 2000,
+    "seed": 20261108
+  },
+  "rule": "preregistration_v2.yaml structure_model replacement_rule",
+  "preregistered": false,
+  "models": [
+    {
+      "name": "rf_served",
+      "label": "Random forest",
+      "served": true,
+      "spearman": 0.1795139520599282,
+      "mae": 0.47204333025308715,
+      "baseline_mae": 0.48149841048561165,
+      "r2": 0.023110474694583272,
+      "spearman_vs_served": null,
+      "spearman_vs_served_ci95": null,
+      "passes_rule": null
+    },
+    {
+      "name": "mlp",
+      "label": "Neural network",
+      "served": false,
+      "spearman": 0.17492244337819848,
+      "mae": 0.4670849643979888,
+      "baseline_mae": 0.48149841048561165,
+      "r2": 0.029198471529690573,
+      "spearman_vs_served": -0.004591508681729722,
+      "spearman_vs_served_ci95": [
+        -0.0688046177418428,
+        0.06225871172869706
+      ],
+      "passes_rule": false
+    },
+    {
+      "name": "multitask",
+      "label": "Neural network, one output per cell line",
+      "served": false,
+      "spearman": 0.23928291421346318,
+      "mae": 0.46269077967220856,
+      "baseline_mae": 0.48149841048561165,
+      "r2": 0.05706920598052201,
+      "spearman_vs_served": 0.05976896215353497,
+      "spearman_vs_served_ci95": [
+        -0.008065877360246162,
+        0.12863312806599916
+      ],
+      "passes_rule": false
+    },
+    {
+      "name": "rf_desc",
+      "label": "Random forest with chemistry descriptors",
+      "served": false,
+      "spearman": 0.22319679047032825,
+      "mae": 0.4674934614818177,
+      "baseline_mae": 0.48149841048561165,
+      "r2": 0.05603468008210688,
+      "spearman_vs_served": 0.04368283841040005,
+      "spearman_vs_served_ci95": [
+        -0.011880670807833924,
+        0.10000517644592721
+      ],
+      "passes_rule": false
+    }
+  ]
+}

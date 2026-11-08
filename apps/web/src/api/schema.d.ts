@@ -1039,8 +1039,12 @@ export interface components {
             n_test: number;
             /** @description scaffold groups among those compounds */
             n_test_groups: number;
-            /** @description unit, n and seed of the scaffold-group bootstrap */
-            bootstrap: Record<string, never>;
+            /** @description scaffold-group bootstrap of the Spearman difference */
+            bootstrap: {
+                unit: string;
+                n: number;
+                seed: number;
+            };
             rule: string;
             preregistered: boolean;
             models: components["schemas"]["EstimateModelRow"][];

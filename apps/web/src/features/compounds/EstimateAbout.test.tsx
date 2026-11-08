@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, expect, it, vi } from "vitest";
 import { EstimateAbout } from "./EstimateAbout";
+import { MOCK_MODELS } from "./useEstimateModels";
 import { MOCK_MODEL } from "./useStructureModel";
 
 afterEach(() => {
@@ -64,4 +65,23 @@ it("shows only a plain message when the service is unavailable", async () => {
   expect(await screen.findByText(/not available right now/)).toBeTruthy();
   expect(screen.queryByText(/Traceback|500/)).toBeNull();
   expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("compares every model on the same held-out compounds and states which one is used", async () => {
+  vi.stubEnv("VITE_USE_MOCK", "0");
+  const fetch = vi.fn(async (url: string) =>
+    new Response(JSON.stringify(url.includes("/compounds/estimate/models") ? MOCK_MODELS : MOCK_MODEL)),
+  );
+  vi.stubGlobal("fetch", fetch);
+  setup();
+  fireEvent.click(screen.getByRole("button", { name: "Show" }));
+  expect(await screen.findByText("How it compares")).toBeTruthy();
+  expect(fetch).toHaveBeenCalledWith("/api/compounds/estimate/models", expect.anything());
+  for (const row of MOCK_MODELS.models) expect(screen.getByText(row.label)).toBeTruthy();
+  expect(screen.getAllByText("in use")).toHaveLength(1);
+  expect(screen.getByText(MOCK_MODELS.outcome)).toBeTruthy();
+  expect(screen.getByText("current")).toBeTruthy();
+  const text = document.body.textContent ?? "";
+  expect(text).not.toMatch(/[\u2013\u2014]/);
+  expect(text).not.toMatch(/\b(treats|effective|safe|dose)\b/i);
 });
