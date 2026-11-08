@@ -66,7 +66,7 @@ const ICONS: Partial<Record<StepId, Icon>> = {
 };
 
 const navButton =
-  "h-9 gap-2.5 rounded-xl px-3 text-[13.5px] text-ink-2 hover:bg-white/70 hover:text-ink data-active:bg-white data-active:font-medium data-active:text-ink data-active:shadow-[0_1px_2px_rgb(15_24_48/0.06),0_6px_14px_-8px_rgb(30_60_140/0.3)] [&_svg]:size-[18px] data-active:[&_svg]:text-primary";
+  "h-9 gap-2.5 rounded-xl px-3 text-[13.5px] text-ink-2 hover:bg-white/45 hover:text-ink data-active:bg-white/60 data-active:font-medium data-active:text-ink data-active:ring-1 data-active:ring-white/80 data-active:backdrop-blur-md [&_svg]:size-[18px] data-active:[&_svg]:text-primary";
 
 export function AppShell({
   title,

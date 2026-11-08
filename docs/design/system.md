@@ -126,7 +126,13 @@ section conflicts with the sections above, this section wins.
   tags (exposure, brain cells, withdrawn, not preregistered), icons in empty states. Weight
   `regular` (16-18px); `fill` only for the active state; `duotone` allowed in hero chips.
 - **Tables.** Inside `glass`, flush. Header row is quiet 11.5px ink-3. Rows have no hard lines:
-  rounded 12px row hover/selected state that lifts to white with a soft shadow. Numbers mono.
+  rounded 12px rows; hover = `bg-white/45`, selected = frosted highlight `bg-white/60 ring-1
+  ring-white/80 backdrop-blur-md`. Numbers mono.
+- **Frosted everywhere, shadows only on floating panels.** Selected and hover states (nav items,
+  rows, segmented controls, chips) never use shadows: they use the frosted highlight above.
+  Inner tiles inside a panel are frosted too (`bg-white/50 ring-1 ring-white/70`), not white
+  cards. Inputs and textareas: `bg-white/60 ring-1 ring-ink/10 backdrop-blur`, focus ring blue.
+  Popovers, menus, dialogs and the command palette are frosted (handled globally in index.css).
 - **Type.** Titles weight 400-500, never bold black. Buttons and numbers mono. Labels 11.5-12px
   ink-3. Body 13-13.5px.
 - **Colour.** Blue (`primary`) for data and selection; dark ink for the primary action; red,
