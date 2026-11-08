@@ -374,6 +374,26 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/LookupResult" } }
 
+  /compounds/search:
+    get:
+      operationId: searchCompounds
+      summary: Typeahead over every compound name POST /lookup understands
+      description: >
+        LINCS compounds, clinical names linked to LINCS, brand names and synonyms, and ChEMBL
+        drugs with no LINCS match. Normalised match (lowercase, non-alphanumerics stripped):
+        exact, then prefix, then substring (3+ characters); ranked rows first in rank order.
+        Rank and score come from the preregistered GSE132903 ranking only. Each row's name,
+        sent to POST /lookup, resolves to the same compound.
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string, maxLength: 200, default: "" } }
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+      responses:
+        "200":
+          description: best matches first; empty for an empty query
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/CompoundMatch" } }
+
   /reports/{drug_id}:
     get:
       operationId: getReportHtml
@@ -978,6 +998,18 @@ components:
         n_contexts: { type: [integer, "null"] }
         attack_ready: { type: boolean }
         preregistered: { type: boolean }
+
+    CompoundMatch:
+      type: object
+      required: [id, name, status]
+      properties:
+        id: { type: string, description: "LINCS pert_id, or the ChEMBL id when not_in_lincs" }
+        name: { type: string, description: "display name; POST /lookup resolves it to this row" }
+        status: { type: string, enum: [ranked, not_rankable, not_in_lincs] }
+        pool_rank: { type: integer, description: "rank in the preregistered clinical-stage pool (ranked rows in the pool only)" }
+        rank_total: { type: integer }
+        consensus: { type: number, description: "median reversal score over ranking contexts (negative = reverses)" }
+        matched_alias: { type: string, description: "brand name or synonym that matched, when not the name itself" }
 
     ResourceAgreement:
       type: object

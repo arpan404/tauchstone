@@ -427,6 +427,16 @@ class LookupResult(BaseModel):
     preregistered: bool | None = None
 
 
+class CompoundMatch(BaseModel):
+    id: str
+    name: str
+    status: Literal["ranked", "not_rankable", "not_in_lincs"]
+    pool_rank: int | None = None
+    rank_total: int | None = None
+    consensus: float | None = None
+    matched_alias: str | None = None
+
+
 class LookupRequest(BaseModel):
     names: list[str] = Field(max_length=200)
     project_id: str | None = None

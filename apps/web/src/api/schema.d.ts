@@ -309,6 +309,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/compounds/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Typeahead over every compound name POST /lookup understands
+         * @description LINCS compounds, clinical names linked to LINCS, brand names and synonyms, and ChEMBL drugs with no LINCS match. Normalised match (lowercase, non-alphanumerics stripped): exact, then prefix, then substring (3+ characters); ranked rows first in rank order. Rank and score come from the preregistered GSE132903 ranking only. Each row's name, sent to POST /lookup, resolves to the same compound.
+         */
+        get: operations["searchCompounds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/{drug_id}": {
         parameters: {
             query?: never;
@@ -865,6 +885,21 @@ export interface components {
             n_contexts?: number | null;
             attack_ready?: boolean;
             preregistered?: boolean;
+        };
+        CompoundMatch: {
+            /** @description LINCS pert_id, or the ChEMBL id when not_in_lincs */
+            id: string;
+            /** @description display name; POST /lookup resolves it to this row */
+            name: string;
+            /** @enum {string} */
+            status: "ranked" | "not_rankable" | "not_in_lincs";
+            /** @description rank in the preregistered clinical-stage pool (ranked rows in the pool only) */
+            pool_rank?: number;
+            rank_total?: number;
+            /** @description median reversal score over ranking contexts (negative = reverses) */
+            consensus?: number;
+            /** @description brand name or synonym that matched, when not the name itself */
+            matched_alias?: string;
         };
         ResourceAgreement: {
             /** @enum {string} */
@@ -1458,6 +1493,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LookupResult"][];
+                };
+            };
+        };
+    };
+    searchCompounds: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description best matches first; empty for an empty query */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompoundMatch"][];
                 };
             };
         };

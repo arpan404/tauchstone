@@ -132,6 +132,7 @@ class Repository(Protocol):
     def get_evidence(self, candidate_id: str) -> dict: ...
     def get_drug_detail(self, drug_id: str) -> dict: ...
     def lookup_compounds(self, names: list[str]) -> list[dict]: ...
+    def search_compounds(self, q: str, limit: int) -> list[dict]: ...
     def get_attack_world(self, candidate_id: str) -> AttackWorld: ...
     def get_single_cell(self) -> dict: ...
     def get_benchmark(self) -> dict: ...
@@ -299,6 +300,12 @@ class MockRepository:
             else:
                 out.append({"query": name, "status": "not_in_lincs"})
         return out
+
+    def search_compounds(self, q: str, limit: int) -> list[dict]:
+        from app.services import compound_search as cs
+
+        path = REPO_ROOT / "contracts" / "fixtures" / "searchCompounds.json"
+        return cs.search(cs.index_from_fixture(json.loads(path.read_text())), q, limit)
 
 
 
@@ -723,6 +730,11 @@ class ParquetRepository:
         from app.services import drug_detail as dd
 
         return dd.lookup_compounds(self.base, names)
+
+    def search_compounds(self, q: str, limit: int) -> list[dict]:
+        from app.services import compound_search as cs
+
+        return cs.search(cs.index_for(self.base), q, limit)
 
     # -- attack --------------------------------------------------------------
     def get_attack_world(self, candidate_id: str):  # -> AttackWorld (import cycle-safe)
