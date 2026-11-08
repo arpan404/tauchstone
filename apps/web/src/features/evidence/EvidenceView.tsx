@@ -150,7 +150,7 @@ function DrugHeader({
       className="rounded-lg border border-line bg-surface"
     >
       <div className="flex flex-wrap items-end gap-x-10 gap-y-5 px-5 pt-5 pb-4">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[min(100%,16rem)] flex-1">
           <div className="font-mono text-[12px] text-ink-3">{drug.drug_id}</div>
           <h2 className="mt-1 mb-2 font-heading text-[28px] leading-tight font-semibold tracking-tight text-ink [font-stretch:92%]">
             {drug.name}
@@ -189,11 +189,12 @@ function DrugHeader({
           <ReversalReadout drug={drug} />
         </dl>
       </div>
-      <div className="flex flex-col gap-3 border-t border-line px-5 py-3 md:flex-row md:items-center">
-        <div className="min-w-0 flex-1">
+      {/* Wraps instead of squeezing: the actions drop below the gaps when the row is too narrow. */}
+      <div className="flex flex-wrap items-center gap-3 border-t border-line px-5 py-3">
+        <div className="min-w-0 flex-[1_1_28rem]">
           <GapBadges gaps={drug.gaps} />
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
+        <div className="ml-auto flex shrink-0 flex-wrap gap-2">
           <Button onClick={onAttack}>
             <CrosshairIcon />
             {drug.attack_ready ? "Attack" : "Build tests"}

@@ -43,14 +43,14 @@ export function IntervalPlot({
     </div>
   );
   return (
-    <div className={cn('text-[13px]', className)}>
-      <div className="grid items-end gap-x-4 pb-1.5 text-[12px] text-ink-3" style={cols}>
+    <div className={cn('overflow-x-auto text-[13px]', className)}>
+      <div className="grid min-w-[32rem] items-end gap-x-4 pb-1.5 text-[12px] text-ink-3" style={cols}>
         <span>Policy</span>
         <span />
         <span className="text-right">{valueHeader}</span>
         <span className="text-right">95% CI</span>
       </div>
-      <ul className="m-0 list-none p-0">
+      <ul className="m-0 min-w-[32rem] list-none p-0">
         {rows.map((r) => {
           const tone =
             r.emphasis === 'accent' ? 'bg-primary' : r.emphasis === 'ink' ? 'bg-ink-2' : 'bg-ink-3/70';

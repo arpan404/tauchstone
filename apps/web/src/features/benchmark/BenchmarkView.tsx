@@ -123,14 +123,14 @@ function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: s
   const awareMetric = pairMetric(analysis.tests, 'decision_lookahead_hybrid', 'random');
   return (
     <Panel aria-label="Headline result">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10">
-        <div className="flex flex-col justify-center gap-5">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10">
+        <div className="flex min-w-0 flex-col justify-center gap-5">
           <p className="m-0 text-[13px] font-medium text-ink-2">
             <Term term="decisionAccuracy">Correct verdict within {analysis.budget} tests</Term>
           </p>
           <dl className="m-0 flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <div className="flex items-end gap-4">
+              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
                 <dd className="m-0 font-mono text-[64px] leading-[0.9] font-semibold tracking-[-0.04em] text-primary tabular-nums">
                   {finite(tau) ? <NumberTicker value={tau * 100} format={(v) => `${Math.round(v)}%`} /> : 'n/a'}
                 </dd>
@@ -157,7 +157,7 @@ function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: s
             </div>
           </dl>
         </div>
-        <dl className="m-0 divide-y divide-line border-line lg:border-l lg:pl-8">
+        <dl className="m-0 min-w-0 divide-y divide-line border-line lg:border-l lg:pl-8">
           {metric && (
             <div className="pb-1.5 text-[12px] font-medium text-ink-2">
               <Term term="holmP">Holm p</Term> · {metricLabel(metric)}

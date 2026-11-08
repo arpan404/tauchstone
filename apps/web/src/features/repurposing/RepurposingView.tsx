@@ -138,7 +138,7 @@ export function RepurposingView({
       <BoundaryBanner />
       <MockRibbon show={mock} />
       <div className="flex-1 px-6 pb-6">
-        <Toolbar className="sticky top-0 z-20 mb-0 h-14 flex-nowrap bg-canvas">
+        <Toolbar className="sticky top-0 z-20 mb-0 min-h-14 flex-wrap gap-y-2 bg-canvas py-2 lg:h-14 lg:flex-nowrap lg:py-0">
           <ToggleGroup
             multiple
             value={keys}
@@ -147,7 +147,7 @@ export function RepurposingView({
             size="sm"
             spacing={0}
             aria-label="Filters"
-            className="bg-surface"
+            className="max-w-full overflow-x-auto bg-surface"
           >
             {FILTERS.map(([key, label]) => (
               <ToggleGroupItem
@@ -218,11 +218,11 @@ export function RepurposingView({
                   </TableHead>
                   <SortHead k="rank" sort={sort} onSort={onSort} className="w-14 text-right" align="right" tip="poolRank">#</SortHead>
                   <SortHead k="name" sort={sort} onSort={onSort}>Drug</SortHead>
-                  <SortHead k="reversal" sort={sort} onSort={onSort} className="w-44" tip="reversal">Reversal</SortHead>
-                  <SortHead k="contexts" sort={sort} onSort={onSort} className="w-24 text-right" align="right" tip="contexts">Contexts</SortHead>
-                  <TableHead className={cn(head, "w-40")}><Term term="brainCells">Brain cells</Term></TableHead>
-                  <TableHead className={cn(head, "w-44")}><Term term="exposure">Exposure</Term></TableHead>
-                  <TableHead className={cn(head, "w-44 rounded-tr-lg pr-4")}><Term term="approval">Approval</Term></TableHead>
+                  <SortHead k="reversal" sort={sort} onSort={onSort} className="w-24 xl:w-44" tip="reversal">Reversal</SortHead>
+                  <SortHead k="contexts" sort={sort} onSort={onSort} className="hidden w-24 text-right xl:table-cell" align="right" tip="contexts">Contexts</SortHead>
+                  <TableHead className={cn(head, "hidden w-32 xl:table-cell")}><Term term="brainCells">Brain cells</Term></TableHead>
+                  <TableHead className={cn(head, "w-40")}><Term term="exposure">Exposure</Term></TableHead>
+                  <TableHead className={cn(head, "w-32 rounded-tr-lg pr-4 2xl:w-48")}><Term term="approval">Approval</Term></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="[&_td]:border-b [&_td]:border-line [&_tr:last-child_td]:border-0">
@@ -233,8 +233,8 @@ export function RepurposingView({
                       <TableCell className={cell}><Skeleton className="ml-auto h-3 w-5 bg-line/70" /></TableCell>
                       <TableCell className={cell}><Skeleton className="h-3 w-32 bg-line/70" /></TableCell>
                       <TableCell className={cell}><Skeleton className="h-3 w-28 bg-line/70" /></TableCell>
-                      <TableCell className={cell}><Skeleton className="ml-auto h-3 w-5 bg-line/70" /></TableCell>
-                      <TableCell className={cell}><Skeleton className="h-5 w-20 bg-line/70" /></TableCell>
+                      <TableCell className={cn(cell, "hidden xl:table-cell")}><Skeleton className="ml-auto h-3 w-5 bg-line/70" /></TableCell>
+                      <TableCell className={cn(cell, "hidden xl:table-cell")}><Skeleton className="h-5 w-20 bg-line/70" /></TableCell>
                       <TableCell className={cell}><Skeleton className="h-5 w-28 bg-line/70" /></TableCell>
                       <TableCell className={cn(cell, "pr-4")}><Skeleton className="h-5 w-16 bg-line/70" /></TableCell>
                     </TableRow>
@@ -455,13 +455,13 @@ function CandidateRow({
           <span className="w-11 text-right font-mono text-[13px] font-medium text-ink tabular-nums">
             {c.consensus.toFixed(2)}
           </span>
-          <ReversalBar score={c.consensus} />
+          <span className="hidden xl:block"><ReversalBar score={c.consensus} /></span>
         </div>
       </TableCell>
-      <TableCell className={cn(cell, "text-right font-mono text-[13px] text-ink-2 tabular-nums")}>
+      <TableCell className={cn(cell, "hidden text-right font-mono text-[13px] text-ink-2 tabular-nums xl:table-cell")}>
         {c.n_ranking_contexts}
       </TableCell>
-      <TableCell className={cell}>
+      <TableCell className={cn(cell, "hidden xl:table-cell")}>
         {c.brain_cells ? (
           <div className="flex items-center gap-1">
             {neural.length ? (
@@ -492,7 +492,7 @@ function CandidateRow({
         </StatusBadge>
       </TableCell>
       <TableCell className={cn(cell, "pr-4")}>
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <StatusBadge
             className={cn(
               "h-5 px-1.5 text-[11.5px]",

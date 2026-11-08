@@ -94,14 +94,16 @@ export function AppShell({
 
   return (
     <SidebarProvider
-      style={{ "--sidebar-width": "14.5rem" } as React.CSSProperties}
+      // Full sidebar on laptops and up; an icon rail on tablets and small laptops (expandable).
+      defaultOpen={typeof window === "undefined" || window.matchMedia("(min-width: 1280px)").matches}
+      style={{ "--sidebar-width": "14.5rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}
       className="h-dvh min-h-0 bg-canvas"
     >
       <a className="workspace-skip" href="#workspace">
         Skip to workspace
       </a>
-        <Sidebar collapsible="offcanvas" className="border-r border-line" aria-label="Workspace navigation">
-          <SidebarHeader className="gap-3 px-3 pt-4 pb-2">
+        <Sidebar collapsible="icon" className="border-r border-line" aria-label="Workspace navigation">
+          <SidebarHeader className="gap-3 px-3 pt-4 pb-2 group-data-[collapsible=icon]:px-2">
             <button
               type="button"
               onClick={() => onNavigate("projects")}
@@ -110,13 +112,13 @@ export function AppShell({
               className="flex items-center gap-2.5 rounded-md px-1.5 py-1 text-left"
             >
               <PlateMark />
-              <span className="font-heading text-[16px] font-semibold tracking-tight text-ink [font-stretch:88%]">
+              <span className="font-heading text-[16px] font-semibold tracking-tight text-ink [font-stretch:88%] group-data-[collapsible=icon]:hidden">
                 Tauchstone
               </span>
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="flex w-full items-center gap-2 rounded-md border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
+                className="flex w-full items-center group-data-[collapsible=icon]:hidden gap-2 rounded-md border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
                 aria-label="Switch project"
               >
                 <span className="min-w-0 flex-1">
@@ -168,6 +170,7 @@ export function AppShell({
                           isActive={active === id}
                           aria-current={active === id ? "page" : undefined}
                           className={navButton}
+                          tooltip={label}
                           onClick={() => onNavigate(id)}
                         >
                           {Glyph && <Glyph weight={active === id ? "fill" : "regular"} />}
@@ -209,15 +212,15 @@ export function AppShell({
               </SidebarGroup>
             )}
           </SidebarContent>
-          <SidebarFooter className="px-3 pb-3">
-            <SidebarMenuButton className={navButton} onClick={() => onExtra("about")}>
+          <SidebarFooter className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
+            <SidebarMenuButton className={navButton} tooltip="Methods" onClick={() => onExtra("about")}>
               <InfoIcon /> <span>Methods</span>
             </SidebarMenuButton>
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="min-h-0 min-w-0 bg-canvas" aria-label={title}>
           <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-line bg-surface/80 px-4 backdrop-blur md:px-6">
-            <SidebarTrigger className="md:hidden" />
+            <SidebarTrigger className="-ml-1 shrink-0 text-ink-3 xl:hidden" aria-label="Toggle sidebar" />
             <div className="flex min-w-0 items-baseline gap-2">
               {active !== "projects" && project && (
                 <>
