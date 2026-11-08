@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "./client";
 import { isMockMode } from "./mock";
 import type { operations } from "./schema";
@@ -160,6 +160,69 @@ export function mockLookup({ names }: LookupInput): Schema<"LookupResult">[] {
       attack_ready: false,
       preregistered: false,
     };
+  });
+}
+export type CompoundMatch = Schema<"CompoundMatch">;
+
+/** Same key as the API: lowercase, non-alphanumerics stripped. */
+export function normalizeName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+// Web mock rows, consistent with mockLookup (each name looks up to the same status).
+const mockSearchRows: (CompoundMatch & { aliases?: string[] })[] = [
+  ...mvpCandidates.map((c) => ({
+    id: c.id,
+    name: c.name,
+    status: "ranked" as const,
+    pool_rank: c.rank,
+    rank_total: 1816,
+    consensus: c.consensus,
+  })),
+  { id: "MOCK-LOOKUP-memantine", name: "Memantine", status: "ranked", pool_rank: 502, rank_total: 1816, consensus: -0.36 },
+  { id: "MOCK-LOOKUP-donepezil", name: "Donepezil", status: "ranked", pool_rank: 684, rank_total: 1816, consensus: -0.24, aliases: ["Aricept"] },
+  { id: "MOCK-LOOKUP-galantamine", name: "Galantamine", status: "ranked", pool_rank: 1214, rank_total: 1816, consensus: 0.21 },
+  { id: "MOCK-LOOKUP-rivastigmine", name: "Rivastigmine", status: "not_rankable" },
+  { id: "MOCK-CHEMBL-lithium", name: "Lithium", status: "not_in_lincs" },
+];
+const STATUS_ORDER: Record<CompoundMatch["status"], number> = { ranked: 0, not_rankable: 1, not_in_lincs: 2 };
+
+/** Mirrors GET /compounds/search: exact, prefix, substring (3+); ranked first in rank order. */
+export function mockCompoundSearch(q: string, limit = 20): CompoundMatch[] {
+  const nq = normalizeName(q);
+  if (!nq) return [];
+  const scored: [number, CompoundMatch][] = [];
+  for (const { aliases = [], ...row } of mockSearchRows) {
+    let best: [number, string | undefined] | null = null;
+    for (const [label, alias] of [[row.name, undefined], ...aliases.map((a) => [a, a])] as [string, string | undefined][]) {
+      const key = normalizeName(label);
+      const tier = key === nq ? 0 : key.startsWith(nq) ? 1 : nq.length >= 3 && key.includes(nq) ? 2 : -1;
+      if (tier >= 0 && (!best || tier < best[0])) best = [tier, alias];
+    }
+    if (best) scored.push([best[0], best[1] ? { ...row, matched_alias: best[1] } : row]);
+  }
+  scored.sort(
+    ([ta, a], [tb, b]) =>
+      ta - tb ||
+      STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+      (a.pool_rank ?? 0) - (b.pool_rank ?? 0) ||
+      a.name.localeCompare(b.name),
+  );
+  return scored.slice(0, limit).map(([, row]) => row);
+}
+
+/** GET /compounds/search for the picker; previous matches stay while the next query loads. */
+export function useCompoundSearch(query: string, limit = 20) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ["compound-search", q, limit],
+    enabled: normalizeName(q).length > 0,
+    staleTime: Infinity,
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      isMockMode()
+        ? Promise.resolve(mockCompoundSearch(q, limit))
+        : api<CompoundMatch[]>(`/compounds/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   });
 }
 export function useProjectCandidates(

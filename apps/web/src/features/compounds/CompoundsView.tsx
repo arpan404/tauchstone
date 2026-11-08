@@ -12,6 +12,7 @@ import {
   MinusCircleIcon,
   QuestionIcon,
   SealWarningIcon,
+  TrashIcon,
   XCircleIcon,
   type Icon,
 } from "@phosphor-icons/react";
@@ -31,9 +32,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { useUi } from "@/store/ui";
 import { cn } from "cn";
+import { CompoundChipInput } from "./CompoundChipInput";
 
 type Result = Schema<"LookupResult">;
 
@@ -61,6 +62,8 @@ const COLUMNS = [
 
 const NUMERIC = new Set(["Rank", "Reversal score", "Conditions"]);
 
+const DEFAULT_NAMES = ["donepezil", "memantine", "galantamine", "rivastigmine", "nepafenac"];
+
 function Dash() {
   return <span className="text-ink-3">n/a</span>;
 }
@@ -72,17 +75,11 @@ export function CompoundsView({
   projectId?: string;
   onBuildTests?: (result: Result) => void;
 } = {}) {
-  const [input, setInput] = useState(
-    "donepezil, memantine, galantamine, rivastigmine, nepafenac",
-  );
+  const [names, setNames] = useState(DEFAULT_NAMES);
   const lookup = useLookup();
   const mock = useMockStatus();
   const reduce = useReducedMotion();
   const { selectCandidate, setStep } = useUi();
-  const names = input
-    .split(/[,\n]+/)
-    .map((name) => name.trim())
-    .filter(Boolean);
   const results = lookup.data ?? [];
   const counts = results.reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
@@ -136,26 +133,35 @@ export function CompoundsView({
                 check();
               }}
             >
-              <label
-                htmlFor="compound-names"
-                className="block text-[12px] font-medium text-ink-3"
-              >
+              <span aria-hidden className="block text-[12px] font-medium text-ink-3">
                 Compound names
-              </label>
-              <Textarea
-                id="compound-names"
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
+              </span>
+              <CompoundChipInput
+                names={names}
+                onChange={(next) => {
+                  setNames(next);
                   lookup.reset();
                 }}
-                placeholder="Compound names · comma or newline"
-                spellCheck={false}
-                className="min-h-24 min-[1400px]:min-h-40 resize-y rounded-xl border-0 bg-frost/70 px-3 py-2.5 text-[13.5px] leading-relaxed text-ink ring-1 ring-ink/12 backdrop-blur placeholder:text-ink-3 focus-visible:ring-2 focus-visible:ring-primary/45"
+                onSubmit={() => names.length && !lookup.isPending && check()}
               />
               <div className="flex items-center justify-between gap-3">
-                <span className="font-mono text-[12px] text-ink-3 tabular-nums">
+                <span className="flex items-center gap-1 font-mono text-[12px] text-ink-3 tabular-nums">
                   {names.length} {names.length === 1 ? "name" : "names"}
+                  {names.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 rounded-full px-2 text-[12px] text-ink-3 hover:text-ink"
+                      onClick={() => {
+                        setNames([]);
+                        lookup.reset();
+                      }}
+                    >
+                      <TrashIcon aria-hidden />
+                      Clear
+                    </Button>
+                  )}
                 </span>
                 <Button
                   type="submit"
