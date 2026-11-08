@@ -9,6 +9,7 @@ import { SingleCellPanel } from "@/features/single-cell";
 import { AttackView } from "@/features/tauchstone/AttackView";
 import { ProjectsView } from "@/features/projects/ProjectsView";
 import { ScreenView } from "@/features/screen/ScreenView";
+import { useCurrentProjectId } from "@/api/workspace";
 import { Chip } from "@/components/mvp";
 import { EmptyState } from "@/components/system";
 import { Button } from "@/components/ui/button";
@@ -49,11 +50,18 @@ function optionalView(folder: string, exportName: string) {
 const CompareInner = optionalView("compare", "CompareView") as ComponentType<{ drugIds: string[]; projectId?: string }>;
 const ReportInner = optionalView("report", "ReportView") as ComponentType<{ drugId: string; projectId?: string }>;
 function Compare() {
-  const { compareIds, currentProjectId } = useUi();
-  return <CompareInner drugIds={compareIds} projectId={currentProjectId ?? undefined} />;
+  const { compareIds } = useUi();
+  return <CompareInner drugIds={compareIds} projectId={useCurrentProjectId()} />;
+}
+function Candidates() {
+  return <RepurposingView projectId={useCurrentProjectId()} />;
+}
+function Evidence() {
+  return <EvidenceView projectId={useCurrentProjectId()} />;
 }
 function Report() {
-  const { selectedCandidateId, currentProjectId, setStep } = useUi();
+  const { selectedCandidateId, setStep } = useUi();
+  const projectId = useCurrentProjectId();
   if (!selectedCandidateId)
     return (
       <div className="mvp-view">
@@ -69,14 +77,14 @@ function Report() {
         />
       </div>
     );
-  return <ReportInner drugId={selectedCandidateId} projectId={currentProjectId ?? undefined} />;
+  return <ReportInner drugId={selectedCandidateId} projectId={projectId} />;
 }
 const Compounds = optionalView("compounds", "CompoundsView");
 const VIEWS: Record<StepId, ComponentType> = {
   projects: ProjectsView,
   screen: ScreenView,
-  candidates: RepurposingView,
-  evidence: EvidenceView,
+  candidates: Candidates,
+  evidence: Evidence,
   compare: Compare,
   compounds: Compounds,
   attack: AttackView,

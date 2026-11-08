@@ -6,6 +6,7 @@ export const SIGNATURES = [
     method: "limma",
     meta: ["97 AD", "98 control", "16,437 genes"],
     badge: { tone: "ok", label: "QC 7/7" },
+    warning: null,
   },
   {
     id: "GSE173955",
@@ -13,6 +14,11 @@ export const SIGNATURES = [
     method: "RNA-seq",
     meta: ["8 AD", "10 control", "14,958 genes"],
     badge: { tone: "gap", label: "held-out" },
+    // QC fact (integrity log #6): quantile normalisation left 0 FDR genes. Not recomputed here.
+    warning: {
+      label: "Weak signature",
+      detail: "0 genes at FDR < 0.05 after normalisation",
+    },
   },
 ] as const;
 

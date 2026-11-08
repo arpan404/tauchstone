@@ -4,10 +4,12 @@ import {
   FileCsvIcon,
   FolderPlusIcon,
   PlusIcon,
+  TrashIcon,
 } from "@phosphor-icons/react";
 import { cn } from "cn";
 import {
   useCreateProject,
+  useDeleteProject,
   useProjects,
   workspaceMock,
   type Project,
@@ -37,7 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SIGNATURES } from "@/features/screen/signatures";
+import { FROZEN_SIGNATURE, SIGNATURES } from "@/features/screen/signatures";
 import { Dot } from "@/features/screen/Dot";
 
 const num = (v: number | null | undefined) =>
@@ -47,6 +49,7 @@ export function ProjectsView() {
   const { data, isPending, error, refetch } = useProjects();
   const { currentProjectId, setProject, setStep } = useUi();
   const [open, setOpen] = useState(false);
+  const [doomed, setDoomed] = useState<Project | null>(null);
   const current = currentProjectId ?? data?.[0]?.id;
   function enter(p: Project) {
     setProject(p.id);
@@ -105,7 +108,9 @@ export function ProjectsView() {
                 <TableHead className="h-9 text-[12px] font-medium text-ink-3">
                   Last screen
                 </TableHead>
-                <TableHead className="h-9 w-10 pr-4" />
+                <TableHead className="h-9 w-20 pr-4">
+                  <span className="sr-only">Actions</span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -125,6 +130,7 @@ export function ProjectsView() {
                       project={p}
                       active={p.id === current}
                       onOpen={() => enter(p)}
+                      onDelete={() => setDoomed(p)}
                     />
                   ))}
             </TableBody>
@@ -132,6 +138,13 @@ export function ProjectsView() {
         </Panel>
       )}
       <NewProjectDialog open={open} onOpenChange={setOpen} />
+      <DeleteProjectDialog
+        project={doomed}
+        onClose={() => setDoomed(null)}
+        onDeleted={(id) => {
+          if (id === currentProjectId) setProject(data?.[0]?.id ?? null);
+        }}
+      />
     </div>
   );
 }
@@ -140,10 +153,12 @@ function ProjectRow({
   project: p,
   active,
   onOpen,
+  onDelete,
 }: {
   project: Project;
   active: boolean;
   onOpen: () => void;
+  onDelete: () => void;
 }) {
   const ranked = num(p.n_ranked);
   return (
@@ -202,7 +217,14 @@ function ProjectRow({
         )}
       </TableCell>
       <TableCell className="py-3">
-        {p.last_screen_id ? (
+        {p.last_screen_id?.startsWith("frozen-") ? (
+          <span
+            className="font-mono text-[12px] text-ink-2"
+            title={p.last_screen_id}
+          >
+            frozen run
+          </span>
+        ) : p.last_screen_id ? (
           <span
             className="font-mono text-[12px] text-ink-2"
             title={p.last_screen_id}
@@ -214,10 +236,26 @@ function ProjectRow({
         )}
       </TableCell>
       <TableCell className="py-3 pr-4 text-right">
-        <ArrowRightIcon
-          aria-hidden
-          className="ml-auto size-4 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-data-active:opacity-100"
-        />
+        <span className="flex items-center justify-end gap-1">
+          {p.kind === "upload" && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={`Delete ${p.name}`}
+              className="text-ink-3 hover:text-bad"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <TrashIcon />
+            </Button>
+          )}
+          <ArrowRightIcon
+            aria-hidden
+            className="size-4 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100 group-data-active:opacity-100"
+          />
+        </span>
       </TableCell>
     </TableRow>
   );
@@ -231,13 +269,22 @@ function NewProjectDialog({
   onOpenChange: (v: boolean) => void;
 }) {
   const create = useCreateProject();
-  const { setProject, setStep } = useUi();
+  const { data: projects } = useProjects();
+  const { setProject, setStep, setUploadName } = useUi();
   const [name, setName] = useState("");
-  const [signature, setSignature] = useState<string>("GSE132903");
+  const [signature, setSignature] = useState<string>("");
   const options = [
-    ...SIGNATURES.map((s) => ({ id: s.id as string, label: s.id, meta: s.name })),
     { id: "", label: "Upload CSV", meta: "gene · log2fc · stat · fdr" },
+    ...SIGNATURES.map((s) => ({ id: s.id as string, label: s.id, meta: s.name })),
   ];
+  const builtin = signature
+    ? projects?.find((p) => p.kind === "builtin" && p.signature_id === signature)
+    : undefined;
+  function openProject(p: Project) {
+    setProject(p.id);
+    setStep(p.n_ranked ? "candidates" : "screen");
+    onOpenChange(false);
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-5 p-5 shadow-overlay sm:max-w-[440px]">
@@ -251,22 +298,26 @@ function NewProjectDialog({
           className="grid gap-5"
           onSubmit={(e) => {
             e.preventDefault();
-            create.mutate(
-              { name: name.trim(), signature_id: signature || null },
-              {
-                onSuccess: (p) => {
-                  setProject(p.id);
-                  setStep("screen");
-                  onOpenChange(false);
-                },
-              },
-            );
+            if (!signature) {
+              // Upload projects are created by the server once the CSV validates.
+              setUploadName(name.trim());
+              setStep("screen");
+              onOpenChange(false);
+              return;
+            }
+            // Each built-in signature has one project: open it, never duplicate it.
+            if (builtin) openProject(builtin);
+            else
+              create.mutate(
+                { name: signature, signature_id: signature },
+                { onSuccess: openProject },
+              );
           }}
         >
-          <label className="grid gap-1.5">
+          <label className={cn("grid gap-1.5", signature && "hidden")}>
             <span className="text-[12px] text-ink-3">Name</span>
             <Input
-              required
+              required={!signature}
               maxLength={120}
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -303,16 +354,90 @@ function NewProjectDialog({
         </form>
         <DialogFooter className="-mx-5 -mb-5 items-center border-line bg-surface-2 px-5 py-3 sm:justify-between">
           <span className="flex items-center gap-2">
-            <StatusBadge tone="gap">not preregistered</StatusBadge>
+            {signature === FROZEN_SIGNATURE ? (
+              <StatusBadge tone="ok">preregistered</StatusBadge>
+            ) : (
+              <StatusBadge tone="gap">not preregistered</StatusBadge>
+            )}
             {create.error && <StatusBadge tone="bad">Project unavailable</StatusBadge>}
           </span>
           <Button
             type="submit"
             form="new-project"
-            disabled={!name.trim() || create.isPending}
+            disabled={(!signature && !name.trim()) || create.isPending}
           >
-            {create.isPending ? "Creating" : "Create project"}
+            {create.isPending
+              ? "Creating"
+              : signature
+                ? "Open project"
+                : "Choose CSV"}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteProjectDialog({
+  project,
+  onClose,
+  onDeleted,
+}: {
+  project: Project | null;
+  onClose: () => void;
+  onDeleted: (id: string) => void;
+}) {
+  const remove = useDeleteProject();
+  return (
+    <Dialog
+      open={!!project}
+      onOpenChange={(v) => {
+        if (!v) {
+          remove.reset();
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="gap-5 p-5 shadow-overlay sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle className="font-heading text-[15px] font-semibold">
+            Delete {project?.name}?
+          </DialogTitle>
+        </DialogHeader>
+        <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-[12.5px]">
+          <dt className="text-ink-3">Ranked</dt>
+          <dd className="m-0 font-mono text-ink-2">
+            {num(project?.n_ranked) ?? "not screened"}
+          </dd>
+          <dt className="text-ink-3">Removes</dt>
+          <dd className="m-0 text-ink-2">uploaded signature, screens, ranking</dd>
+        </dl>
+        <DialogFooter className="-mx-5 -mb-5 items-center border-line bg-surface-2 px-5 py-3 sm:justify-between">
+          <span>
+            {remove.error && (
+              <StatusBadge tone="bad">{remove.error.message}</StatusBadge>
+            )}
+          </span>
+          <span className="flex gap-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!project || remove.isPending}
+              onClick={() =>
+                project &&
+                remove.mutate(project.id, {
+                  onSuccess: () => {
+                    onDeleted(project.id);
+                    onClose();
+                  },
+                })
+              }
+            >
+              {remove.isPending ? "Deleting" : "Delete project"}
+            </Button>
+          </span>
         </DialogFooter>
       </DialogContent>
     </Dialog>

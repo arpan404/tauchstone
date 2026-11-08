@@ -3,11 +3,26 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { Schema } from '@/api/types';
 import { useUi } from '@/store/ui';
 import { AttackView } from './AttackView';
+import { drugDisplayName, joinSentences } from './attackCopy';
 
+const scope = vi.hoisted(() => ({
+  invalidate: vi.fn(),
+  project: { id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' } as Record<string, unknown> | null,
+  drugName: undefined as string | undefined,
+}));
+vi.mock('@tanstack/react-query', async (orig) => ({
+  ...(await orig<typeof import('@tanstack/react-query')>()),
+  useQueryClient: () => ({ invalidateQueries: scope.invalidate }),
+}));
+vi.mock('@/api/workspace', () => ({
+  useCurrentProject: () => scope.project,
+  useProjects: () => ({ data: [{ id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' }, scope.project] }),
+}));
 const mocks = vi.hoisted(() => ({ start: vi.fn(), run: vi.fn(), snapshot: null as unknown }));
 vi.mock("@/api/mvpHooks", async (orig) => ({
   ...(await orig<typeof import("@/api/mvpHooks")>()),
   useProjectCandidates: () => ({ data: undefined }),
+  useDrug: () => ({ data: scope.drugName ? { name: scope.drugName } : undefined }),
 }));
 vi.mock('@/api/hooks', () => ({
   useMockStatus: () => false,
@@ -28,6 +43,9 @@ const initial: Schema<'AttackSession'> = {
   ], recommended_context_id: 'ctx-a', rationale: 'Lowest predicted survival.', history: [],
 };
 beforeEach(() => {
+  scope.invalidate.mockReset();
+  scope.project = { id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' };
+  scope.drugName = undefined;
   mocks.start.mockReset(); mocks.run.mockReset(); mocks.snapshot = null;
   useUi.setState({ selectedCandidateId: 'drug-a', sessionId: null, mode: 'attack', step: 'attack' });
 });
@@ -123,4 +141,61 @@ it('cannot commit after budget is exhausted', () => {
   expect(commit.hasAttribute('disabled')).toBe(true);
   fireEvent.click(commit);
   expect(mocks.run).not.toHaveBeenCalled();
+});
+it('offers no hidden tests under a non-preregistered project and switches to the preregistered one', () => {
+  scope.project = { id: 'upload-1', preregistered: false, signature_id: null };
+  useUi.setState({ currentProjectId: 'upload-1', selectedCandidateId: 'drug-a' });
+  render(<AttackView />);
+  expect(screen.getByRole('heading', { name: 'Attack runs on the preregistered project' })).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Create experiment session' })).toBeNull();
+  expect(screen.queryByText(/Held-out cohort/)).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Open GSE132903' }));
+  expect(useUi.getState().currentProjectId).toBe('GSE132903');
+  // A drug picked from another project's ranking is not carried into the preregistered one.
+  expect(useUi.getState().selectedCandidateId).toBeNull();
+  expect(mocks.start).not.toHaveBeenCalled();
+});
+it('names the drug, never its BRD id, in the header and claim', () => {
+  scope.drugName = 'Articaine';
+  mocks.snapshot = { ...initial, candidate_id: 'BRD-A70514680', candidate_name: 'BRD-A70514680',
+    claim: { ...initial.claim, text: 'BRD-A70514680 reverses the AD signature' } };
+  useUi.setState({ selectedCandidateId: 'BRD-A70514680', sessionId: 'session-a' });
+  render(<AttackView />);
+  expect(screen.getByLabelText('Claim under test').textContent).toBe('Articaine reverses the AD signature');
+  expect(screen.getByRole('region', { name: 'Claim and belief' }).textContent).not.toContain('BRD-');
+  expect(drugDisplayName('BRD-1', 'BRD-1', undefined, 'Name')).toBe('Name');
+  expect(drugDisplayName('BRD-1', null, undefined)).toBe('BRD-1');
+});
+it('refreshes drug and candidate queries after a session builds tests', () => {
+  render(<AttackView />);
+  fireEvent.click(screen.getByRole('button', { name: 'Create experiment session' }));
+  mocks.start.mock.calls[0][1].onSuccess({ ...initial, preregistered: false });
+  expect(scope.invalidate.mock.calls.map((c) => c[0].queryKey[0])).toEqual(
+    expect.arrayContaining(['drug', 'project-candidates', 'candidates']));
+});
+it('asks before replacing a session with reveals and resets the new session to Attack', async () => {
+  const revealed: Schema<'RevealedOutcome'> = { context_id: 'ctx-b', type: 'held_out_cohort', label: 'Held-out cohort B', outcome: 'fail', value: 0.1, threshold: 0.05, rule: 'r', belief_before: 0.6, belief_after: 0.2 };
+  mocks.snapshot = { ...initial, mode: 'learn', history: [revealed], contexts: initial.contexts.map(c => c.context_id === 'ctx-b' ? { ...c, status: 'revealed', outcome: 'fail' } : c) };
+  useUi.setState({ sessionId: 'session-a', mode: 'learn' });
+  render(<AttackView />);
+  fireEvent.click(screen.getByRole('button', { name: 'Start new session' }));
+  expect(mocks.start).not.toHaveBeenCalled();
+  const dialog = await screen.findByRole('dialog');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Keep session' }));
+  expect(mocks.start).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Start new session' }));
+  fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Start new session' }));
+  expect(mocks.start.mock.calls[0][0]).toMatchObject({ candidateId: 'drug-a', mode: 'attack' });
+  expect(useUi.getState().mode).toBe('attack');
+});
+it('explains both modes and joins hint sentences with one full stop', () => {
+  restore();
+  expect(screen.getByRole('button', { name: 'Attack' }).getAttribute('aria-description')).toBe('Run the test most likely to break the claim');
+  expect(screen.getByRole('button', { name: 'Learn' }).getAttribute('aria-description')).toBe('Run the test expected to change the verdict most');
+  expect(joinSentences('Most likely to break the claim: 48% chance this test fails.', 'Learn applies after the next reveal'))
+    .toBe('Most likely to break the claim: 48% chance this test fails. Learn applies after the next reveal');
+  fireEvent.click(screen.getByRole('button', { name: 'Learn' }));
+  expect(screen.getByText('Learn applies after the next reveal')).toBeTruthy();
+  expect(screen.getByText('Attack pick')).toBeTruthy();
+  expect(document.getElementById('attack-rec-rationale')?.textContent).not.toContain('..');
 });

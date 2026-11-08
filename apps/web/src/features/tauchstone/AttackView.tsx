@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CandidatePicker } from "@/app/CandidatePicker";
-import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, ArrowCounterClockwiseIcon, CrosshairIcon, PlayIcon } from '@phosphor-icons/react';
+import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, ArrowCounterClockwiseIcon, CrosshairIcon, LockSimpleIcon, PlayIcon } from '@phosphor-icons/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { cn } from 'cn';
 import { useRunExperiment, useStartAttack, useMockStatus, useAttackSessionSnapshot, useCandidates } from '@/api/hooks';
+import { useDrug } from '@/api/mvpHooks';
+import { useCurrentProject, useProjects } from '@/api/workspace';
 import type { Schema } from '@/api/types';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { EmptyState, NumberTicker, Panel, Readout, StatusBadge, type Tone } from '@/components/system';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useUi, type AttackMode } from '@/store/ui';
@@ -18,6 +23,7 @@ import { RecommendedBadge } from './RecommendationRationale';
 import { rationaleCopy } from './rationale';
 import { BeliefTrace, WellMarker, type WellMarkerState } from './AttackParts';
 import { useDrugGaps } from './useDrugGaps';
+import { drugDisplayName, FAIL_RISK_HELP, joinSentences, MODE_HELP, P_CLAIM_HELP } from './attackCopy';
 import './attack.css';
 
 type Session = Schema<'AttackSession'>;
@@ -50,17 +56,74 @@ function reducedMotion(): boolean {
 /** Sealed labels spell micromolar as 'uM'; display it properly without touching the data. */
 const unit = (label: string) => label.replace(/(\d)\s*uM\b/g, '$1 µM');
 
+function HelpLabel({ text, help, className }: { text: string; help: string; className?: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<span />} className={cn('cursor-help underline decoration-line-strong decoration-dotted underline-offset-2', className)}>
+        {text}
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-64">{help}</TooltipContent>
+    </Tooltip>
+  );
+}
+
 type LogKind = 'SEAL' | 'REVEAL' | 'BELIEF';
 interface LogLine { kind: LogKind; text: string; detail?: string; tone?: 'ok' | 'bad'; at: number | null }
 
 export function AttackView() {
+  const project = useCurrentProject();
+  if (project && !project.preregistered) return <PreregisteredOnly />;
+  return <AttackSessionView />;
+}
+
+/** Hidden tests are built for the preregistered ranking; other projects never borrow them. */
+function PreregisteredOnly() {
+  const { data: projects } = useProjects();
+  const setProject = useUi((s) => s.setProject);
+  const prereg = projects?.find((p) => p.preregistered);
+  return (
+    <div className="attack flex h-full flex-col">
+      <BoundaryBanner />
+      <div className="flex-1 overflow-auto p-4 md:p-6">
+        <EmptyState
+          className="mx-auto mt-[8vh] max-w-xl"
+          icon={<LockSimpleIcon />}
+          title={<span role="heading" aria-level={2}>Attack runs on the preregistered project</span>}
+          action={
+            <Button
+              disabled={!prereg}
+              onClick={() => prereg && setProject(prereg.id)}
+            >
+              Open {prereg?.signature_id ?? 'GSE132903'}
+            </Button>
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
+function AttackSessionView() {
   const { selectedCandidateId, mode, setMode, sessionId, setSessionId, setStep } = useUi();
+  const qc = useQueryClient();
   const snapshot = useAttackSessionSnapshot(sessionId);
   const candidates = useCandidates();
+  const drug = useDrug(selectedCandidateId);
   const [localSession, setSession] = useState<Session | null>(snapshot);
   const currentSession = localSession?.session_id === sessionId ? localSession : snapshot;
   const session = currentSession?.candidate_id === selectedCandidateId ? currentSession : null;
-  const candidateName = session?.candidate_name ?? candidates.data?.candidates.find((c) => c.id === selectedCandidateId)?.name ?? selectedCandidateId;
+  const candidateName = drugDisplayName(
+    selectedCandidateId,
+    session?.candidate_name,
+    drug.data?.name,
+    candidates.data?.candidates.find((c) => c.id === selectedCandidateId)?.name,
+  );
+  const claimText = session && candidateName && session.candidate_id !== candidateName
+    ? session.claim.text.split(session.candidate_id).join(candidateName)
+    : session?.claim.text;
+  // A new session starts in Attack unless the user chose a mode during this one.
+  const modeTouched = useRef(false);
+  const [confirmNew, setConfirmNew] = useState<AttackMode | null>(null);
   const [budget, setBudget] = useState(5);
   const mockData = useMockStatus(session?.history?.[session.history.length - 1]?.provenance ?? null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -147,20 +210,33 @@ export function AttackView() {
     );
   }
 
-  function handleStart() {
+  function handleStart(nextMode: AttackMode = mode) {
     if (!selectedCandidateId || start.isPending || run.isPending) return;
     clearTimer();
     setRunningId(null);
     setPicked(null);
+    setConfirmNew(null);
+    modeTouched.current = false;
+    if (nextMode !== mode) setMode(nextMode);
     start.mutate(
-      { candidateId: selectedCandidateId, mode, budget },
+      { candidateId: selectedCandidateId, mode: nextMode, budget },
       {
         onSuccess: (s) => {
           setSession(s);
           setSessionId(s.session_id);
+          // Tests built on the fly change the drug's hidden-test count and attack readiness.
+          void qc.invalidateQueries({ queryKey: ['drug'] });
+          void qc.invalidateQueries({ queryKey: ['project-candidates'] });
+          void qc.invalidateQueries({ queryKey: ['candidates'] });
         },
       },
     );
+  }
+
+  function handleNewSession() {
+    const nextMode: AttackMode = modeTouched.current ? mode : 'attack';
+    if (history.length > 0) setConfirmNew(nextMode);
+    else handleStart(nextMode);
   }
 
   /** Locks in the selected test, shows ~1 s of `running`, then commits; the server reveals only after the commit. */
@@ -214,7 +290,7 @@ export function AttackView() {
                   ))}
                 </div>
               </div>
-              <Button size="lg" className="h-10 w-full text-[14px]" onClick={handleStart} disabled={busy}>
+              <Button size="lg" className="h-10 w-full text-[14px]" onClick={() => handleStart()} disabled={busy}>
                 <PlayIcon weight="fill" />
                 {start.isPending ? 'Starting…' : 'Create experiment session'}
               </Button>
@@ -225,17 +301,17 @@ export function AttackView() {
 
         {session && verdict && (
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(320px,380px)_minmax(0,1fr)]">
-            <Panel aria-label="Claim and belief" title={session.candidate_name ?? candidateName}
+            <Panel aria-label="Claim and belief" title={candidateName}
               actions={session.preregistered === false ? <StatusBadge tone="gap">not preregistered</StatusBadge> : <span className="font-mono text-[11px] text-ink-3">session {session.session_id.slice(0, 8)}</span>}>
               <div className="grid gap-5">
                 <div>
                   <p className="text-[12px] text-ink-3">Claim under test</p>
-                  <p className="mt-1 text-[13px] leading-snug text-ink-2" aria-label="Claim under test">{session.claim.text}</p>
+                  <p className="mt-1 text-[13px] leading-snug text-ink-2" aria-label="Claim under test">{claimText}</p>
                 </div>
 
                 <div className="flex items-end justify-between gap-3">
                   <div role="img" aria-label={`P(claim holds) ${session.belief.p_claim_holds.toFixed(2)}`}>
-                    <p className="text-[12px] text-ink-3">P(claim holds)</p>
+                    <p className="text-[12px] text-ink-3"><HelpLabel text="P(claim holds)" help={P_CLAIM_HELP} /></p>
                     <p className="mt-1 font-mono text-[56px] leading-none font-medium tracking-[-0.06em] text-primary tabular-nums">
                       <NumberTicker value={session.belief.p_claim_holds} format={(v) => v.toFixed(2)} duration={0.9} />
                     </p>
@@ -267,11 +343,24 @@ export function AttackView() {
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-[12px] text-ink-3">Mode</span>
                     <ToggleGroup aria-label="Attack or learn mode" variant="outline" size="sm" spacing={0}
-                      value={[mode]} onValueChange={(v: string[]) => v[0] && setMode(v[0] as AttackMode)} disabled={busy}>
-                      <ToggleGroupItem value="attack" className="px-3 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink">Attack</ToggleGroupItem>
-                      <ToggleGroupItem value="learn" className="px-3 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink">Learn</ToggleGroupItem>
+                      value={[mode]} onValueChange={(v: string[]) => { if (v[0]) { modeTouched.current = true; setMode(v[0] as AttackMode); } }} disabled={busy}>
+                      {(['attack', 'learn'] as const).map((m) => (
+                        <Tooltip key={m}>
+                          <TooltipTrigger
+                            render={<ToggleGroupItem value={m} aria-description={MODE_HELP[m]} className="px-3 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink" />}
+                          >
+                            {m === 'attack' ? 'Attack' : 'Learn'}
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-64">{MODE_HELP[m]}</TooltipContent>
+                        </Tooltip>
+                      ))}
                     </ToggleGroup>
                   </div>
+                  {rec?.stale && (
+                    <p className="-mt-1 text-right font-mono text-[11px] text-ink-3" aria-live="polite">
+                      {rec.note}
+                    </p>
+                  )}
                   <div className="flex items-center justify-between gap-3">
                     <span className="shrink-0 text-[12px] text-ink-3">Next test</span>
                     <p className="min-w-0 truncate font-mono text-[12.5px] text-ink" aria-label="Next experiment" aria-live="polite">
@@ -289,7 +378,7 @@ export function AttackView() {
                 <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
                   <label id="session-budget-label" className="sr-only">Session budget</label>
                   {budgetSelect}
-                  <Button variant="outline" size="sm" className="h-8 flex-1" onClick={handleStart} disabled={busy}>
+                  <Button variant="outline" size="sm" className="h-8 flex-1" onClick={handleNewSession} disabled={busy}>
                     <ArrowCounterClockwiseIcon />
                     {start.isPending ? 'Creating session…' : 'Start new session'}
                   </Button>
@@ -301,7 +390,7 @@ export function AttackView() {
             <div className="grid min-w-0 gap-4">
               <Panel aria-label="Hidden tests" title="Hidden tests" flush
                 actions={<span className="font-mono text-[12px] text-ink-3 tabular-nums">{hiddenCount} sealed  ·  {revealedCount} revealed</span>}>
-                {rec && <span id="attack-rec-rationale" className="sr-only">{rec.title}: {rec.body}{rec.note ? `. ${rec.note}` : ''}</span>}
+                {rec && <span id="attack-rec-rationale" className="sr-only">{rec.title}: {joinSentences(rec.body, rec.note)}</span>}
                 <ul className="divide-y divide-line">
                   {session.contexts.map((c) => {
                     const revealed = c.status === 'revealed';
@@ -347,7 +436,7 @@ export function AttackView() {
                             ) : (
                               <>
                                 <span className="block text-[14px] text-ink">{failPct}%</span>
-                                <span className="block text-[11px] text-ink-3">fail risk</span>
+                                <span className="block text-[11px] text-ink-3"><HelpLabel text="fail risk" help={FAIL_RISK_HELP} /></span>
                               </>
                             )}
                           </span>
@@ -412,6 +501,29 @@ export function AttackView() {
           </div>
         )}
       </div>
+      <Dialog open={confirmNew !== null} onOpenChange={(v) => { if (!v) setConfirmNew(null); }}>
+        <DialogContent className="gap-5 p-5 shadow-overlay sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-[15px] font-semibold">Start a new session?</DialogTitle>
+          </DialogHeader>
+          <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 text-[12.5px]">
+            <dt className="text-ink-3">Current</dt>
+            <dd className="m-0 font-mono text-ink-2">{revealedCount} revealed · {verdict?.text}</dd>
+            <dt className="text-ink-3">Mode</dt>
+            <dd className="m-0">
+              <ToggleGroup aria-label="New session mode" variant="outline" size="sm" spacing={0}
+                value={[confirmNew ?? 'attack']} onValueChange={(v: string[]) => v[0] && setConfirmNew(v[0] as AttackMode)}>
+                <ToggleGroupItem value="attack" className="px-3 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink">Attack</ToggleGroupItem>
+                <ToggleGroupItem value="learn" className="px-3 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink">Learn</ToggleGroupItem>
+              </ToggleGroup>
+            </dd>
+          </dl>
+          <DialogFooter className="-mx-5 -mb-5 border-line bg-surface-2 px-5 py-3">
+            <Button variant="outline" onClick={() => setConfirmNew(null)}>Keep session</Button>
+            <Button onClick={() => handleStart(confirmNew ?? 'attack')}>Start new session</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <ProvenanceStrip provenance={lastRevealed?.provenance} />
     </div>
   );

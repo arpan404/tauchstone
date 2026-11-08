@@ -5,7 +5,7 @@ from email.parser import BytesParser
 from email.policy import default
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 
 from app.services import jobs
 from app.services import projects as store
@@ -27,15 +27,28 @@ async def start(request: Request):
             f'Content-Type: {ctype}\r\nMIME-Version: 1.0\r\n\r\n'.encode() + content)
         parts = {p.get_param('name', header='content-disposition'): p.get_payload(decode=True)
                  for p in message.iter_parts()}
-        if 'project_id' not in parts or 'file' not in parts:
-            raise HTTPException(422, 'project_id and file are required')
+        if 'file' not in parts or not ('project_id' in parts or 'name' in parts):
+            raise HTTPException(422, 'file and project_id or name are required')
+        # Validate before any project exists, so a bad file never leaves an empty project.
         signature = store.parse_csv(parts['file'])
-        return jobs.submit(parts['project_id'].decode(), signature=signature)
+        if 'project_id' in parts:
+            project = store.get('project', parts['project_id'].decode())
+            if project.get('kind') == 'builtin':
+                raise HTTPException(422, 'Uploads need their own project')
+            return jobs.submit(project['id'], signature=signature)
+        project = store.create(parts['name'].decode(errors='replace')[:120] or 'Upload', None)
+        return jobs.submit(project['id'], signature=signature, new_project=True)
     try:
         body = json.loads(content)
         return jobs.submit(body['project_id'], body['signature_id'])
     except (ValueError, KeyError, TypeError) as exc:
         raise HTTPException(422, 'project_id and signature_id are required') from exc
+
+
+@router.get('/screens/template.csv')
+def template():
+    return Response(store.template_csv(), media_type='text/csv',
+                    headers={'Content-Disposition': 'attachment; filename="signature_template.csv"'})
 
 
 @router.get('/screens/{screen_id}')

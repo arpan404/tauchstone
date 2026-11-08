@@ -62,15 +62,69 @@ def attack_ids():
     return set(pd.read_parquet(path, columns=['candidate_id'])['candidate_id'].astype(str)) if path.exists() else set()
 
 
+BUILTIN = ('GSE132903', 'GSE173955')
+FROZEN = 'GSE132903'
+
+
 def create(name, signature_id=None, ident=None):
-    if signature_id not in (None, 'GSE132903', 'GSE173955'):
+    if signature_id not in (None, *BUILTIN):
         raise HTTPException(422, 'Unknown built-in signature_id')
     if not isinstance(name, str) or not name.strip():
         raise HTTPException(422, 'name is required')
+    if signature_id and ident is None:
+        # Each built-in signature has exactly one project; reuse it instead of duplicating.
+        return get('project', signature_id)
     return put('project', dict(id=ident or str(uuid.uuid4()), name=name.strip(),
         kind='builtin' if signature_id else 'upload', signature_id=signature_id,
         preregistered=ident == 'GSE132903', created_at=datetime.now(UTC).isoformat(),
         n_ranked=None, n_attack_ready=None, last_screen_id=None))
+
+
+def delete(project_id, with_screens=True):
+    """Remove an upload project, its screens and its saved signature. Built-ins are permanent."""
+    p = get('project', project_id)
+    if p.get('kind') == 'builtin':
+        raise HTTPException(403, 'Built-in projects cannot be deleted')
+    with _lock, db() as conn:
+        screens = [s['id'] for s in map(json.loads, (r[0] for r in conn.execute(
+            'SELECT body FROM records WHERE kind=?', ('screen',))))
+            if with_screens and s.get('project_id') == project_id]
+        conn.execute('DELETE FROM records WHERE kind=? AND id=?', ('project', project_id))
+        for sid in screens:
+            conn.execute('DELETE FROM records WHERE kind=? AND id=?', ('screen', sid))
+    for stem in [project_id + '-signature', *screens, *(s + '-signature' for s in screens)]:
+        for path in (root() / f'{stem}.parquet', root() / f'{stem}.parquet.provenance.json'):
+            path.unlink(missing_ok=True)
+    return dict(id=project_id, deleted=True)
+
+
+def template_csv():
+    """Example upload CSV: a curated example if one is installed, else landmark genes at zero."""
+    from app.services.repository import REPO_ROOT
+    for path in (settings.data_dir / 'example_signature.csv', REPO_ROOT / 'data/demo/example_signature.csv'):
+        if path.is_file():
+            content = path.read_bytes()
+            try:
+                parse_csv(content)
+                return content
+            except HTTPException:
+                log.warning('Example signature %s fails validation; using the generated template', path)
+    genes = _genes()
+    genes = genes[genes.is_landmark.astype(bool)].dropna(subset=['symbol'])
+    genes = genes.drop_duplicates('symbol').head(60)
+    lines = ['gene,log2fc,stat,fdr'] + [f'{s},0,0,1' for s in genes.symbol.astype(str)]
+    content = ('\n'.join(lines) + '\n').encode()
+    parse_csv(content)
+    return content
+
+
+def _genes():
+    if settings.mock:
+        world = json.loads(MOCK_WORLD_PATH.read_text())
+        genes = pd.DataFrame(world['signatures']['GSE132903__main']['genes'])
+        genes['is_landmark'] = True
+        return genes
+    return pd.read_parquet(base() / 'lincs/genes.parquet')
 
 
 def seed():
@@ -104,12 +158,7 @@ def parse_csv(content, genes=None):
         if not {'gene', 'log2fc', 'fdr'} <= set(frame.columns):
             raise ValueError('Required columns: gene, log2fc, fdr; stat is optional')
         if genes is None:
-            if settings.mock:
-                world = json.loads(MOCK_WORLD_PATH.read_text())
-                genes = pd.DataFrame(world['signatures']['GSE132903__main']['genes'])
-                genes['is_landmark'] = True
-            else:
-                genes = pd.read_parquet(base() / 'lincs/genes.parquet')
+            genes = _genes()
         genes = genes.copy()
         genes['entrez_id'] = genes.entrez_id.astype(str)
         symbols = genes.drop_duplicates('symbol').set_index('symbol').entrez_id
@@ -143,8 +192,8 @@ def candidates(project_id, approved=None, brain_cells=None, penetrant=None, min_
     p = get('project', project_id)
     sid = p.get('last_screen_id')
     if not sid:
-        rows = []
-    elif settings.mock:
+        raise HTTPException(409, 'Project not screened')
+    if settings.mock:
         rows = [dict(c) for c in mock_candidates()]
     else:
         path = (base() / 'scores/GSE132903__main__candidate_pool.parquet' if sid.startswith('frozen-')
@@ -183,7 +232,8 @@ def candidates(project_id, approved=None, brain_cells=None, penetrant=None, min_
                 penetration = False
         c.update(brain_cells=len(neural) > 0, penetrant=penetration,
                  exposure_label=label, cancer_lines_only=bool(g.get('cancer_lines_only', False)),
-                 attack_ready=c['id'] in ready, preregistered=p['preregistered'])
+                 attack_ready=p['preregistered'] and c['id'] in ready,
+                 preregistered=p['preregistered'])
     total = len(rows)
     rows = [c for c in rows if
             (approved is None or (c.get('approval_status', {}).get('status') == 'approved') == approved)

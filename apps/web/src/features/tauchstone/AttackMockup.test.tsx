@@ -4,6 +4,24 @@ import type { Schema } from '@/api/types';
 import { useUi } from '@/store/ui';
 import { AttackView } from './AttackView';
 
+const scope = vi.hoisted(() => ({
+  invalidate: vi.fn(),
+  project: { id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' } as Record<string, unknown> | null,
+  drugName: undefined as string | undefined,
+}));
+vi.mock('@tanstack/react-query', async (orig) => ({
+  ...(await orig<typeof import('@tanstack/react-query')>()),
+  useQueryClient: () => ({ invalidateQueries: scope.invalidate }),
+}));
+vi.mock('@/api/workspace', () => ({
+  useCurrentProject: () => scope.project,
+  useProjects: () => ({ data: [{ id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' }, scope.project] }),
+}));
+vi.mock('@/api/mvpHooks', async (orig) => ({
+  ...(await orig<typeof import('@/api/mvpHooks')>()),
+  useProjectCandidates: () => ({ data: undefined }),
+  useDrug: () => ({ data: undefined }),
+}));
 const mocks = vi.hoisted(() => ({ start: vi.fn(), run: vi.fn(), snapshot: null as unknown }));
 vi.mock('@/api/hooks', () => ({
   useMockStatus: () => false,
@@ -26,6 +44,9 @@ const base: Schema<'AttackSession'> = {
 };
 
 beforeEach(() => {
+  scope.invalidate.mockReset();
+  scope.project = { id: 'GSE132903', preregistered: true, signature_id: 'GSE132903' };
+  scope.drugName = undefined;
   mocks.start.mockReset(); mocks.run.mockReset(); mocks.snapshot = null;
   useUi.setState({ selectedCandidateId: 'drug-a', sessionId: 'session-a', mode: 'attack', step: 'attack' });
 });

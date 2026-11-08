@@ -178,6 +178,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/screens/template.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Example upload CSV (gene, log2fc, stat, fdr) that passes upload validation. */
+        get: operations["getScreenTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/screens/{screen_id}": {
         parameters: {
             query?: never;
@@ -206,6 +223,23 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an upload project with its screens and saved signature. Built-in projects return 403. */
+        delete: operations["deleteProject"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1184,7 +1218,7 @@ export interface operations {
                     signature_id: string;
                 };
                 "multipart/form-data": {
-                    project_id: string;
+                    project_id?: string;
                     name?: string;
                     /**
                      * Format: binary
@@ -1211,6 +1245,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Error"];
+                };
+            };
+        };
+    };
+    getScreenTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV template */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
         };
@@ -1260,6 +1314,41 @@ export interface operations {
             };
         };
     };
+    deleteProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        id: string;
+                        deleted: boolean;
+                    };
+                };
+            };
+            /** @description built-in project */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
     listProjectCandidates: {
         parameters: {
             query?: {
@@ -1287,11 +1376,21 @@ export interface operations {
                 };
             };
             404: components["responses"]["NotFound"];
+            /** @description project not screened yet (detail "Project not screened") */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Error"];
+                };
+            };
         };
     };
     getDrug: {
         parameters: {
             query?: {
+                /** @description non-preregistered project: pool_rank, rank_total, consensus and scores come from that project's own screen (pool_rank null if the drug is not in it) and preregistered is false */
                 project_id?: string;
             };
             header?: never;

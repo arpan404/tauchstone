@@ -31,6 +31,12 @@ def create(body: CreateProject):
     return store.create(body.name, body.signature_id)
 
 
+@router.delete('/projects/{project_id}')
+def delete(project_id: str):
+    store.seed()
+    return store.delete(project_id)
+
+
 @router.get('/projects/{project_id}/candidates')
 def candidates(project_id: str, approved: bool | None = None, brain_cells: bool | None = None,
                penetrant: bool | None = None, min_contexts: int | None = None,

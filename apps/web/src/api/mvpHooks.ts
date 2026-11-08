@@ -176,11 +176,27 @@ export function useProjectCandidates(
         if (value !== undefined) params.set(key, String(value));
       return isMockMode()
         ? Promise.resolve(mockProjectCandidates(projectId, filters))
-        : api<Schema<"ProjectCandidates">>(
-            `/projects/${encodeURIComponent(projectId)}/candidates?${params}`,
-          );
+        : projectCandidates(projectId, params);
     },
+    // An unscreened project is a state, not a transient failure.
+    retry: (count, error) =>
+      (error as { status?: number }).status !== 409 && count < 2,
   });
+}
+/** Error raised for a project with no screen yet (HTTP 409, detail 'Project not screened'). */
+export class NotScreenedError extends Error {
+  status = 409;
+  constructor() {
+    super("Project not screened");
+    this.name = "NotScreenedError";
+  }
+}
+async function projectCandidates(projectId: string, params: URLSearchParams) {
+  const path = `/projects/${encodeURIComponent(projectId)}/candidates?${params}`;
+  const res = await fetch(`/api${path}`);
+  if (res.status === 409) throw new NotScreenedError();
+  if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`);
+  return res.json() as Promise<Schema<"ProjectCandidates">>;
 }
 export function useDrug(drugId: string | null, projectId?: string) {
   return useQuery({

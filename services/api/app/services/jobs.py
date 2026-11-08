@@ -15,6 +15,8 @@ from app.settings import settings
 executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='screen')
 lock = threading.RLock()
 started = {}
+# Projects created together with an upload; removed again if their first screen fails.
+pending = set()
 
 
 def snapshot(ident):
@@ -36,9 +38,9 @@ def hits(frame):
                  consensus=float(r.consensus_median)) for r in frame.head(10).itertuples()]
 
 
-def submit(project_id, signature_id=None, signature=None):
+def submit(project_id, signature_id=None, signature=None, new_project=False):
     store.get('project', project_id)
-    if signature is None and signature_id not in ('GSE132903', 'GSE173955'):
+    if signature is None and signature_id not in store.BUILTIN:
         raise HTTPException(422, 'Unknown built-in signature_id')
     # Only the original, unmodified primary project is preregistered.
     prereg = project_id == 'GSE132903' and signature_id == 'GSE132903' and signature is None
@@ -49,6 +51,8 @@ def submit(project_id, signature_id=None, signature=None):
     obj = dict(id=ident, project_id=project_id, signature_id=signature_id, status='queued',
                n_signatures=0, n_scored=0, elapsed_s=0, preregistered=prereg, top=[])
     store.put('screen', obj)
+    if new_project:
+        pending.add(project_id)
     executor.submit(run, ident, signature)
     return obj
 
@@ -89,12 +93,29 @@ def run(ident, signature):
             update(ident, top=hits(pool))
         with lock:
             project = store.get('project', obj['project_id'])
-            project.update(last_screen_id=ident, n_ranked=n, preregistered=obj['preregistered'],
-                           n_attack_ready=len(store.attack_ids()) if obj['preregistered'] else None)
-            store.put('project', project)
+            # The preregistered project keeps its frozen run: a live re-screen is shown on
+            # the Screen page but never replaces the frozen candidates or n_ranked.
+            if not str(project.get('last_screen_id') or '').startswith('frozen-'):
+                project.update(last_screen_id=ident, n_ranked=n, preregistered=obj['preregistered'],
+                               n_attack_ready=len(store.attack_ids()) if obj['preregistered'] else None)
+                store.put('project', project)
             update(ident, status='done', n_ranked=n)
+        pending.discard(obj['project_id'])
     except Exception as exc:
         logging.getLogger(__name__).exception('Screen %s failed', ident)
         update(ident, status='failed', error=str(exc))
+        _discard_pending(store.get('screen', ident).get('project_id'))
     finally:
         started.pop(ident, None)
+
+
+def _discard_pending(project_id):
+    """Delete a project created for an upload whose first screen failed."""
+    if project_id not in pending:
+        return
+    pending.discard(project_id)
+    try:
+        # Keep the failed screen record so its stream still reports the error.
+        store.delete(project_id, with_screens=False)
+    except Exception:
+        logging.getLogger(__name__).exception('Could not discard project %s', project_id)
