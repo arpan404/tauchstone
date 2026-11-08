@@ -1,3 +1,4 @@
+import { CubeIcon, TargetIcon } from "@phosphor-icons/react";
 import type { Schema } from "@/api/types";
 import { Panel, StatusBadge } from "@/components/system";
 import {
@@ -35,20 +36,17 @@ export function TargetsPanel({
   return (
     <Panel
       title="Targets"
+      icon={<TargetIcon />}
+      caption={targets.length ? `${targets.length} recorded · ChEMBL` : "ChEMBL"}
       aria-label="Targets"
       className={className}
       flush
-      actions={
-        targets.length ? (
-          <span className="font-mono text-[12px] text-ink-3">{targets.length}</span>
-        ) : null
-      }
     >
       {targets.length ? (
-        <div className="max-h-[248px] overflow-auto">
-          <table className="w-full text-[13px]">
-            <thead className="sticky top-0 bg-surface">
-              <tr className="text-left text-[12px] text-ink-3">
+        <div className="max-h-[260px] overflow-auto px-3 pb-3">
+          <table className="w-full border-separate border-spacing-0 text-[13px]">
+            <thead className="sticky top-0 z-[1] bg-white/85 backdrop-blur">
+              <tr className="text-left text-[11.5px] text-ink-3">
                 <th scope="col" className="px-4 py-2 font-normal">Symbol</th>
                 <th scope="col" className="px-4 py-2 font-normal">Action</th>
                 <th scope="col" className="px-4 py-2 text-right font-normal">Brain nTPM</th>
@@ -60,7 +58,7 @@ export function TargetsPanel({
               {targets.map((t) => {
                 const peak = peakBrain(t);
                 return (
-                  <tr key={t.entrez_id} className="border-t border-line">
+                  <tr key={t.entrez_id} className="transition-colors hover:bg-primary/6 [&>*:first-child]:rounded-l-[12px] [&>*:last-child]:rounded-r-[12px]">
                     <th scope="row" className="px-4 py-2 text-left font-mono font-medium text-ink">
                       {t.symbol}
                     </th>
@@ -80,7 +78,7 @@ export function TargetsPanel({
           </table>
         </div>
       ) : (
-        <p className="m-0 px-4 py-3 text-[13px] text-ink-3">No recorded targets</p>
+        <p className="m-0 px-5 pt-2 pb-5 text-[13px] text-ink-3">No recorded targets</p>
       )}
     </Panel>
   );
@@ -108,13 +106,15 @@ export function StructurePanel({
   return (
     <Panel
       title="Protein structure"
+      icon={<CubeIcon />}
+      caption="Target context only, not binding evidence"
       aria-label="Protein structure"
       className={className}
       actions={<TargetContextBadge note={structure?.note} />}
     >
       {structure ? (
         <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-          <dl className="m-0 grid content-start gap-3">
+          <dl className="m-0 grid content-start gap-3 rounded-[12px] bg-white/55 p-4 ring-1 ring-white/80">
             <Meta label="PDB" value={structure.pdb_id} />
             <Meta label="UniProt" value={structure.uniprot} />
             <Meta label="Method" value={structure.method ?? "unspecified"} />
@@ -127,7 +127,7 @@ export function StructurePanel({
               }
             />
           </dl>
-          <div className="min-w-0 [&_.tauchstone-molstar]:rounded-md [&_.tauchstone-molstar]:border-line">
+          <div className="min-w-0 overflow-hidden rounded-[12px] [&_.tauchstone-molstar]:rounded-[12px] [&_.tauchstone-molstar]:border-0">
             <ProteinPanel url={structure.url} note={null} />
           </div>
         </div>
