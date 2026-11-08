@@ -151,3 +151,13 @@ def test_gap_filters(client, monkeypatch):
     assert len(result['candidates']) == 1
     check(result, 'ProjectCandidates')
     assert result['candidates'][0]['attack_ready']
+
+
+def test_frozen_run_reports_cell_lines(client):
+    """The frozen run predates cell-line tracking; viewing it fills the summary in (mock: fixed values)."""
+    sid = next(p for p in client.get('/projects').json() if p['id'] == 'GSE132903')['last_screen_id']
+    assert sid.startswith('frozen-')
+    body = client.get(f'/screens/{sid}').json()
+    assert body['status'] == 'done' and len(body['cell_lines']) == jobs.MAX_CELL_LINES
+    assert body['n_cell_lines'] >= len(body['cell_lines'])
+    assert {'cell_id', 'n_scored', 'best_consensus', 'neural'} <= set(body['cell_lines'][0])

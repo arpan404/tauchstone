@@ -55,6 +55,54 @@ def cell_lines(frame):
                  neural=str(r.cell_id) in _NEURAL_CELLS) for r in rows.itertuples()]
 
 
+_frozen_fill = threading.Event()
+
+
+def ensure_frozen_cell_lines(obj):
+    """The frozen run predates cell-line tracking. Score it once, in the background, with the
+    same code a live re-screen uses (which reproduces the frozen ranking exactly), and keep the
+    per-cell-line summary on the frozen record. Nothing else about the frozen run changes."""
+    if not str(obj.get('id', '')).startswith('frozen-'):
+        return
+    if not obj.get('top') and not settings.mock:
+        pool = pd.read_parquet(store.base() / 'scores/GSE132903__main__candidate_pool.parquet')
+        with lock:
+            frozen = store.get('screen', obj['id'])
+            frozen.update(top=hits(pool.sort_values('pool_rank')))
+            store.put('screen', frozen)
+    if obj.get('cell_lines'):
+        return
+    if settings.mock:
+        with lock:
+            frozen = store.get('screen', obj['id'])
+            frozen.update(cell_lines=mock_cell_lines(1.0), n_cell_lines=83)
+            store.put('screen', frozen)
+        return
+    if _frozen_fill.is_set():
+        return
+    _frozen_fill.set()
+    executor.submit(_fill_frozen, obj['id'], obj['signature_id'])
+
+
+def _fill_frozen(ident, signature_id):
+    try:
+        from pipelines.lincs.screen_job import run_screen
+        signature = pd.read_parquet(store.base() / f'signatures/{signature_id}__main.parquet')
+        last = {}
+
+        def progress(n, total, top, cells):
+            last['cells'] = cells
+
+        run_screen(signature, progress)
+        with lock:
+            frozen = store.get('screen', ident)
+            frozen.update(cell_lines=cell_lines(last['cells']), n_cell_lines=len(last['cells']))
+            store.put('screen', frozen)
+    except Exception:
+        logging.getLogger(__name__).exception('Frozen cell-line summary failed')
+        _frozen_fill.clear()
+
+
 def mock_cell_lines(fraction):
     rows = [dict(cell_id=c, n_scored=int(n * fraction), best_consensus=b) for c, n, b in _MOCK_CELLS]
     return cell_lines(pd.DataFrame(rows))
@@ -125,10 +173,18 @@ def run(ident, signature):
             project = store.get('project', obj['project_id'])
             # The preregistered project keeps its frozen run: a live re-screen is shown on
             # the Screen page but never replaces the frozen candidates or n_ranked.
-            if not str(project.get('last_screen_id') or '').startswith('frozen-'):
+            frozen_id = str(project.get('last_screen_id') or '')
+            if not frozen_id.startswith('frozen-'):
                 project.update(last_screen_id=ident, n_ranked=n, preregistered=obj['preregistered'],
                                n_attack_ready=len(store.attack_ids()) if obj['preregistered'] else None)
                 store.put('project', project)
+            elif obj['preregistered']:
+                # A live re-screen of the frozen signature reproduces the frozen ranking, so its
+                # cell-line summary is the frozen run's too.
+                done = snapshot(ident)
+                frozen = store.get('screen', frozen_id)
+                frozen.update(cell_lines=done.get('cell_lines') or [], n_cell_lines=done.get('n_cell_lines'))
+                store.put('screen', frozen)
             update(ident, status='done', n_ranked=n)
         pending.discard(obj['project_id'])
     except Exception as exc:

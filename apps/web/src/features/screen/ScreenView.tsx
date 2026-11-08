@@ -101,7 +101,10 @@ export function ScreenView() {
   const running = busy || (!!job && !["done", "failed"].includes(job.status));
   const progress = job ? job.n_scored / Math.max(1, job.n_signatures) : 0;
   const done = job?.status === "done";
-  const top = useMemo(() => (job?.top ?? []).slice(0, SLOTS), [job?.top]);
+  // Before a new run starts, show the project's last saved run.
+  const shownTop = job ? job.top : running ? [] : (saved?.top ?? []);
+  const top = useMemo(() => (shownTop ?? []).slice(0, SLOTS), [shownTop]);
+  const savedShown = !job && !running && !!saved && (saved.top?.length ?? 0) > 0;
   const maxScore = Math.max(1e-6, ...top.map((h) => Math.abs(h.consensus)));
   const total = job?.n_signatures || GOLD;
   const wells = useMemo<WellState[]>(() => {
@@ -531,7 +534,9 @@ export function ScreenView() {
           icon={<ListNumbersIcon />}
           title="Top hits"
           caption={
-            done
+            savedShown
+              ? "Last run · reversal score"
+              : done
               ? "Reversal score"
               : top.length > 0
                 ? "Provisional, still scoring"

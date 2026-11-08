@@ -118,6 +118,11 @@ export function useSavedScreen(id?: string | null) {
     queryFn: () => request<Screen>(`/screens/${id}`),
     retry: false,
     staleTime: 60_000,
+    // The original run's cell lines are scored once on the server on first view: poll until they land.
+    refetchInterval: (q) =>
+      q.state.data?.status === "done" && !q.state.data.cell_lines?.length && String(id).startsWith("frozen-")
+        ? 3000
+        : false,
   });
 }
 export function useCreateProject() {

@@ -28,12 +28,14 @@ export function CellLinePanel({
   const neural = lines.filter((c) => c.neural).length;
   // A finished run saved before cell lines were tracked has none to show.
   const untracked = !running && job?.status === "done" && !lines.length;
+  // The frozen original run gets its cell lines worked out on the server the first time it is shown.
+  const original = String(job?.id ?? "").startsWith("frozen-");
   const caption = lines.length
     ? `${fromSaved ? "Last run: top" : "Top"} ${lines.length} of ${job?.n_cell_lines ?? lines.length} lines by signatures scored`
     : running
       ? "Waiting for the first block"
       : untracked
-        ? "Not recorded for this run"
+        ? original ? "Original run: scoring its cell lines" : "Not recorded for this run"
         : "Appears when a screen runs";
   return (
     <Panel
@@ -92,7 +94,9 @@ export function CellLinePanel({
             {running
               ? "Cell lines fill in as each block of signatures is scored"
               : untracked
-                ? "This result was saved before cell lines were tracked. Run the screen again to see them."
+                ? original
+                  ? "Working out which cell lines the original run scored. This takes a few seconds."
+                  : "This result was saved before cell lines were tracked. Run the screen again to see them."
                 : "Run a screen to see each LINCS cell line as it is scored"}
           </p>
         </div>

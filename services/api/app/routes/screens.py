@@ -54,6 +54,8 @@ def template():
 @router.get('/screens/{screen_id}')
 def get(screen_id: str):
     store.seed()
+    obj = jobs.snapshot(screen_id)
+    jobs.ensure_frozen_cell_lines(obj)
     return jobs.snapshot(screen_id)
 
 
