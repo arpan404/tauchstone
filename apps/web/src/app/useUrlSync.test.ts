@@ -15,7 +15,7 @@ describe("URL routes", () => {
     expect(parseRoute("")).toBeNull();
     expect(parseRoute("#/nowhere")).toBeNull();
   });
-  it("encodes upload project ids safely", () => {
+  it("round-trips upload project ids with spaces and slashes", () => {
     const route = { step: "report" as const, drug: "BRD A/1", project: "my project" };
     expect(parseRoute(formatRoute(route))).toEqual(route);
   });

@@ -17,6 +17,7 @@ import { FileTextIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { ShellBoundaryContext } from "@/components/BoundaryBanner";
 import { AppShell } from "@/app/AppShell";
+import { useUrlSync } from "@/app/useUrlSync";
 import { CandidatePicker, DrugSearchGroups } from "@/app/CandidatePicker";
 import {
   Command,
@@ -95,6 +96,7 @@ const VIEWS: Record<StepId, ComponentType> = {
 };
 import { NAV_ITEMS as ITEMS } from "@/app/nav";
 export default function App() {
+  useUrlSync();
   const { step, setStep, selectCandidate } = useUi();
   const [search, setSearch] = useState(false);
   const [query, setQuery] = useState("");
