@@ -109,7 +109,7 @@ it("keeps context-map combinations empty and retains multiple time points", () =
       ]}
     />,
   );
-  expect(screen.getAllByText("—")).toHaveLength(2);
+  expect(screen.getAllByText("Not measured")).toHaveLength(2);
   expect(screen.getByText("24 h")).toBeTruthy();
   expect(screen.getByText("Neural-line ranking data")).toBeTruthy();
 });
