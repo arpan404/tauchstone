@@ -72,7 +72,7 @@ function Report() {
           action={
             <div className="flex flex-col items-center gap-2">
               <CandidatePicker variant="button" />
-              <Button variant="ghost" size="sm" onClick={() => setStep("candidates")}>Browse candidates</Button>
+              <Button variant="outline" size="sm" onClick={() => setStep("candidates")}>Browse candidates</Button>
             </div>
           }
         />

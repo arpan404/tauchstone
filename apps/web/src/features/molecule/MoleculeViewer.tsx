@@ -81,8 +81,8 @@ function drawMolecule(ctx: CanvasRenderingContext2D, width: number, height: numb
 
   // Soft contact shadow under the molecule.
   const sh = ctx.createRadialGradient(width / 2, height / 2 + mol.radius * scale * 0.9, 0, width / 2, height / 2 + mol.radius * scale * 0.9, mol.radius * scale * 0.9);
-  sh.addColorStop(0, 'rgba(60,40,140,0.10)');
-  sh.addColorStop(1, 'rgba(60,40,140,0)');
+  sh.addColorStop(0, 'rgba(15,24,48,0.07)');
+  sh.addColorStop(1, 'rgba(15,24,48,0)');
   ctx.fillStyle = sh;
   ctx.fillRect(0, 0, width, height);
 
@@ -250,7 +250,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
   return (
     <div
       className="relative overflow-hidden rounded-[14px] border border-[#e6e2d8]"
-      style={{ height, background: 'radial-gradient(ellipse at 50% 38%, #ffffff, #f1ecfb 78%)' }}
+      style={{ height, background: 'radial-gradient(ellipse at 50% 38%, #ffffff, #eef2fa 78%)' }}
       data-testid="molecule-viewer"
       data-state={mol ? 'molecule' : 'empty'}
     >
