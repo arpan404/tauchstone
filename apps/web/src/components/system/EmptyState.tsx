@@ -16,11 +16,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex min-h-48 flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-line-strong bg-surface/60 p-8 text-center",
+        "glass flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center",
         className,
       )}
     >
-      {icon && <div className="text-ink-3 [&>svg]:size-6">{icon}</div>}
+      {icon && <div className="grid size-11 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-5">{icon}</div>}
       <p className="m-0 text-[14px] font-medium text-ink-2">{title}</p>
       {action}
     </div>
