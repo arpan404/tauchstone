@@ -206,13 +206,9 @@ export function CompoundsView({
           >
             {!results.length && !lookup.isPending ? (
               <EmptyState
-                icon={
-                  <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-5">
-                    <FlaskIcon />
-                  </span>
-                }
+                icon={<FlaskIcon />}
                 title="No compounds checked"
-                className="m-0 min-h-64 rounded-xl border-0 bg-white/45 ring-1 ring-white/80"
+                className="m-0 min-h-64 rounded-xl border-0 bg-white/45 shadow-none ring-1 ring-white/80"
               />
             ) : (
               <Table

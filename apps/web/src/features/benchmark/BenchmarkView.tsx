@@ -48,7 +48,7 @@ import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
 type Scope = 'contested' | 'all';
 
 /** Empty and error states sit on glass, not in a dashed grey box. */
-const EMPTY = 'glass min-h-64 border-0 bg-transparent';
+const EMPTY = 'min-h-64';
 type Policy = BenchmarkAnalysis['policies'][number];
 
 /** Documented permutation gate result (README, integrity log): 17 of 20 compounds, gate needs 20. */
