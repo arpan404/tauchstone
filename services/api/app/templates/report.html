@@ -1,10 +1,32 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ report.title }}</title>
 <style>
-@page { size:A4; margin:16mm }
-*{box-sizing:border-box}body{margin:0;background:#f6f5f1;color:#202020;font:14px/1.6 Arial,sans-serif}.paper{max-width:760px;margin:24px auto;padding:32px;background:white;border:1px solid #e5e2da;border-radius:12px}header{color:#686761;font-size:12px}h1{font-size:28px;margin:6px 0 12px}.chips{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:3px 8px;background:#E6EEFA;color:#0F4593;border-radius:6px;font-size:12px}.gap{background:#FDF1DE;color:#A15C07}.ok{background:#E5F5EF;color:#0E8F6A}.bad{background:#FCEBEB;color:#D23B3B}.neutral{background:#F6F7F9;color:#464A55}.mono{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}th{text-align:left;font-weight:600;color:#6B7080;font-size:11.5px;padding:4px 6px;border-bottom:1px solid #E2E4E9}td{padding:5px 6px;border-bottom:1px solid #E2E4E9;vertical-align:top}td.mono{white-space:nowrap}.readouts{display:flex;gap:28px;margin:8px 0 4px}.readouts div span{display:block;font-size:11.5px;color:#6B7080}.readouts div b{font-size:18px}.muted{color:#6B7080}section{border-top:1px solid #e5e2da;padding:14px 0}h2{font-size:14px;margin:0 0 4px}p{margin:0}footer{font-size:11px;color:#686761;border-top:1px solid #e5e2da;padding-top:12px;overflow-wrap:anywhere}.chips+section{margin-top:18px}.print{margin-bottom:12px}button{background:#1558B8;color:white;padding:8px 16px;border:0;border-radius:6px}
-@media(max-width:600px){.paper{margin:0;padding:20px;border:0;border-radius:0}}
-@media print{body{background:white}.paper{margin:0;padding:0;border:0;max-width:none}.print{display:none}section{break-inside:avoid}}
+{{ fonts|safe }}
+@page { size:A4; margin:16mm 16mm 18mm }
+*{box-sizing:border-box}
+body{margin:0;background:#e9eef8;color:#0f1830;font:14px/1.62 'Instrument Sans','Geist Mono',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+.paper{max-width:780px;margin:28px auto;padding:44px 48px 36px;background:#fff;border-radius:18px;box-shadow:0 1px 2px rgba(15,24,48,.05),0 24px 60px -24px rgba(30,60,140,.28)}
+header{font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;color:#636d89;letter-spacing:-.01em;line-height:1.5}
+h1{font-size:40px;line-height:1.06;font-weight:500;letter-spacing:-.032em;margin:12px 0 16px;color:#0f1830}
+h2{font-size:11px;line-height:1.4;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#636d89;margin:0 0 6px}
+p{margin:0}p+p{margin-top:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 6px}
+.chip{display:inline-block;padding:3px 10px;background:#e6eefa;color:#0f4593;border-radius:999px;font-size:12px;font-weight:500;line-height:1.5}
+.gap{background:#fbefdd;color:#9a5a06}.ok{background:#e2f3ec;color:#0b8463}.bad{background:#fbe9e9;color:#c93838}.neutral{background:#f1f4f9;color:#3c4660}
+.mono{font-family:'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:-.01em}
+section{border-top:1px solid #e9edf4;padding:18px 0 16px}
+.chips+section{margin-top:22px}
+.muted{color:#636d89}
+.readouts{display:flex;gap:36px;margin:12px 0 6px}
+.readouts div span{display:block;font-size:11.5px;color:#636d89}
+.readouts div b{font-size:22px;font-weight:500;letter-spacing:-.02em}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+th{text-align:left;font-weight:600;color:#636d89;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:6px 8px;border-bottom:1px solid #e4e8f1}
+td{padding:8px;border-bottom:1px solid #eef1f7;vertical-align:top}td.mono{white-space:nowrap}
+footer{font-size:11px;color:#636d89;border-top:1px solid #e9edf4;padding-top:14px;margin-top:6px;overflow-wrap:anywhere}
+.print{margin-bottom:16px}button{font:500 13px 'Instrument Sans',sans-serif;background:#0f1830;color:#fff;padding:9px 18px;border:0;border-radius:999px}
+@media(max-width:600px){.paper{margin:0;padding:24px;border-radius:0;box-shadow:none}h1{font-size:30px}}
+@media print{body{background:#fff}.paper{margin:0;padding:0;border-radius:0;box-shadow:none;max-width:none}.print{display:none}section{break-inside:avoid}}
 </style></head><body><main class="paper">
 {% if fallback %}<div class="print"><p>PDF renderer unavailable. Print HTML to PDF.</p><button onclick="window.print()">Print report</button></div>{% endif %}
 <header>Tauchstone evidence report · Signature {{ report.signature }}{% if report.project %} · Project {{ report.project }}{% endif %} · preregistration {{ report.hash }}{% if report.mock %} · Mock fixture{% endif %}</header>

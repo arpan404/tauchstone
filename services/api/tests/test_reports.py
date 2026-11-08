@@ -218,3 +218,22 @@ def test_withdrawn_drug_is_flagged_in_report():
     single = report_render.withdrawn_label({'withdrawn': True, 'withdrawn_year': 2000, 'withdrawn_country': 'Vietnam'})
     assert single == 'withdrawn in Vietnam 2000'
     assert report_render.withdrawn_label({'withdrawn': False}) is None
+
+
+def test_report_embeds_its_fonts_offline():
+    from app.services import report_render
+    css = report_render.font_faces_css()
+    assert "font-family:'Instrument Sans'" in css and "font-family:'Geist Mono'" in css
+    assert 'url(data:font/woff2;base64,' in css and 'http' not in css
+    html = report_render.render_html({'name': 'X', 'gaps': {}, 'provenance': {}}, 'GSE132903')
+    assert "'Instrument Sans'" in html
+
+
+def test_pdf_fetcher_allows_only_embedded_data():
+    import pytest
+    weasy = pytest.importorskip('weasyprint.urls')
+    fetcher = weasy.URLFetcher(allowed_protocols={'data'})
+    with pytest.raises(ValueError):
+        fetcher.fetch('https://example.org/font.woff2')
+    with pytest.raises(ValueError):
+        fetcher.fetch('file:///etc/hosts')

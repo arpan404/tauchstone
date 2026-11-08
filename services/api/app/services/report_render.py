@@ -1,8 +1,10 @@
 """Offline report presentation. Only public DrugDetail fields enter the template."""
 from __future__ import annotations
 
+import base64
 import importlib
 import json
+from functools import lru_cache
 import re
 import unicodedata
 from datetime import date
@@ -178,14 +180,40 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['hash'] = sha256((ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8]
     env = Environment(loader=FileSystemLoader(APP / 'templates'), autoescape=select_autoescape(['html']))
     view['title'] = title or f'{view["name"]} | Tauchstone evidence report'
-    return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback,
+    return env.get_template('report.html').render(report=view, boundary=BOUNDARY, fallback=fallback, fonts=font_faces_css(),
                                                   session=session)
+
+
+FONTS = APP / 'static' / 'fonts'
+_FACES = (
+    ('Instrument Sans', 400, 'instrument-sans-latin-400-normal'),
+    ('Instrument Sans', 500, 'instrument-sans-latin-500-normal'),
+    ('Instrument Sans', 600, 'instrument-sans-latin-600-normal'),
+    ('Geist Mono', 400, 'geist-mono-latin-400-normal'),
+    ('Geist Mono', 500, 'geist-mono-latin-500-normal'),
+)
+
+
+@lru_cache(maxsize=1)
+def font_faces_css() -> str:
+    """@font-face rules with the fonts embedded as data URLs, so reports render offline
+    (browser and PDF) without any font request. Fonts: SIL OFL 1.1 (static/fonts/LICENSE-*)."""
+    rules = []
+    for family, weight, stem in _FACES:
+        path = FONTS / f'{stem}.woff2'
+        if not path.exists():
+            continue
+        data = base64.b64encode(path.read_bytes()).decode()
+        rules.append(f"@font-face{{font-family:'{family}';font-style:normal;font-weight:{weight};"
+                     f"src:url(data:font/woff2;base64,{data}) format('woff2')}}")
+    return '\n'.join(rules)
 
 
 def render_pdf(html: str) -> bytes:
     from weasyprint import HTML
+    from weasyprint.urls import URLFetcher
 
-    def deny_network(url: str, **kwargs):
-        raise ValueError('External resources are disabled in offline reports')
-
-    return HTML(string=html, url_fetcher=deny_network).write_pdf()
+    # Offline by construction: only data: URLs (the embedded fonts) may load; http(s), file
+    # and everything else are refused.
+    fetcher = URLFetcher(allowed_protocols={'data'})
+    return HTML(string=html, url_fetcher=fetcher).write_pdf()
