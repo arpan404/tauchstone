@@ -161,7 +161,7 @@ export function EvidenceView({
  * from xl the actions share the bottom row with the figures, as in the approved mockup.
  */
 const HERO_GRID =
-  "grid gap-x-8 gap-y-5 [grid-template-areas:'id'_'mol'_'figs'_'acts'] md:grid-cols-[minmax(0,1fr)_minmax(240px,38%)] md:[grid-template-areas:'id_mol'_'figs_figs'_'acts_acts'] xl:grid-cols-[minmax(0,1fr)_minmax(340px,auto)] xl:[grid-template-areas:'id_mol'_'figs_acts']";
+  "grid gap-x-8 gap-y-5 [grid-template-areas:'id'_'mol'_'figs'_'acts'] md:grid-cols-[minmax(16rem,1fr)_minmax(220px,38%)] md:[grid-template-areas:'id_mol'_'figs_figs'_'acts_acts'] xl:grid-cols-[minmax(18rem,1fr)_minmax(300px,440px)] xl:[grid-template-areas:'id_mol'_'figs_acts']";
 
 function DrugHero({
   drug,
@@ -253,7 +253,7 @@ function HeroMolecule({ drug }: { drug: Drug }) {
   return (
     <div
       className={cn(
-        "relative -mx-2 min-w-0 [grid-area:mol] md:-my-2 md:mx-0",
+        "relative -mx-2 w-full min-w-0 max-w-full overflow-hidden [grid-area:mol] md:-my-2 md:mx-0",
         "[&_[data-testid=molecule-viewer]]:h-[220px]! [&_[data-testid=molecule-viewer]]:rounded-none [&_[data-testid=molecule-viewer]]:border-0 [&_[data-testid=molecule-viewer]]:bg-none! md:[&_[data-testid=molecule-viewer]]:h-[250px]!",
         "[&_[data-testid=molecule-formula]]:right-2 [&_[data-testid=molecule-formula]]:bottom-1 [&_[data-testid=molecule-formula]]:left-auto [&_[data-testid=molecule-formula]]:rounded-full [&_[data-testid=molecule-formula]]:bg-white/70 [&_[data-testid=molecule-formula]]:px-2.5 [&_[data-testid=molecule-formula]]:py-0.5 [&_[data-testid=molecule-formula]]:text-ink-2 [&_[data-testid=molecule-formula]]:shadow-none [&_[data-testid=molecule-formula]]:ring-1 [&_[data-testid=molecule-formula]]:ring-ink/10",
       )}
