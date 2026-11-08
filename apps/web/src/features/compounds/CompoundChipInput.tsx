@@ -196,11 +196,10 @@ export function CompoundChipInput({
       {open &&
         createPortal(
           <div
-            data-slot="popover-content"
             style={style}
             // Keep focus in the input while clicking a row.
             onMouseDown={(e) => e.preventDefault()}
-            className="fixed z-50 flex flex-col overflow-hidden rounded-xl p-1 text-sm text-ink shadow-overlay"
+            className="fixed z-50 flex flex-col overflow-hidden rounded-xl border border-(--glass-border) bg-(--solid-panel) p-1 text-sm text-ink shadow-overlay ring-1 ring-ink/8"
           >
             <CommandList className="max-h-none min-h-0 flex-1">
               {matches.length > 0 && (
