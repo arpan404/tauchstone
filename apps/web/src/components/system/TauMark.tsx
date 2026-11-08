@@ -1,18 +1,14 @@
 import { cn } from "cn";
 
-/** A cut stone, eight sided. */
-export const STONE =
-  "M59.72 43.48L43.48 59.72L20.52 59.72L4.28 43.48L4.28 20.52L20.52 4.28L43.48 4.28L59.72 20.52Z";
-/** The bar of the tau. */
-export const TAU_BAR = "M19.6 21.15H44.4V26.73H19.6Z";
-/** The stem of the tau, hooking right. */
-export const TAU_STEM =
-  "M28.9 21.15H34.48V32.31c0 3.1 1.86 4.96 4.96 4.96H41.3V42.85H38.82c-6.2 0-9.92-3.72-9.92-9.92Z";
+/** Wells that spell tau, as (column, row) on a 4 x 4 plate: bar, stem, hook. */
+const LIT = new Set(["0,0", "1,0", "2,0", "3,0", "1,1", "1,2", "2,3"]);
+const WELLS = Array.from({ length: 16 }, (_, i) => ({ col: i % 4, row: Math.floor(i / 4) }));
 
 /**
- * The app mark: tau, the protein that tangles in Alzheimer's disease, cut into
- * a touchstone, the stone an assayer rubs a sample against to judge it. One
- * flat shape with the letter knocked out, so it works in any single colour.
+ * The app mark: the Greek letter tau written in the wells of a screening plate.
+ * Tau is the protein that tangles in Alzheimer's disease and the first half of
+ * the name; the plate is what a screen runs on. Drawn in currentColor, empty
+ * wells at low opacity, so it follows the theme.
  */
 export function TauMark({ className, title }: { className?: string; title?: string }) {
   return (
@@ -23,10 +19,17 @@ export function TauMark({ className, title }: { className?: string; title?: stri
       aria-label={title}
       aria-hidden={title ? undefined : true}
       fill="currentColor"
-      fillRule="evenodd"
     >
       {title && <title>{title}</title>}
-      <path d={`${STONE}${TAU_BAR}${TAU_STEM}`} />
+      {WELLS.map(({ col, row }) => (
+        <circle
+          key={`${col},${row}`}
+          cx={11 + col * 14}
+          cy={11 + row * 14}
+          r={6}
+          fillOpacity={LIT.has(`${col},${row}`) ? 1 : 0.2}
+        />
+      ))}
     </svg>
   );
 }

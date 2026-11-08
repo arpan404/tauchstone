@@ -1,9 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Tauchstone. Tau, the protein that tangles in Alzheimer's disease, cut into
-       a touchstone: the stone an assayer rubs a sample against to judge it. -->
-  <path fill="#1558b8" d="M59.72 43.48L43.48 59.72L20.52 59.72L4.28 43.48L4.28 20.52L20.52 4.28L43.48 4.28L59.72 20.52Z"/>
-  <g fill="#ffffff">
-    <path d="M19.6 21.15H44.4V26.73H19.6Z"/>
-    <path d="M28.9 21.15H34.48V32.31c0 3.1 1.86 4.96 4.96 4.96H41.3V42.85H38.82c-6.2 0-9.92-3.72-9.92-9.92Z"/>
+  <!-- Tauchstone: the Greek letter tau written in the wells of a screening plate.
+       Tau is the protein that tangles in Alzheimer's disease. -->
+  <rect width="64" height="64" rx="15" fill="#1558b8"/>
+  <g fill="#ffffff" transform="translate(32 32) scale(0.74) translate(-32 -32)">
+    <circle cx="11" cy="11" r="6"/>
+    <circle cx="25" cy="11" r="6"/>
+    <circle cx="39" cy="11" r="6"/>
+    <circle cx="53" cy="11" r="6"/>
+    <circle cx="11" cy="25" r="6" fill-opacity="0.3"/>
+    <circle cx="25" cy="25" r="6"/>
+    <circle cx="39" cy="25" r="6" fill-opacity="0.3"/>
+    <circle cx="53" cy="25" r="6" fill-opacity="0.3"/>
+    <circle cx="11" cy="39" r="6" fill-opacity="0.3"/>
+    <circle cx="25" cy="39" r="6"/>
+    <circle cx="39" cy="39" r="6" fill-opacity="0.3"/>
+    <circle cx="53" cy="39" r="6" fill-opacity="0.3"/>
+    <circle cx="11" cy="53" r="6" fill-opacity="0.3"/>
+    <circle cx="25" cy="53" r="6" fill-opacity="0.3"/>
+    <circle cx="39" cy="53" r="6"/>
+    <circle cx="53" cy="53" r="6" fill-opacity="0.3"/>
   </g>
 </svg>
