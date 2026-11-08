@@ -10,8 +10,10 @@ Invariant: each row's `name`, sent to POST /lookup, resolves to that same row, s
 chip picked from the dropdown checks exactly as shown.
 
 Matching on the normalised query (lowercase, non-alphanumerics stripped): exact name
-or alias, then prefix, then substring (3+ characters); within a tier ranked rows come
-first in rank order, then not rankable, then not in LINCS, alphabetically.
+or alias, then prefix, then substring (3+ characters). Within a tier, named compounds
+come before bare BRD codes (15,876 LINCS compounds have only a BRD id as their name;
+they stay searchable by it), then ranked rows in rank order, then not rankable, then
+not in LINCS, alphabetically.
 """
 
 from __future__ import annotations
@@ -26,6 +28,7 @@ import pandas as pd
 _RANKING_NAME = "GSE132903__main"
 _GROUP = {"ranked": 0, "not_rankable": 1, "not_in_lincs": 2}
 MIN_SUBSTRING = 3
+_BRD_CODE = re.compile(r"^BRD-[A-Z]\d", re.IGNORECASE)
 
 
 def normalize(name: object) -> str:
@@ -52,7 +55,12 @@ class Row:
     rank: int | None = None  # global ranking order, sort only
 
     def order(self) -> tuple:
-        return (_GROUP[self.status], self.rank if self.rank is not None else 0, self.name.lower())
+        return (
+            bool(_BRD_CODE.match(self.name)),  # named compounds before bare BRD codes
+            _GROUP[self.status],
+            self.rank if self.rank is not None else 0,
+            self.name.lower(),
+        )
 
     def payload(self, alias: str | None) -> dict:
         out: dict = {"id": self.id, "name": self.name, "status": self.status}

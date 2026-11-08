@@ -83,6 +83,19 @@ def test_short_queries_skip_substring():
     assert cs.search(index, "ab")[0]["id"] == "X"
 
 
+def test_named_compounds_sort_above_bare_brd_codes():
+    index = cs.index_from_fixture(
+        [
+            {"id": "BRD-K00000001", "name": "BRD-K00000001", "status": "ranked", "pool_rank": 1},
+            {"id": "BRD-K00000002", "name": "Brdamide", "status": "not_rankable"},
+            {"id": "CHEMBL1", "name": "Brdoxin", "status": "not_in_lincs"},
+        ]
+    )
+    assert [r["name"] for r in cs.search(index, "brd")] == ["Brdamide", "Brdoxin", "BRD-K00000001"]
+    # A bare code stays findable by its id.
+    assert cs.search(index, "BRD-K00000001")[0]["id"] == "BRD-K00000001"
+
+
 # ----------------------------------------------------------------------------
 # Real data
 # ----------------------------------------------------------------------------
@@ -113,6 +126,15 @@ def test_real_search_typed_examples(real_client):
     assert _search(real_client, "rivastigmine")[0]["status"] == "not_rankable"
     assert _search(real_client, "lithium")[0]["status"] == "not_in_lincs"
     assert len(_search(real_client, "a", limit=50)) == 50
+    # 15,876 LINCS compounds are named only by their BRD id: a word never surfaces them first.
+    for q in ("b", "a", "ac"):
+        names = [r["name"] for r in _search(real_client, q, limit=50)]
+        assert not any(cs._BRD_CODE.match(n) for n in names), (q, names)
+    # Fewer named matches than the limit: codes only fill in after every named row.
+    is_code = [bool(cs._BRD_CODE.match(r["name"])) for r in _search(real_client, "brd", limit=50)]
+    assert any(is_code) and is_code == sorted(is_code)
+    code = _search(real_client, "BRD-K07276035")
+    assert code[0]["id"] == "BRD-K07276035" and code[0]["name"] == "BRD-K07276035"
 
 
 @pytest.mark.data
