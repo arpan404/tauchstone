@@ -75,14 +75,3 @@ export function PlateMap({
   );
 }
 
-/** Small brand mark: a 3x4 corner of a plate. */
-export function PlateMark({ className }: { className?: string }) {
-  const on = [1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1];
-  return (
-    <span className={cn("grid grid-cols-4 gap-[2px]", className)} aria-hidden>
-      {on.map((v, i) => (
-        <span key={i} className={cn("size-[5px] rounded-full", v ? "bg-primary" : "bg-primary/25")} />
-      ))}
-    </span>
-  );
-}

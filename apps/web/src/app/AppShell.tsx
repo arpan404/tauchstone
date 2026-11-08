@@ -17,7 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import { useCandidates, useHealth, useMockStatus } from "@/api/hooks";
 import { useProjects } from "@/api/workspace";
-import { PlateMark, StatusBadge } from "@/components/system";
+import { StatusBadge, TauMark } from "@/components/system";
 import { Kbd } from "@/components/ui/kbd";
 import { ThemeToggle } from "@/app/ThemeToggle";
 import {
@@ -108,7 +108,7 @@ export function AppShell({
               aria-current={active === "projects" ? "page" : undefined}
               className="flex items-center gap-2.5 rounded-md px-1.5 py-1 text-left"
             >
-              <PlateMark />
+              <TauMark className="size-7 shrink-0 text-primary" />
               <span className="font-heading text-[17px] font-semibold tracking-tight text-ink [font-stretch:88%] group-data-[collapsible=icon]:hidden">
                 Tauchstone
               </span>

@@ -1,7 +1,7 @@
 # Tauchstone UI system (Nov 8 redesign)
 
 Binding for every view. The goal: the app reads as one precise lab instrument, not a website.
-AGENTS.md rules still win (no clinical language, boundary line, measured/curated/predicted labels,
+AGENTS.md rules still win (no clinical language, measured/curated/predicted labels,
 "not preregistered" labels, no hidden outcomes before a committed experiment).
 
 ## Design read
@@ -91,7 +91,7 @@ The page title lives in the top bar. Views never render their own page title.
 
 - Labels, not sentences. If a string explains how the system works, delete it. If a user needs
   it to act, make it a label, tooltip or empty state.
-- Keep, verbatim where they exist: boundary text (status bar), `not preregistered`,
+- Keep, verbatim where they exist: the boundary text in the PDF report, `not preregistered`,
   `measured / curated / predicted` exposure labels, verdict names (SUPPORTED SO FAR,
   FRAGILE / CONTEXT-DEPENDENT, INSUFFICIENT EVIDENCE), `Report only` on resource agreement.
 - No em dashes or en dashes in visible text. Use `·` at most once per line; prefer columns.

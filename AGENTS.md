@@ -22,7 +22,10 @@ evidence under a fixed budget (Tauchstone). Expo is Mon Nov 9 2026; code freeze 
 7. **No clinical language.** Verdicts are SUPPORTED SO FAR, FRAGILE / CONTEXT-DEPENDENT or
    INSUFFICIENT EVIDENCE, never true/false, never "treats", "effective", "safe", "dose".
    Brain exposure is always labelled measured / curated / predicted. A PDB structure is
-   target context, never binding evidence.
+   target context, never binding evidence. The boundary sentence ("Research hypothesis only...")
+   is carried by the PDF report, not by every page: Arpan removed it from the app shell on
+   Nov 8 2026. Its wording is still fixed, and `tests/redteam/test_wording.py` is what keeps
+   clinical language out of the UI.
 8. **The truth table never reaches the browser** except one value per committed experiment.
 
 ## Where things live
@@ -37,7 +40,7 @@ evidence under a fixed budget (Tauchstone). Expo is Mon Nov 9 2026; code freeze 
 | `pipelines/evidence/` | WS4: Open Targets, HPA, ChEMBL, PDB. Cache everything locally; nothing live at demo time. |
 | `pipelines/tauchstone/` | WS5: truth table, policies, replay benchmark, evaluation |
 | `services/api/app/` | WS6: FastAPI. `TS_API_MOCK=1` serves `contracts/fixtures`. |
-| `apps/web/src/features/` | WS7: React. One folder per feature. Boundary banner on every page. |
+| `apps/web/src/features/` | WS7: React. One folder per feature. |
 | `tests/` | WS8: `leakage/`, `permutation/`, `api_contract/` |
 
 ## Commands
