@@ -14,6 +14,7 @@ from app.routes import (
     attack,
     benchmark,
     candidates,
+    compounds_estimate,
     drugs,
     lab,
     lookup,
@@ -59,6 +60,7 @@ app.include_router(projects.router)
 app.include_router(screens.router)
 app.include_router(drugs.router)
 app.include_router(lookup.router)
+app.include_router(compounds_estimate.router)
 app.include_router(reports.router)
 app.include_router(resources.router)
 

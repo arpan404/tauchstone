@@ -309,6 +309,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/compounds/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Exploratory structure-only estimate of the GSE132903 discovery score (not preregistered)
+         * @description Display only. A random forest on Morgan fingerprints guesses the discovery reversal score LINCS would likely measure. It never feeds ranking, thresholds, the truth table or any hidden test. On held-out scaffolds it is barely better than predicting the training mean (MAE 0.472 vs 0.481, R2 0.023, Spearman 0.18). 409 when the model is not trained, still training, or its artifacts fail their provenance checksum.
+         */
+        post: operations["estimateCompounds"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/{drug_id}": {
         parameters: {
             query?: never;
@@ -865,6 +885,25 @@ export interface components {
             n_contexts?: number | null;
             attack_ready?: boolean;
             preregistered?: boolean;
+        };
+        /** @description Exploratory, not preregistered. Never used for ranking or any hidden test. */
+        CompoundEstimate: {
+            id: string;
+            /** @description structure-only estimate of the discovery consensus_median */
+            estimate: number | null;
+            /**
+             * @description held_out: scaffold-grouped internal test, unseen in training; in_training: the model saw this compound (or an identical fingerprint) while training, so the estimate flatters it; new_structure: fingerprint absent from the trained run
+             * @enum {string|null}
+             */
+            basis: "held_out" | "in_training" | "new_structure" | null;
+            /** @description discovery consensus_median when the compound was scored */
+            measured: number | null;
+            /**
+             * @description stored: from the trained run's predictions; computed: fresh from SMILES; otherwise why no estimate exists
+             * @enum {string}
+             */
+            status: "stored" | "computed" | "no_structure" | "invalid_structure" | "unknown_id";
+            run_id: string;
         };
         ResourceAgreement: {
             /** @enum {string} */
@@ -1459,6 +1498,40 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LookupResult"][];
                 };
+            };
+        };
+    };
+    estimateCompounds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description LINCS pert_ids */
+                    ids: string[];
+                };
+            };
+        };
+        responses: {
+            /** @description one estimate per input id, same order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CompoundEstimate"][];
+                };
+            };
+            /** @description exploratory model not trained, training, or failing verification */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
