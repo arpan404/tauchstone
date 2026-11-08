@@ -41,6 +41,7 @@ import { useUi } from "@/store/ui";
 import { ContextMap } from "./ContextMap";
 import { int, signed } from "./format";
 import { ResourceAgreement } from "./ResourceAgreement";
+import { SourcingPanel } from "./SourcingPanel";
 import { StructurePanel, TargetsPanel } from "./TargetsPanel";
 
 export { ContextMap } from "./ContextMap";
@@ -139,6 +140,7 @@ export function EvidenceView({
           {drug.structure && (
             <StructurePanel structure={drug.structure} className="xl:col-span-7" />
           )}
+          <SourcingPanel sourcing={drug.sourcing} className="xl:col-span-12" />
         </div>
       </>
     );

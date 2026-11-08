@@ -393,6 +393,24 @@ class Molecule3D(BaseModel):
     method: str | None = None
 
 
+class Sourcing(BaseModel):
+    """Purity and sourcing check (Broad Repurposing Hub sample QC, 2020). Display only."""
+    status: Literal["at_or_above_95", "below_95", "no_purity_value", "no_record"]
+    threshold_pct: float = 95.0
+    best_purity_pct: float | None = None
+    n_samples: int = 0
+    n_samples_at_or_above_95: int = 0
+    n_vendors: int = 0
+    vendors: list[str] = Field(default_factory=list)
+    best_vendor: str | None = None
+    best_catalog_no: str | None = None
+    qc_incompatible: bool = False
+    n_qc_incompatible: int = 0
+    match: Literal["inchikey", "inchikey_block", "name", "none"] = "none"
+    source: str
+    note: str
+
+
 class DrugDetail(BaseModel):
     drug_id: str
     name: str
@@ -411,6 +429,7 @@ class DrugDetail(BaseModel):
     n_hidden_tests: int | None = None
     attack_ready: bool
     preregistered: bool
+    sourcing: Sourcing | None = None
     provenance: Provenance | None = None
 
 

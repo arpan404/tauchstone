@@ -1,5 +1,6 @@
 """Report contract, leakage boundary, and offline rendering checks."""
 import io
+import json
 import sys
 from dataclasses import replace
 from hashlib import sha256
@@ -238,3 +239,24 @@ def test_pdf_fetcher_allows_only_embedded_data():
         fetcher.fetch('https://example.org/font.woff2')
     with pytest.raises(ValueError):
         fetcher.fetch('file:///etc/hosts')
+
+
+def test_report_carries_purity_and_sourcing_check():
+    from app.services import drug_detail
+    sourcing = json.loads((render.ROOT / 'contracts/fixtures/getDrug.json').read_text())['sourcing']
+    assert sourcing['note'] == drug_detail.SOURCING_NOTE
+    html = render.render_html({'name': 'Piperacillin', 'gaps': {}, 'provenance': {},
+                               'sourcing': sourcing}, 'GSE132903')
+    assert 'Before the lab: purity and sourcing' in html
+    assert 'A vendor sample with purity of 95% or more is on record.' in html
+    assert 'Best recorded purity 96.30% · 6 samples · 3 vendors: MedChemEx, Selleck, Sigma' in html
+    assert 'Broad Drug Repurposing Hub sample QC (2020)' in html
+    from app.services import report_render
+    none = report_render.sourcing_lines({'status': 'no_record', 'source': 'S'})
+    assert none[0].startswith('No vendor sample') and len(none) == 2
+    one = report_render.sourcing_lines({'status': 'below_95', 'best_purity_pct': 89.78, 'n_samples': 1,
+                                        'n_vendors': 1, 'vendors': ['Tocris']})
+    assert one[1] == 'Best recorded purity 89.78% · 1 sample · 1 vendor: Tocris'
+    assert report_render.sourcing_lines(None) is None
+    html = report_render.render_html({'name': 'X', 'gaps': {}, 'provenance': {}}, 'GSE132903')
+    assert 'purity and sourcing' not in html

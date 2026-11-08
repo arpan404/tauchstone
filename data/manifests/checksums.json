@@ -887,6 +887,14 @@
     "upstream_sha512_verified": null,
     "frozen_at": "2026-11-06T03:04:08+00:00"
   },
+  "evidence/repurposing_hub/repurposing_samples_20200324.txt": {
+    "url": "https://s3.amazonaws.com/data.clue.io/repurposing/downloads/repurposing_samples_20200324.txt",
+    "path": "raw/evidence/repurposing_hub/repurposing_samples_20200324.txt",
+    "bytes": 2459986,
+    "sha256": "3324dfac93d19ceaeafbe7d9e466127709328777cb2f6c5a465740cd327088e9",
+    "upstream_sha512_verified": null,
+    "frozen_at": "2026-11-08T23:32:31+00:00"
+  },
   "evidence/uniprot/uniprot_human_swissprot.tsv.gz": {
     "url": "https://rest.uniprot.org/uniprotkb/stream?compressed=true&format=tsv&query=%28organism_id%3A9606%29%20AND%20%28reviewed%3Atrue%29&fields=accession%2Cid%2Cgene_primary%2Cgene_names%2Cprotein_name%2Cxref_geneid%2Cxref_ensembl%2Cxref_pdb%2Cxref_chembl%2Clength",
     "path": "raw/evidence/uniprot/uniprot_human_swissprot.tsv.gz",

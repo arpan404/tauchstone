@@ -1116,7 +1116,35 @@ components:
         n_hidden_tests: { type: [integer, "null"] }
         attack_ready: { type: boolean }
         preregistered: { type: boolean, description: "true if the drug is in the sealed benchmark or development pool of the built-in project" }
+        sourcing: { $ref: "#/components/schemas/Sourcing" }
         provenance: { $ref: "#/components/schemas/Provenance" }
+
+    Sourcing:
+      type: object
+      required: [status, threshold_pct, n_samples, n_vendors, vendors, qc_incompatible, match, source, note]
+      description: >-
+        Purity and sourcing check before any lab follow-up: vendor samples the Broad Drug
+        Repurposing Hub bought and QC'd (2020-03-24 release, evidence/sourcing.parquet).
+        Display only; never feeds ranking, threshold, pool, truth table or any verdict.
+        Absent when the table has not been built.
+      properties:
+        status:
+          type: string
+          enum: [at_or_above_95, below_95, no_purity_value, no_record]
+          description: "at_or_above_95: some QC-compatible sample measured >= threshold_pct; below_95: samples measured, all below; no_purity_value: samples on record without a usable purity; no_record: no Hub sample matched"
+        threshold_pct: { type: number, examples: [95] }
+        best_purity_pct: { type: number, minimum: 0, maximum: 100, description: highest recorded purity over samples not flagged qc_incompatible }
+        n_samples: { type: integer, minimum: 0 }
+        n_samples_at_or_above_95: { type: integer, minimum: 0 }
+        n_vendors: { type: integer, minimum: 0 }
+        vendors: { type: array, items: { type: string } }
+        best_vendor: { type: string }
+        best_catalog_no: { type: string }
+        qc_incompatible: { type: boolean, description: any matched sample flagged incompatible with the Broad QC method }
+        n_qc_incompatible: { type: integer, minimum: 0 }
+        match: { type: string, enum: [inchikey, inchikey_block, name, none], description: "how the drug was matched to Hub samples: full InChIKey, InChIKey first block (salt or stereo variant), normalised name" }
+        source: { type: string, examples: ["Broad Drug Repurposing Hub sample QC (2020)"] }
+        note: { type: string }
 
     CompoundEstimate:
       type: object

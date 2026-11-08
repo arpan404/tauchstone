@@ -34,6 +34,7 @@ footer{font-size:11px;color:#636d89;border-top:1px solid #e9edf4;padding-top:14p
 <section><h2>LINCS data</h2><p>{{ report.n_contexts }} conditions (cell line, concentration, time) · {{ report.cells }} · {{ report.concentrations }} · {{ report.times }}</p></section>
 <section><h2>Evidence gaps</h2><p>{{ report.gaps|join(' · ') }}</p></section>
 <section><h2>Targets</h2>{% for target in report.targets %}<p>{{ target.symbol }} {{ target.uniprot }} · {{ target.action_type or 'unspecified' }} · Open Targets Alzheimer's association {{ target.ad_association_score if target.ad_association_score is not none else 'unspecified' }}</p>{% else %}<p>None recorded</p>{% endfor %}</section>
+{% if report.sourcing %}<section><h2>Before the lab: purity and sourcing</h2>{% for line in report.sourcing %}<p>{{ line }}</p>{% endfor %}</section>{% endif %}
 {% if session %}<section class="session"><h2>Attack session</h2>
 <div class="chips"><span class="chip mono {{ {'SUPPORTED SO FAR': 'ok', 'FRAGILE / CONTEXT-DEPENDENT': 'bad'}.get(session.verdict, 'neutral') }}">{{ session.verdict }}</span>{% if not session.preregistered %}<span class="chip gap">Exploratory</span>{% endif %}</div>
 {% if session.claim %}<p class="muted">{{ session.claim }}</p>{% endif %}

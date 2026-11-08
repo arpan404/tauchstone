@@ -12,6 +12,7 @@ but not on the dev server's path (see services/api/Dockerfile).
 from __future__ import annotations
 
 import json
+from functools import lru_cache
 from pathlib import Path
 
 import pandas as pd
@@ -121,6 +122,53 @@ def molecule_for(base: Path, drug_id: str) -> dict | None:
         return None
 
 
+SOURCING_SOURCE = "Broad Drug Repurposing Hub sample QC (2020)"
+SOURCING_NOTE = ("Purities measured by the Broad on vendor samples bought around 2020. "
+                 "Any lab must re-check the purity of its own sample.")
+
+
+@lru_cache(maxsize=4)
+def _sourcing_cached(path: str, mtime: float) -> dict[str, dict]:
+    frame = pd.read_parquet(path)
+    return {str(r["pert_id"]): r for r in frame.to_dict("records")}
+
+
+def sourcing_for(base: Path, drug_id: str) -> dict | None:
+    """Purity and sourcing check from evidence/sourcing.parquet; None when the table is absent.
+    Display only: never feeds ranking, threshold, pool, truth table or any verdict."""
+    path = base / "evidence" / "sourcing.parquet"
+    if not path.is_file():
+        return None
+    row = _sourcing_cached(str(path), path.stat().st_mtime).get(str(drug_id))
+    if row is None:
+        return {"status": "no_record", "threshold_pct": 95.0, "n_samples": 0,
+                "n_samples_at_or_above_95": 0, "n_vendors": 0, "vendors": [],
+                "qc_incompatible": False, "n_qc_incompatible": 0, "match": "none",
+                "source": SOURCING_SOURCE, "note": SOURCING_NOTE}
+
+    def text(key: str) -> str | None:
+        v = row.get(key)
+        return v if isinstance(v, str) and v else None
+
+    best = row.get("best_purity_pct")
+    return {
+        "status": str(row["status"]),
+        "threshold_pct": 95.0,
+        "best_purity_pct": float(best) if best is not None and pd.notna(best) else None,
+        "n_samples": int(row.get("n_samples") or 0),
+        "n_samples_at_or_above_95": int(row.get("n_samples_at_or_above_95") or 0),
+        "n_vendors": int(row.get("n_vendors") or 0),
+        "vendors": [v.strip() for v in (text("vendors") or "").split(";") if v.strip()],
+        "best_vendor": text("best_vendor"),
+        "best_catalog_no": text("best_catalog_no"),
+        "qc_incompatible": bool(row.get("qc_incompatible")),
+        "n_qc_incompatible": int(row.get("n_qc_incompatible") or 0),
+        "match": str(row.get("match") or "none"),
+        "source": SOURCING_SOURCE,
+        "note": SOURCING_NOTE,
+    }
+
+
 def build_drug_detail(base: Path, drug_id: str, evidence: dict, provenance: dict) -> dict:
     """Assemble a DrugDetail payload. `evidence` is the repository evidence card."""
     from app.services.repository import NotFoundError
@@ -179,6 +227,7 @@ def build_drug_detail(base: Path, drug_id: str, evidence: dict, provenance: dict
         "n_hidden_tests": n_hidden if truth is not None else None,
         "attack_ready": attack_ready,
         "preregistered": attack_ready,
+        "sourcing": sourcing_for(base, drug_id),
         "provenance": provenance,
     }
 

@@ -114,6 +114,25 @@ export function mockDrug(id: string): Schema<"DrugDetail"> {
     n_hidden_tests: piperacillin ? 3 : null,
     attack_ready: true,
     preregistered: true,
+    // Same values as contracts/fixtures/getDrug.json (Broad Repurposing Hub, 2020).
+    sourcing: piperacillin
+      ? {
+          status: "at_or_above_95",
+          threshold_pct: 95,
+          best_purity_pct: 96.3,
+          n_samples: 6,
+          n_samples_at_or_above_95: 1,
+          n_vendors: 3,
+          vendors: ["MedChemEx", "Selleck", "Sigma"],
+          best_vendor: "MedChemEx",
+          best_catalog_no: "HY-B1286",
+          qc_incompatible: false,
+          n_qc_incompatible: 0,
+          match: "inchikey",
+          source: "Broad Drug Repurposing Hub sample QC (2020)",
+          note: "Purities measured by the Broad on vendor samples bought around 2020. Any lab must re-check the purity of its own sample.",
+        }
+      : undefined,
   };
 }
 export function mockDrugResources(id: string): Schema<"ResourceAgreement">[] {

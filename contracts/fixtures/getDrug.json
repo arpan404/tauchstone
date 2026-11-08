@@ -483,6 +483,22 @@
  "n_hidden_tests": 3,
  "attack_ready": true,
  "preregistered": true,
+ "sourcing": {
+  "status": "at_or_above_95",
+  "threshold_pct": 95.0,
+  "best_purity_pct": 96.3,
+  "n_samples": 6,
+  "n_samples_at_or_above_95": 1,
+  "n_vendors": 3,
+  "vendors": ["MedChemEx", "Selleck", "Sigma"],
+  "best_vendor": "MedChemEx",
+  "best_catalog_no": "HY-B1286",
+  "qc_incompatible": false,
+  "n_qc_incompatible": 0,
+  "match": "inchikey",
+  "source": "Broad Drug Repurposing Hub sample QC (2020)",
+  "note": "Purities measured by the Broad on vendor samples bought around 2020. Any lab must re-check the purity of its own sample."
+ },
  "provenance": {
   "dataset_accession": "MOCK",
   "processing_version": "mock-0.1",

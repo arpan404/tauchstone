@@ -188,6 +188,7 @@ the frozen ranking, θ, λ, the truth table, the benchmark or any verdict, and e
 | Nov 8 | LINCS 2020 beta downloaded (compound signatures) | No: opt-in, separate folder, not read by any v1 code | Not shown in the app |
 | Nov 8 | Live cell-line panel on Screen | No: counts from the frozen scoring, held-out scores never sent | Shown during a screen |
 | Nov 8 | Boundary sentence moved from every page to the PDF report | No | AGENTS.md rule 7 updated |
+| Nov 8 | Purity and sourcing check on the Drug page, from expert advice (vendor-sample purity from the Broad Drug Repurposing Hub sample QC, 2020) | No: display only, feeds no ranking, threshold, hidden test or verdict | Shown on the Drug page and in the report |
 
 ### Preregistration v2 (Nov 8)
 

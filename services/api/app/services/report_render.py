@@ -122,6 +122,31 @@ def report_filename(detail: dict, drug_id: str, today: date | None = None) -> st
     return f'tauchstone-{slug(detail.get("name") or drug_id)}-{(today or date.today()).isoformat()}'
 
 
+SOURCING_STATE = {
+    'at_or_above_95': 'A vendor sample with purity of 95% or more is on record.',
+    'below_95': 'Vendor samples are on record, but none reached 95% purity.',
+    'no_purity_value': 'Vendor samples are on record, but none has a usable purity value.',
+    'no_record': 'No vendor sample of this compound is on record in the Repurposing Hub.',
+}
+
+
+def sourcing_lines(sourcing: dict | None) -> list[str] | None:
+    """Purity and sourcing check for the report (display only), or None when not built."""
+    if not isinstance(sourcing, dict) or sourcing.get('status') not in SOURCING_STATE:
+        return None
+    lines = [SOURCING_STATE[sourcing['status']]]
+    if sourcing['status'] != 'no_record':
+        best = sourcing.get('best_purity_pct')
+        vendors = ', '.join(sourcing.get('vendors') or []) or 'unspecified'
+        n_s, n_v = int(sourcing.get('n_samples') or 0), int(sourcing.get('n_vendors') or 0)
+        purity = f'{best:.2f}%' if isinstance(best, (int, float)) else 'unspecified'
+        lines.append(f"Best recorded purity {purity} · {n_s} {'sample' if n_s == 1 else 'samples'}"
+                     f" · {n_v} {'vendor' if n_v == 1 else 'vendors'}: {vendors}")
+    lines.append(f"{sourcing.get('source') or 'Broad Drug Repurposing Hub sample QC (2020)'}. "
+                 'Purities measured on vendor samples around 2020; any lab must re-check its own sample.')
+    return lines
+
+
 def withdrawn_label(approval: dict) -> str | None:
     """'withdrawn 1980', or 'withdrawn in Vietnam 2000' for a single-country withdrawal (ChEMBL 37)."""
     if not approval.get('withdrawn'):
@@ -161,6 +186,7 @@ def render_html(detail: dict, project_id: str | None = None, *, fallback: bool =
     view['targets'] = [{k: target.get(k, 'unspecified') for k in
                         ('symbol', 'uniprot', 'action_type', 'ad_association_score')}
                        for target in detail.get('targets', [])]
+    view['sourcing'] = sourcing_lines(detail.get('sourcing'))
     view['next'] = next_experiment(gaps)
     datasets = provenance.get('dataset_accession', 'unspecified')
     view['datasets'] = ', '.join(datasets) if isinstance(datasets, list) else datasets

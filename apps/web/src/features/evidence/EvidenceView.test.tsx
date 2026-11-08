@@ -124,3 +124,9 @@ it("opens Compare with this drug and Report from the hero when the shell passes 
   fireEvent.click(screen.getByRole("button", { name: "Report" }));
   expect(useUi.getState().step).toBe("report");
 });
+it("shows the purity and sourcing check on the drug page", async () => {
+  setup();
+  const panel = await screen.findByRole("region", { name: "Before the lab: purity and sourcing" });
+  expect(within(panel).getByText("95% or more on record")).toBeTruthy();
+  expect(within(panel).getByText("96.30%")).toBeTruthy();
+});

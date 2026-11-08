@@ -28,6 +28,7 @@ def main() -> None:
     run("ad_association", args.ranking)
     run("brain_expression", args.ranking)
     run("approval", args.ranking)
+    run("sourcing", args.ranking)  # display only: purity and sourcing check
     run("exposure", args.ranking)
     run("gaps", args.ranking)
     run("structures", args.ranking, ["--no-download"] if args.no_download else [])

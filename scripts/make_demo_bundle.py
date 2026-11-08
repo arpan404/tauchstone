@@ -80,6 +80,7 @@ EVIDENCE_FILES = [
     "drug_map.parquet",  # candidate pool for live screens + lookup
     "gaps.parquet",
     "cell_lines.parquet",  # cell-line cards (Cellosaurus CC BY 4.0 + LINCS metadata)
+    "sourcing.parquet",  # purity and sourcing check (Broad Repurposing Hub 2020), display only
 ]
 
 TAUCHSTONE_FILES = [

@@ -172,6 +172,12 @@ check("drug page with gaps + 3D molecule",
       s == 200 and (drug or {}).get("gaps") and ((drug or {}).get("molecule") or {}).get("atoms"),
       f"status={s}")
 
+src = (drug or {}).get("sourcing") or {}
+check("purity and sourcing check served offline (Broad Repurposing Hub 2020)",
+      src.get("status") in ("at_or_above_95", "below_95", "no_purity_value", "no_record")
+      and src.get("source") == "Broad Drug Repurposing Hub sample QC (2020)",
+      f"status={src.get('status')}")
+
 s, res, _ = req("GET", f"/api/drugs/{ids[5]}/resources")
 check("resource agreement rows", s == 200 and len(res or []) == 3, f"status={s}")
 

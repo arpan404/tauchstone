@@ -1008,7 +1008,37 @@ export interface components {
             attack_ready: boolean;
             /** @description true if the drug is in the sealed benchmark or development pool of the built-in project */
             preregistered: boolean;
+            sourcing?: components["schemas"]["Sourcing"];
             provenance?: components["schemas"]["Provenance"];
+        };
+        /** @description Purity and sourcing check before any lab follow-up: vendor samples the Broad Drug Repurposing Hub bought and QC'd (2020-03-24 release, evidence/sourcing.parquet). Display only; never feeds ranking, threshold, pool, truth table or any verdict. Absent when the table has not been built. */
+        Sourcing: {
+            /**
+             * @description at_or_above_95: some QC-compatible sample measured >= threshold_pct; below_95: samples measured, all below; no_purity_value: samples on record without a usable purity; no_record: no Hub sample matched
+             * @enum {string}
+             */
+            status: "at_or_above_95" | "below_95" | "no_purity_value" | "no_record";
+            /** @example 95 */
+            threshold_pct: number;
+            /** @description highest recorded purity over samples not flagged qc_incompatible */
+            best_purity_pct?: number;
+            n_samples: number;
+            n_samples_at_or_above_95?: number;
+            n_vendors: number;
+            vendors: string[];
+            best_vendor?: string;
+            best_catalog_no?: string;
+            /** @description any matched sample flagged incompatible with the Broad QC method */
+            qc_incompatible: boolean;
+            n_qc_incompatible?: number;
+            /**
+             * @description how the drug was matched to Hub samples: full InChIKey, InChIKey first block (salt or stereo variant), normalised name
+             * @enum {string}
+             */
+            match: "inchikey" | "inchikey_block" | "name" | "none";
+            /** @example Broad Drug Repurposing Hub sample QC (2020) */
+            source: string;
+            note: string;
         };
         /** @description Exploratory, not preregistered. Never used for ranking or any hidden test. */
         CompoundEstimate: {
