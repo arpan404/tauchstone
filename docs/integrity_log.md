@@ -66,3 +66,17 @@ None of these change the sealed set, the truth table, θ or the benchmark.
   ranking, threshold or candidate choice.
 - **Evidence gaps** (cancer lines only, single concentration, acute time point, brain exposure
   label) describe the LINCS ranking contexts and are display-only.
+- **AI estimate on My compounds** (Nov 8). The exploratory structure model
+  (`pipelines/lincs/exploratory_model.py`: random forest on 1,024-bit Morgan fingerprints,
+  radius 2, predicting the GSE132903 discovery `consensus_median`) is now shown in the UI as an
+  "AI estimate" column, served by `POST /compounds/estimate`, plus a closed-by-default "About
+  this estimate" panel reading `GET /lab/model`. It is display only and labelled not
+  preregistered: it changes no ranking, threshold, truth table, hidden test or verdict, and it
+  is a guess at what LINCS would measure, not evidence about Alzheimer's. Honest test numbers
+  (scaffold-grouped internal test, n = 1,123): mean absolute error 0.472 versus 0.481 for always
+  predicting the training mean, R2 0.023, Spearman 0.18, so barely better than guessing the
+  average. The stored predictions cover only the 5,633 compounds that already have a measured
+  score, and 4,510 of those were in training, where the number flatters the model; those rows
+  are tagged "in training data". Compounds outside that table get a fresh estimate from SMILES;
+  if their fingerprint is identical to a training structure they are also tagged "in training
+  data". Artifacts are checked against their provenance checksums before the model is loaded.
