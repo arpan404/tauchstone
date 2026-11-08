@@ -803,6 +803,16 @@ export interface components {
             name: string;
             consensus: number;
         };
+        ScreenCellLine: {
+            /** @example MCF7 */
+            cell_id: string;
+            /** @description signatures from this cell line scored so far */
+            n_scored: number;
+            /** @description Most negative signature-level consensus so far (strongest reversal), on the same provisional scale as the live ranking. Ranking contexts only; null when none yet. */
+            best_consensus: number | null;
+            /** @description SHSY5Y, NEU, NEU.KCL, MNEU.E, NPC, NPC.CAS9, NPC.TAK, FIBRNPC */
+            neural: boolean;
+        };
         Screen: {
             id: string;
             project_id: string;
@@ -816,6 +826,10 @@ export interface components {
             n_genes_mapped?: number | null;
             n_ranked?: number | null;
             top?: components["schemas"]["ScreenHit"][];
+            /** @description Live per-cell-line progress: the (at most 24) LINCS cell lines with the most signatures scored so far, most signatures first. Absent on frozen screens. */
+            cell_lines?: components["schemas"]["ScreenCellLine"][];
+            /** @description cell lines seen so far (cell_lines is the top 24 of these) */
+            n_cell_lines?: number | null;
             error?: string | null;
             preregistered: boolean;
         };

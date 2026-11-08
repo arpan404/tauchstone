@@ -8,5 +8,20 @@
   "elapsed_s": 0,
   "n_ranked": 50,
   "preregistered": true,
-  "top": []
+  "top": [],
+  "cell_lines": [
+    {
+      "cell_id": "MCF7",
+      "n_scored": 14690,
+      "best_consensus": -4.31,
+      "neural": false
+    },
+    {
+      "cell_id": "NPC",
+      "n_scored": 2314,
+      "best_consensus": -3.48,
+      "neural": true
+    }
+  ],
+  "n_cell_lines": 83
 }

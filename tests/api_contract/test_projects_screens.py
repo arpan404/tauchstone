@@ -43,6 +43,11 @@ def test_endpoints_and_sse(client):
     assert 'scoring' in states and 'aggregating' in states
     assert all(a['n_scored'] <= b['n_scored'] for a, b in zip(events, events[1:], strict=False))
     assert events[-1]['n_scored'] == events[-1]['n_signatures']
+    cells = events[-1]['cell_lines']
+    assert 0 < len(cells) <= 24 and events[-1]['n_cell_lines'] >= len(cells)
+    assert [c['n_scored'] for c in cells] == sorted((c['n_scored'] for c in cells), reverse=True)
+    assert sum(c['n_scored'] for c in cells) <= events[-1]['n_scored']
+    assert {c['cell_id'] for c in cells if c['neural']} == {'NPC', 'NEU'}
     result = client.get(f"/projects/{p['id']}/candidates").json()
     check(result, 'ProjectCandidates')
     assert result['candidates'] and not result['preregistered']
@@ -80,11 +85,16 @@ def test_frozen_reproduction():
     if not path.exists():
         pytest.skip('real data unavailable')
     updates = []
-    result = run_screen(pd.read_parquet(path), lambda n, total, top: updates.append((n, total)))
+    result = run_screen(pd.read_parquet(path),
+                        lambda n, total, top, cells: updates.append((n, total, cells)))
     expected = pd.read_parquet(PROCESSED / 'scores/GSE132903__main__compound_ranking.parquet')
     assert result.pert_id.tolist() == expected.pert_id.tolist()
     np.testing.assert_allclose(result.consensus_median, expected.consensus_median, rtol=0, atol=1e-9)
     assert len(updates) > 1 and updates[-1][0] == updates[-1][1]
+    # Per-cell-line counts always add up to the rows scored so far.
+    assert all(int(c.n_scored.sum()) == n for n, _, c in updates)
+    cells = updates[-1][2]
+    assert cells.n_scored.is_monotonic_decreasing and cells.cell_id.is_unique
 
 
 def test_new_fixtures():

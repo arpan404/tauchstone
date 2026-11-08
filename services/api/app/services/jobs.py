@@ -9,6 +9,7 @@ import pandas as pd
 from fastapi import HTTPException
 
 from app.services import projects as store
+from app.services.drug_detail import _NEURAL_CELLS
 from app.services.repository import display_name
 from app.settings import settings
 
@@ -33,6 +34,32 @@ def update(ident, **fields):
         store.put('screen', obj)
 
 
+MAX_CELL_LINES = 24
+# Mock mode only: real per-line gold signature counts with synthetic scores, so the
+# offline demo fills the panel the same way a real screen does.
+_MOCK_CELLS = [
+    ('MCF7', 14690, -4.31), ('VCAP', 11966, -3.87), ('PC3', 10576, -4.02), ('A375', 9165, -3.66),
+    ('HA1E', 8182, -3.94), ('A549', 7695, -3.71), ('HT29', 7476, -3.58), ('HCC515', 4399, -3.42),
+    ('HEPG2', 3720, -3.29), ('HELA', 3393, -3.35), ('YAPC', 3004, -3.12), ('NPC', 2314, -3.48),
+    ('SKBR3', 1725, -2.97), ('HS578T', 1656, -2.88), ('MDAMB231', 1594, -2.91), ('MCF10A', 1592, -2.84),
+    ('BT20', 1575, -2.79), ('ASC', 1327, -2.66), ('NEU', 1171, -3.05), ('HME1', 1137, -2.58),
+    ('SKB', 870, -2.41), ('CD34', 745, -2.37), ('PHH', 744, -2.29), ('ASC.C', 635, -2.18),
+]
+
+
+def cell_lines(frame):
+    """The MAX_CELL_LINES lines with the most signatures scored so far, for the live panel."""
+    rows = frame.sort_values(['n_scored', 'cell_id'], ascending=[False, True]).head(MAX_CELL_LINES)
+    return [dict(cell_id=str(r.cell_id), n_scored=int(r.n_scored),
+                 best_consensus=None if pd.isna(r.best_consensus) else float(r.best_consensus),
+                 neural=str(r.cell_id) in _NEURAL_CELLS) for r in rows.itertuples()]
+
+
+def mock_cell_lines(fraction):
+    rows = [dict(cell_id=c, n_scored=int(n * fraction), best_consensus=b) for c, n, b in _MOCK_CELLS]
+    return cell_lines(pd.DataFrame(rows))
+
+
 def hits(frame):
     return [dict(rank=int(r.pool_rank), drug_id=r.pert_id, name=display_name(r.drug_name),
                  consensus=float(r.consensus_median)) for r in frame.head(10).itertuples()]
@@ -49,7 +76,8 @@ def submit(project_id, signature_id=None, signature=None, new_project=False):
         store.save_frame(signature, store.root() / f'{ident}-signature.parquet', 'screen_upload')
         store.save_frame(signature, store.root() / f'{project_id}-signature.parquet', 'project_upload')
     obj = dict(id=ident, project_id=project_id, signature_id=signature_id, status='queued',
-               n_signatures=0, n_scored=0, elapsed_s=0, preregistered=prereg, top=[])
+               n_signatures=0, n_scored=0, elapsed_s=0, preregistered=prereg, top=[],
+               cell_lines=[], n_cell_lines=None)
     store.put('screen', obj)
     if new_project:
         pending.add(project_id)
@@ -70,7 +98,8 @@ def run(ident, signature):
             update(ident, status='scoring', n_signatures=113310)
             for i in range(1, 11):
                 time.sleep(.5)
-                update(ident, n_scored=11331*i, top=top)
+                update(ident, n_scored=11331*i, top=top, cell_lines=mock_cell_lines(i / 10),
+                       n_cell_lines=83)
             update(ident, status='aggregating')
             time.sleep(.5)
             n = len(rows)
@@ -80,8 +109,9 @@ def run(ident, signature):
                 signature = pd.read_parquet(store.base() / f"signatures/{obj['signature_id']}__main.parquet")
             update(ident, status='scoring', n_genes_mapped=len(signature))
 
-            def progress(n, total, top):
-                update(ident, n_scored=n, n_signatures=total, top=hits(top))
+            def progress(n, total, top, cells):
+                update(ident, n_scored=n, n_signatures=total, top=hits(top),
+                       cell_lines=cell_lines(cells), n_cell_lines=len(cells))
 
             ranking = run_screen(signature, progress)
             update(ident, status='aggregating')

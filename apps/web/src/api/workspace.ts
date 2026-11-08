@@ -29,6 +29,28 @@ let projects: Project[] = [
   },
 ];
 const jobs = new Map<string, Screen>();
+/**
+ * Mock only, same rows as the API mock (services/api/app/services/jobs.py): real per-line
+ * gold signature counts with synthetic scores.
+ */
+const MOCK_CELLS: [string, number, number, boolean][] = [
+  ["MCF7", 14690, -4.31, false], ["VCAP", 11966, -3.87, false], ["PC3", 10576, -4.02, false],
+  ["A375", 9165, -3.66, false], ["HA1E", 8182, -3.94, false], ["A549", 7695, -3.71, false],
+  ["HT29", 7476, -3.58, false], ["HCC515", 4399, -3.42, false], ["HEPG2", 3720, -3.29, false],
+  ["HELA", 3393, -3.35, false], ["YAPC", 3004, -3.12, false], ["NPC", 2314, -3.48, true],
+  ["SKBR3", 1725, -2.97, false], ["HS578T", 1656, -2.88, false], ["MDAMB231", 1594, -2.91, false],
+  ["MCF10A", 1592, -2.84, false], ["BT20", 1575, -2.79, false], ["ASC", 1327, -2.66, false],
+  ["NEU", 1171, -3.05, true], ["HME1", 1137, -2.58, false], ["SKB", 870, -2.41, false],
+  ["CD34", 745, -2.37, false], ["PHH", 744, -2.29, false], ["ASC.C", 635, -2.18, false],
+];
+function mockCellLines(progress: number): NonNullable<Screen["cell_lines"]> {
+  return MOCK_CELLS.map(([cell_id, n, best, neural]) => ({
+    cell_id,
+    n_scored: Math.floor(n * progress),
+    best_consensus: best,
+    neural,
+  }));
+}
 const hits = new Map<string, NonNullable<Screen["top"]>>();
 let serverMock = false;
 export function workspaceMock() {
@@ -215,6 +237,8 @@ export function watchScreen(
         elapsed_s: tick * 0.3,
         n_ranked: progress === 1 ? 1816 : null,
         top: top.slice(0, Math.floor(progress * top.length)),
+        cell_lines: mockCellLines(progress),
+        n_cell_lines: 83,
       };
       jobs.set(job.id, next);
       if (progress === 1) {
