@@ -134,6 +134,10 @@ check("project candidates 200", s == 200 and len((pc or {}).get("candidates", []
 s, csv_body, ct = req("GET", "/api/projects/GSE132903/candidates.csv")
 check("candidates CSV export", s == 200 and "csv" in ct, f"status={s} ct={ct}")
 
+# Before the live screen below screens it: an unscreened project must not show another ranking.
+s, _, _ = req("GET", "/api/projects/GSE173955/candidates")
+check("unscreened project does not borrow another ranking", s == 409, f"status={s}")
+
 s, job, _ = req("POST", "/api/screens", {"project_id": "GSE173955", "signature_id": "GSE173955"})
 screen_id = (job or {}).get("id")
 check("live screen submitted", s == 200 and screen_id, f"status={s}")
@@ -175,8 +179,6 @@ top = ((pc1 or {}).get("candidates") or [{}])[0]
 check("withdrawn flag served (ChEMBL 37)", s == 200 and "withdrawn" in (top.get("approval_status") or {}),
       f"status={s} {top.get('name')} {top.get('approval_status')}")
 
-s, _, _ = req("GET", "/api/projects/GSE173955/candidates")
-check("unscreened project does not borrow another ranking", s == 409, f"status={s}")
 
 s, pdf, ct = req("GET", f"/api/reports/{ids[5]}.pdf?project_id=GSE132903")
 try:
