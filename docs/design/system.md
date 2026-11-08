@@ -85,7 +85,7 @@ The page title lives in the top bar. Views never render their own page title.
   state. No lucide in app code, no hand-drawn SVG icons, no emoji.
 - Motion: `motion/react`. Allowed: view enter (opacity + 4px y, 180ms), number changes
   (`NumberTicker` in system), list insertions, plate wells filling. Every animation honours
-  `useReducedMotion`. No infinite decorative loops except the existing cell simulation.
+  `useReducedMotion`. No infinite decorative loops.
 
 ## Copy rules
 
