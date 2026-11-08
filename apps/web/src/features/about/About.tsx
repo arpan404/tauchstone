@@ -52,8 +52,7 @@ export function About() {
     <MockRibbon show={mock} />
     <div className="about-body flex-1 overflow-auto p-6">
       <header>
-        <h2>How it works and how we kept it honest</h2>
-        <p className="text-muted-foreground">Find a drug. Attack the hypothesis. Keep only what survives.</p>
+        <p className="m-0 font-heading text-[22px] font-semibold tracking-tight text-ink [font-stretch:88%]">Find a drug. Attack the hypothesis. Keep only what survives.</p>
       </header>
       <section aria-labelledby="about-pipeline">
         <h3 id="about-pipeline">A ranking becomes a testable claim</h3>
@@ -65,19 +64,27 @@ export function About() {
         <p className="text-sm text-muted-foreground">Held-out cohorts, composition sensitivity, unseen LINCS contexts and exposure lookups never feed ranking, threshold selection, tuning or demo-candidate choice. The truth table stays on the server.</p>
       </section>
       <section aria-labelledby="about-benchmark">
-        <h3 id="about-benchmark">The benchmark, loaded from the API</h3>
+        <h3 id="about-benchmark">Benchmark</h3>
         {isLoading && <p role="status">Loading benchmark…</p>}
         {isError && <p role="alert">Benchmark unavailable. No result is substituted.</p>}
         {data && <>
-          <p>{data.n_candidates} candidates undecided before testing{data.all_candidates?.n_candidates !== undefined && `, of ${data.all_candidates.n_candidates} sealed`}. {data.n_seeds} seeds. Budget {data.budget}.</p>
-          <div className="accuracy-grid">{selected?.map((p) => <div className="accuracy-policy" data-primary={p.policy === 'tauchstone_hybrid'} key={p.policy}>
-            <h4>{p.policy === 'tauchstone_hybrid' ? 'Tauchstone' : p.policy === 'random' ? 'Random' : 'Decision-aware co-primary'}</h4>
-            <p className="accuracy-number">{(p.decision_accuracy.estimate * 100).toFixed(1)}%</p>
-            <p className="text-sm">Decision accuracy after {data.budget} tests</p>
-            <meter min={0} max={1} value={p.decision_accuracy.estimate} aria-label={`${p.label} decision accuracy`} />
-            <p className="font-mono text-xs text-muted-foreground">95% CI {p.decision_accuracy.ci95.map((v) => `${(v * 100).toFixed(1)}%`).join(' to ')}</p>
-          </div>)}</div>
-          <ul className="about-comparisons">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i}>
+          <p className="text-ink-2">{data.n_candidates} candidates undecided before testing{data.all_candidates?.n_candidates !== undefined && `, of ${data.all_candidates.n_candidates} sealed`}. {data.n_seeds} seeds. Budget {data.budget}.</p>
+          <div className="overflow-hidden rounded-lg border border-line bg-surface">
+            <table className="w-full border-collapse text-[13px]">
+              <thead className="bg-surface-2 text-left text-[12px] text-ink-3">
+                <tr><th className="px-4 py-2 font-medium">Policy</th><th className="px-4 py-2 font-medium">Decision accuracy after {data.budget} tests</th><th className="px-4 py-2 font-medium">95% CI</th></tr>
+              </thead>
+              <tbody>{selected?.map((p) => <tr key={p.policy} className="border-t border-line" data-primary={p.policy === 'tauchstone_hybrid'}>
+                <td className="px-4 py-2.5 font-medium text-ink">{p.policy === 'tauchstone_hybrid' ? 'Tauchstone' : p.policy === 'random' ? 'Random' : 'Decision-aware co-primary'}</td>
+                <td className={`px-4 py-2.5 font-mono ${p.policy === 'tauchstone_hybrid' ? 'text-primary' : 'text-ink-2'}`}>
+                  <meter className="sr-only" min={0} max={1} value={p.decision_accuracy.estimate} aria-label={`${p.label} decision accuracy`} />
+                  {(p.decision_accuracy.estimate * 100).toFixed(1)}%
+                </td>
+                <td className="px-4 py-2.5 font-mono text-ink-3">{p.decision_accuracy.ci95.map((v) => `${(v * 100).toFixed(1)}%`).join(' to ')}</td>
+              </tr>)}</tbody>
+            </table>
+          </div>
+          <ul className="mt-3 flex list-none flex-wrap gap-2 p-0">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i} className="rounded-md border border-line bg-surface px-2.5 py-1 text-[12px] text-ink-2">
             {t.policy_a === 'tauchstone_hybrid' ? 'Tauchstone' : 'Decision-aware co-primary'} vs random: Holm p = <span className="font-mono text-primary">{t.p_holm.toPrecision(3)}</span> for {t.metric.replaceAll('_', ' ')}.
           </li>)}</ul>
           <p className="text-sm text-muted-foreground">{mock ? 'Synthetic API/fixture hash' : 'API preregistration SHA-256'}: <code className="break-all">{data.preregistration_sha256}</code></p>
@@ -97,7 +104,6 @@ export function About() {
         <p>Preregistration committed at <code>8ed0885</code>. SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
         <code className="about-hash">{frozenPreregistrationSha256}</code>
         {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert">The API hash differs from the frozen record. Verify the serving bundle before citing results.</p>}
-        <p className="text-sm text-muted-foreground">The timeline below copies docs/integrity_log.md verbatim, including its rounded historical result summaries. Live figures above come from /benchmark.</p>
       </section>
       <section aria-labelledby="about-integrity"><h3 id="about-integrity">Integrity log</h3><IntegrityLog /></section>
     </div>

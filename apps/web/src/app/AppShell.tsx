@@ -272,7 +272,7 @@ export function AppShell({
               />
               Engine {engine}
             </span>
-            <span>{mock ? "Synthetic data" : "Real data"}</span>
+          {mock && <span className="text-gap">Synthetic data</span>}
             <span>LINCS gold 113,310</span>
             <span>Prereg {frozenPreregistrationSha256.slice(0, 8)}</span>
             <p role="note" aria-label="Boundary" className="m-0 font-sans text-[11px] text-ink-3 lg:ml-auto">

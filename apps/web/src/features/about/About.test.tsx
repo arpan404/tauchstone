@@ -30,7 +30,7 @@ describe('About integrity and API boundary', () => {
     vi.mocked(useMockStatus).mockReturnValue(true);
     mount();
     expect(screen.getByText('73.1%')).toBeTruthy();
-    expect(screen.getAllByText('Decision accuracy after 3 tests')).toHaveLength(2);
+    expect(screen.getByRole('columnheader', { name: 'Decision accuracy after 3 tests' })).toBeTruthy();
     expect(screen.getByText(/Synthetic API\/fixture hash/)).toBeTruthy();
     expect(screen.getByText(/Mock data: not real results/)).toBeTruthy();
   });
