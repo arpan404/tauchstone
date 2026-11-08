@@ -53,7 +53,7 @@ it("renders Piperacillin gaps, ranking contexts, resources, and hidden test coun
   const context = screen.getByRole("region", { name: "Ranking context map" });
   for (const cell of ["HT29", "MCF7", "VCAP"])
     expect(within(context).getByText(cell)).toBeTruthy();
-  expect(screen.getByText("Hidden tests").nextElementSibling?.textContent).toBe(
+  expect(screen.getByText("Hidden tests").closest("dt")?.nextElementSibling?.textContent).toBe(
     "3",
   );
   expect(screen.getByRole("button", { name: "Add API key" })).toBeTruthy();

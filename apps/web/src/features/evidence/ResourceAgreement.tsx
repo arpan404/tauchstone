@@ -19,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { int } from "./format";
+import { sourcesDisagree } from "./agreement";
 
 type Resource = Schema<"ResourceAgreement">;
 
@@ -51,6 +52,7 @@ export function ResourceAgreement({
   const rows = [...(resources.data ?? [])].sort(
     (a, b) => ORDER.indexOf(a.resource) - ORDER.indexOf(b.resource),
   );
+  const disagree = sourcesDisagree(rows);
   return (
     <Panel
       title="Resource agreement"
@@ -58,12 +60,24 @@ export function ResourceAgreement({
       className={className}
       flush
       actions={
-        <Tooltip>
-          <TooltipTrigger render={<StatusBadge tone="neutral" tabIndex={0} />}>
-            Report only
-          </TooltipTrigger>
-          <TooltipContent>Not preregistered. Not used for ranking.</TooltipContent>
-        </Tooltip>
+        <span className="flex items-center gap-1.5">
+          {disagree && (
+            <Tooltip>
+              <TooltipTrigger render={<StatusBadge tone="gap" tabIndex={0} />}>
+                Sources disagree
+              </TooltipTrigger>
+              <TooltipContent className="max-w-72 text-left leading-snug">
+                {`LINCS gold rank ${int(disagree.lincs.rank!)} / ${int(disagree.lincs.n_ranked!)}. Perturb-Seqr rank ${int(disagree.seqr.rank!)} / ${int(disagree.seqr.n_ranked!)}. The resources use different compound libraries and assays.`}
+              </TooltipContent>
+            </Tooltip>
+          )}
+          <Tooltip>
+            <TooltipTrigger render={<StatusBadge tone="neutral" tabIndex={0} />}>
+              Report only
+            </TooltipTrigger>
+            <TooltipContent>Not preregistered. Not used for ranking.</TooltipContent>
+          </Tooltip>
+        </span>
       }
     >
       {resources.isPending && (

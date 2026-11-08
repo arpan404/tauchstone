@@ -8,6 +8,9 @@ const detail = (id: string) => ({ drug_id: id, name: id === 'a' ? 'Piperacillin'
   preregistered: false, attack_ready: true, n_hidden_tests: 3,
   contexts: [{ cell_id: 'MCF7', dose: '10 uM', time: '6 h', consensus: -1.67 }],
   gaps: { brain_cells: [], doses_um: [10], times_h: [6, 24], exposure: { level: 'predicted', label: 'predicted low' }, has_targets: false },
+  approval_status: id === 'a'
+    ? { status: 'approved', withdrawn: true, withdrawn_year: 1980, withdrawn_class: 'hepatotoxicity', withdrawn_source: 'ChEMBL 37' }
+    : { status: 'approved', withdrawn: false },
   targets: id === 'a' ? [] : [{ symbol: 'CA2' }], hidden: { value: 'SECRET_OUTCOME' } });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
@@ -30,6 +33,7 @@ describe('CompareView', () => {
     expect(screen.getAllByText('not preregistered')).toHaveLength(2);
     expect(screen.getAllByText('predicted low')).toHaveLength(2);
     expect(screen.queryByText('SECRET_OUTCOME')).toBeNull();
+    expect(screen.getAllByText('withdrawn 1980')).toHaveLength(1);
   });
   it('keeps successful columns when another drug fails', async () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: url.endsWith('a'), json: async () => detail('a') })));

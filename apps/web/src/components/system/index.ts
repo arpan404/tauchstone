@@ -5,3 +5,6 @@ export { EmptyState } from "./EmptyState";
 export { Toolbar } from "./Toolbar";
 export { NumberTicker } from "./NumberTicker";
 export { PlateMap, PlateMark, PLATE_WELLS, type WellState } from "./PlateMap";
+export { Term } from "./Term";
+export { GLOSSARY, type GlossaryKey } from "./glossary";
+export { WithdrawnBadge } from "./WithdrawnBadge";

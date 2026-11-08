@@ -127,3 +127,25 @@ export function buildCalibrationOption(
     ],
   };
 }
+
+/** Policies whose decision accuracy equals Tauchstone's, by their raw id words. */
+export function tiedWith(policies: Schema<'Benchmark'>['policies']): string[] {
+  const tau = policies.find((p) => p.policy === 'tauchstone_hybrid')?.decision_accuracy.estimate;
+  if (tau === undefined || !Number.isFinite(tau)) return [];
+  return policies
+    .filter((p) => p.policy !== 'tauchstone_hybrid' && Math.abs(p.decision_accuracy.estimate - tau) < 1e-9)
+    .map((p) => p.policy.replaceAll('_', ' '));
+}
+
+/** Tooltip for a headline p-value: what was tested, plus the median tie when there is one. */
+export function pairTip(analysis: Pick<Schema<'Benchmark'>, 'policies'>, a: string, b: string, metric: string | null): string {
+  const base = `Paired Wilcoxon test across candidates on ${metricLabel(metric ?? 'decision_accuracy')}, Holm corrected.`;
+  if (metric !== 'experiments_to_correct_verdict') return base;
+  const med = (id: string) => analysis.policies.find((p) => p.policy === id)?.experiments_to_correct_verdict.median;
+  const ma = med(a);
+  const mb = med(b);
+  return ma !== undefined && mb !== undefined && Number.isFinite(ma) && ma === mb
+    ? `${base} Medians tie at ${ma}; the test uses paired per-candidate differences, not medians.`
+    : base;
+}
+

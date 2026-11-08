@@ -34,7 +34,7 @@ def create(body: CreateProject):
 @router.get('/projects/{project_id}/candidates')
 def candidates(project_id: str, approved: bool | None = None, brain_cells: bool | None = None,
                penetrant: bool | None = None, min_contexts: int | None = None,
-               limit: int = Query(100, ge=1, le=500)):
+               limit: int = Query(100, ge=1, le=5000)):
     store.seed()
     return store.candidates(project_id, approved, brain_cells, penetrant, min_contexts, limit)
 
