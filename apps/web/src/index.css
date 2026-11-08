@@ -70,14 +70,14 @@
 :root {
   color-scheme: light;
   /* Tauchstone system tokens: see docs/design/system.md */
-  --canvas: #f1f2f4;
-  --surface: #fdfdfe;
-  --surface-2: #f6f7f9;
-  --line: #e2e4e9;
-  --line-strong: #cdd1d9;
-  --ink: #14151a;
-  --ink-2: #464a55;
-  --ink-3: #6b7080;
+  --canvas: #edf1f8;
+  --surface: #ffffff;
+  --surface-2: #f3f6fb;
+  --line: #e4e8f1;
+  --line-strong: #cbd2e0;
+  --ink: #0f1830;
+  --ink-2: #3c4660;
+  --ink-3: #636d89;
   --accent-soft: #e6eefa;
   --accent-ink: #0f4593;
   --ok: #0e8f6a;
@@ -125,16 +125,22 @@
   --success-surface: var(--ok-soft);
   --failure: var(--bad);
   --failure-surface: var(--bad-soft);
-  --sidebar: var(--surface);
+  --sidebar: rgb(255 255 255 / 0.72);
   --sidebar-foreground: var(--ink-2);
   --sidebar-primary: #1558b8;
   --sidebar-primary-foreground: #fdfdfe;
   --sidebar-accent: var(--accent-soft);
   --sidebar-accent-foreground: var(--accent-ink);
-  --sidebar-border: var(--line);
+  --sidebar-border: rgb(255 255 255 / 0.75);
   --sidebar-ring: #1558b8;
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --font-readout: "Geist Mono Variable", ui-monospace, monospace;
+  /* Atmosphere and glass (see docs/design/system.md, Nov 8 direction) */
+  --atmosphere: radial-gradient(1100px 620px at 88% -14%, #b7c8f4 0%, rgb(183 200 244 / 0) 62%),
+    radial-gradient(820px 560px at -10% 110%, #d6e0fb 0%, rgb(214 224 251 / 0) 60%), #edf1f8;
+  --glass-bg: rgb(255 255 255 / 0.72);
+  --glass-border: rgb(255 255 255 / 0.78);
+  --glass-shadow: 0 1px 2px rgb(15 24 48 / 0.04), 0 18px 44px -18px rgb(30 60 140 / 0.22);
 }
 @layer base {
   * {
@@ -273,4 +279,29 @@ select:focus-visible:not([data-slot]) {
   .mvp-view {
     padding: 14px;
   }
+}
+
+/* Frosted floating surface: the only container style in the app. */
+@utility glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow);
+}
+@utility atmosphere {
+  background: var(--atmosphere);
+  background-attachment: fixed;
+}
+/* Floating sidebar renders as glass. */
+[data-variant="floating"] [data-slot="sidebar-inner"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border-radius: 18px;
+  box-shadow: var(--glass-shadow);
+}
+@media (prefers-reduced-transparency: reduce) {
+  [data-variant="floating"] [data-slot="sidebar-inner"] { background: #fff; backdrop-filter: none; }
 }

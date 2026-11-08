@@ -102,3 +102,32 @@ The page title lives in the top bar. Views never render their own page title.
 
 Keyboard focus visible (accent ring), AA contrast, works at 1280×800 and 1920×1080, collapses
 to one column under 768px, `prefers-reduced-motion` respected, tests updated not weakened.
+
+## Nov 8 direction: atmosphere and glass (supersedes the boxed look above)
+
+Approved by Arpan from a mockup inspired by Chai Discovery, Benchling and Recursion. Where this
+section conflicts with the sections above, this section wins.
+
+- **Atmosphere.** The app background is the soft blue wash (`atmosphere` utility on the shell).
+  Never paint page backgrounds grey or white.
+- **Glass, not boxes.** Every container is a frosted floating panel: the `glass` utility or the
+  `Panel` component (`icon`, `title`, `caption`, `actions`). No bordered white cards, no grey
+  dashed boxes, no hairline-boxed tables. Empty cells and wells are soft tinted fills
+  (`bg-ink/[0.035]`, rounded 8px). Radius: 18px panels, 12px inner tiles and rows, pills for
+  tags and buttons.
+- **A hero per page.** Each page opens with one hero `glass` panel: mono id or eyebrow line,
+  a large light title (40-48px, weight 400, tracking -0.035em, `font-heading`), pill tags, the
+  page's key number as a large light accent readout (`text-primary`, 48-58px mono), and the
+  page's actions as pill buttons on the right (primary = dark ink `Button` default, others
+  `outline`). Where the page has a natural visual (molecule, plate, belief gauge, policy plot),
+  it sits in the hero with a soft blurred copy behind it as glow (opacity ~0.5, blur 14px).
+- **Icons.** Phosphor everywhere it helps scanning: a soft icon chip before every panel title
+  (`Panel icon`), a leading icon on every button, small icons on stat labels and on meaningful
+  tags (exposure, brain cells, withdrawn, not preregistered), icons in empty states. Weight
+  `regular` (16-18px); `fill` only for the active state; `duotone` allowed in hero chips.
+- **Tables.** Inside `glass`, flush. Header row is quiet 11.5px ink-3. Rows have no hard lines:
+  rounded 12px row hover/selected state that lifts to white with a soft shadow. Numbers mono.
+- **Type.** Titles weight 400-500, never bold black. Buttons and numbers mono. Labels 11.5-12px
+  ink-3. Body 13-13.5px.
+- **Colour.** Blue (`primary`) for data and selection; dark ink for the primary action; red,
+  green, amber only for fail, survive/ok, gap. No other hues.

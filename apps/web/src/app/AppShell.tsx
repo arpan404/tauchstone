@@ -66,7 +66,7 @@ const ICONS: Partial<Record<StepId, Icon>> = {
 };
 
 const navButton =
-  "h-8 gap-2.5 rounded-md px-2.5 text-[13.5px] text-ink-2 hover:bg-surface-2 hover:text-ink data-active:bg-accent-soft data-active:font-medium data-active:text-accent-ink [&_svg]:size-[17px]";
+  "h-9 gap-2.5 rounded-xl px-3 text-[13.5px] text-ink-2 hover:bg-white/70 hover:text-ink data-active:bg-white data-active:font-medium data-active:text-ink data-active:shadow-[0_1px_2px_rgb(15_24_48/0.06),0_6px_14px_-8px_rgb(30_60_140/0.3)] [&_svg]:size-[18px] data-active:[&_svg]:text-primary";
 
 export function AppShell({
   title,
@@ -97,12 +97,12 @@ export function AppShell({
       // Full sidebar on laptops and up; an icon rail on tablets and small laptops (expandable).
       defaultOpen={typeof window === "undefined" || window.matchMedia("(min-width: 1280px)").matches}
       style={{ "--sidebar-width": "14.5rem", "--sidebar-width-icon": "3.25rem" } as React.CSSProperties}
-      className="h-dvh min-h-0 bg-canvas"
+      className="atmosphere h-dvh min-h-0"
     >
       <a className="workspace-skip" href="#workspace">
         Skip to workspace
       </a>
-        <Sidebar collapsible="icon" className="border-r border-line" aria-label="Workspace navigation">
+        <Sidebar variant="floating" collapsible="icon" aria-label="Workspace navigation">
           <SidebarHeader className="gap-3 px-3 pt-4 pb-2 group-data-[collapsible=icon]:px-2">
             <button
               type="button"
@@ -118,7 +118,7 @@ export function AppShell({
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="flex w-full items-center group-data-[collapsible=icon]:hidden gap-2 rounded-md border border-line bg-surface px-2.5 py-2 text-left hover:border-line-strong"
+                className="flex w-full items-center gap-2 rounded-xl border border-ink/8 bg-white/80 px-3 py-2 text-left shadow-[0_1px_2px_rgb(15_24_48/0.04)] hover:bg-white group-data-[collapsible=icon]:hidden"
                 aria-label="Switch project"
               >
                 <span className="min-w-0 flex-1">
@@ -218,8 +218,8 @@ export function AppShell({
             </SidebarMenuButton>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset className="min-h-0 min-w-0 bg-canvas" aria-label={title}>
-          <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-line bg-surface/80 px-4 backdrop-blur md:px-6">
+        <SidebarInset className="min-h-0 min-w-0 bg-transparent" aria-label={title}>
+          <header className="flex h-[60px] shrink-0 items-center gap-3 px-4 pt-2 md:px-6">
             <SidebarTrigger className="-ml-1 shrink-0 text-ink-3 xl:hidden" aria-label="Toggle sidebar" />
             <div className="flex min-w-0 items-baseline gap-2">
               {active !== "projects" && project && (
@@ -250,7 +250,7 @@ export function AppShell({
                 type="button"
                 onClick={onSearch}
                 aria-label="Search workspace"
-                className="flex items-center gap-2 rounded-md border border-line bg-surface px-2 py-1 text-[12px] text-ink-3 hover:border-line-strong"
+                className="flex h-8 items-center gap-2 rounded-full border border-white/90 bg-white/75 px-3 text-[12px] text-ink-3 shadow-[0_1px_2px_rgb(15_24_48/0.05)] backdrop-blur hover:bg-white"
               >
                 Search <Kbd>⌘K</Kbd>
               </button>
@@ -259,7 +259,7 @@ export function AppShell({
           <div id="workspace" tabIndex={-1} className="min-h-0 flex-1 overflow-auto">
             <ViewErrorBoundary resetKey={`${active}`}>{children}</ViewErrorBoundary>
           </div>
-          <footer className="shell-status flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-line bg-surface px-4 py-1.5 font-mono text-[11px] text-ink-3">
+          <footer className="shell-status flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-6 pt-1 pb-2.5 font-mono text-[11px] text-ink-3">
             <span className="flex items-center gap-1.5">
               <span
                 className={

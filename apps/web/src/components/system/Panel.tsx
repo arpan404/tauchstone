@@ -1,9 +1,11 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "cn";
 
-/** The only container in the app: hairline border, no shadow. */
+/** Frosted floating panel: the only container. Title row has an optional icon chip and actions. */
 export function Panel({
   title,
+  icon,
+  caption,
   actions,
   flush = false,
   className,
@@ -12,6 +14,10 @@ export function Panel({
   ...props
 }: Omit<ComponentProps<"section">, "title"> & {
   title?: ReactNode;
+  /** Phosphor icon element shown in a soft chip before the title. */
+  icon?: ReactNode;
+  /** Short muted line under the title (a label, not a sentence about the UI). */
+  caption?: ReactNode;
   actions?: ReactNode;
   /** No inner padding (tables, plots that bleed to the edge). */
   flush?: boolean;
@@ -19,17 +25,22 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section
-      className={cn("min-w-0 rounded-lg border border-line bg-surface", className)}
-      {...props}
-    >
+    <section className={cn("glass min-w-0", className)} {...props}>
       {(title || actions) && (
-        <header className="flex min-h-11 items-center gap-3 border-b border-line px-4 py-2">
-          {title && <h3 className="text-[13px] font-semibold text-ink">{title}</h3>}
-          {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
+        <header className="flex min-h-12 items-start gap-3 px-5 pt-4 pb-1">
+          {icon && (
+            <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-4">
+              {icon}
+            </span>
+          )}
+          <div className="min-w-0 flex-1">
+            {title && <h3 className="m-0 text-[15px] font-medium tracking-[-0.01em] text-ink [font-stretch:100%]">{title}</h3>}
+            {caption && <p className="m-0 mt-0.5 text-[12px] text-ink-3">{caption}</p>}
+          </div>
+          {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
         </header>
       )}
-      <div className={cn(flush ? "" : "p-4", bodyClassName)}>{children}</div>
+      <div className={cn(flush ? "" : "px-5 pt-3 pb-5", bodyClassName)}>{children}</div>
     </section>
   );
 }
