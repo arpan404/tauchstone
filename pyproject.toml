@@ -35,6 +35,9 @@ dev = [
   "jupyterlab>=4",
   "pypdf>=7.0.0",
 ]
+ml = [
+    "torch>=2.15.0",
+]
 
 [tool.uv]
 package = false
