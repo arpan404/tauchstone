@@ -55,7 +55,16 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
 
   // A lab's own compounds.
   await nav(page, 'My compounds');
-  await page.getByPlaceholder('Compound names · comma or newline').fill('donepezil, memantine, galantamine, Aricept');
+  // The field is a chip picker: type a name, take the first match, repeat.
+  const compounds = page.getByLabel('Compound names');
+  await page.getByRole('button', { name: 'Clear' }).click();
+  for (const name of ['donepezil', 'memantine', 'galantamine', 'Aricept']) {
+    await compounds.click();
+    await compounds.fill(name);
+    await page.getByRole('option').first().waitFor({ state: 'visible' });
+    await page.keyboard.press('Enter');
+    await pause(page, 400);
+  }
   await page.getByRole('button', { name: 'Check' }).click();
   await expect(page.getByRole('table', { name: 'Compound results' })).toContainText(/donepezil/i);
   await pause(page, 2000);
