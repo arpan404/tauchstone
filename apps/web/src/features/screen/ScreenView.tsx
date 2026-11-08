@@ -1,13 +1,4 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ComponentType,
-  type ReactNode,
-} from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -15,7 +6,6 @@ import {
   ArrowRightIcon,
   CheckCircleIcon,
   CircleIcon,
-  CirclesThreeIcon,
   DotsNineIcon,
   DownloadSimpleIcon,
   FileCsvIcon,
@@ -49,26 +39,9 @@ import {
   type WellState,
 } from "@/components/system";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { CellLinePanel } from "./CellLinePanel";
 import { FROZEN_SIGNATURE, SIGNATURES } from "./signatures";
-
-type SimulationProps = {
-  state: "idle" | "scoring" | "done";
-  progress: number;
-  height?: number;
-  className?: string;
-};
-const simulations = import.meta.glob("../simulation/CellSimulation.tsx");
-const loader = simulations["../simulation/CellSimulation.tsx"];
-const Simulation = loader
-  ? lazy(async () => {
-      const m = (await loader()) as {
-        CellSimulation: ComponentType<SimulationProps>;
-      };
-      return { default: m.CellSimulation };
-    })
-  : null;
 
 const SLOTS = 10;
 const GOLD = 113310;
@@ -372,7 +345,7 @@ export function ScreenView() {
       </section>
 
       <div className="grid items-start gap-4 max-md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        {/* Below lg the columns dissolve so Top hits comes before the decorative cell model. */}
+        {/* Below lg the columns dissolve so Top hits comes before the cell lines panel. */}
         <div className="contents lg:grid lg:min-w-0 lg:content-start lg:gap-4">
           <Panel
             icon={<FlaskIcon />}
@@ -549,27 +522,7 @@ export function ScreenView() {
               </div>
             </div>
           </Panel>
-          <Panel
-            icon={<CirclesThreeIcon />}
-            title="Cell model"
-            caption="Moves with screen progress"
-            className="max-lg:order-last"
-            actions={<StatusBadge>Illustration</StatusBadge>}
-            bodyClassName="px-3 pt-2 pb-3"
-          >
-            <Suspense fallback={<Skeleton className="h-[170px] rounded-xl bg-ink/[0.04]" />}>
-              {Simulation ? (
-                <Simulation
-                  state={done ? "done" : running ? "scoring" : "idle"}
-                  progress={progress}
-                  height={170}
-                  className="rounded-xl"
-                />
-              ) : (
-                <div className="h-[170px] rounded-xl bg-ink/[0.035]" />
-              )}
-            </Suspense>
-          </Panel>
+          <CellLinePanel job={job} running={running} className="max-lg:order-last" />
         </div>
 
         <Panel
