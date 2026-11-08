@@ -41,21 +41,21 @@ describe('benchmark hero', () => {
     expect(hero.textContent).toContain('Correct verdict within 5 tests');
     expect(hero.textContent).toContain('100%');
     expect(hero.textContent).toMatch(/88%\s*Random/);
-    expect(hero.textContent).toContain('Holm p · decision accuracy');
+    expect(hero.textContent).toContain('p (Holm-adjusted) · verdict match rate');
     expect(hero.textContent).toMatch(/Tauchstone vs random\s*0\.000900/);
-    expect(hero.textContent).toMatch(/Tauchstone vs confirmation\s*0\.00200/);
-    expect(hero.textContent).toContain('Permutation gate');
+    expect(hero.textContent).toMatch(/Tauchstone vs most likely to pass first\s*0\.00200/);
+    expect(hero.textContent).toContain('Shuffled-label check');
     expect(hero.textContent).toContain('17/20 not met');
-    expect(hero.textContent).toContain('Retrospective benchmark');
-    expect(hero.textContent).toContain('Ties max failure and max uncertainty');
+    expect(hero.textContent).toContain('Replay on past data');
+    expect(hero.textContent).toContain('Tied with 2 others');
     expect(within(hero).getByText('17/20 not met').className).toContain('text-bad');
     expect(hero.textContent).toContain('21f7460e');
-    // The decision-aware co-primary result stays visible: 87%, not better than random.
-    expect(hero.textContent).toMatch(/87%\s*Decision-aware/);
-    expect(hero.textContent).toMatch(/Decision-aware vs random\s*not better\s*0\.246/);
-    const plot = screen.getByRole('region', { name: 'Decision accuracy after five tests' });
-    for (const p of ['Tauchstone decision accuracy 100%', 'Random decision accuracy 88%',
-      'Decision-aware decision accuracy 87%', 'Confirmation decision accuracy 80%'])
+    // The two-step lookahead primary result stays visible: 87%, not better than random.
+    expect(hero.textContent).toMatch(/87%\s*Two-step lookahead/);
+    expect(hero.textContent).toMatch(/Two-step lookahead vs random\s*not better\s*0\.246/);
+    const plot = screen.getByRole('region', { name: 'Verdict match rate after five tests' });
+    for (const p of ['Tauchstone verdict match rate 100%', 'Random verdict match rate 88%',
+      'Two-step lookahead verdict match rate 87%', 'Most likely to pass first verdict match rate 80%'])
       expect(within(plot).getByRole('listitem', { name: p })).toBeTruthy();
   });
 });

@@ -28,16 +28,16 @@ import { BenchmarkView } from './BenchmarkView';
 
 afterEach(cleanup);
 describe('benchmark presentation', () => {
-  it('leads with API accuracy and intervals, then pairwise Holm tests, before the median plot', () => {
+  it('leads with API accuracy and intervals, then Holm-adjusted strategy comparisons, before the median plot', () => {
     render(<BenchmarkView />);
-    const accuracy = screen.getByRole('region', { name: 'Decision accuracy after five tests' });
+    const accuracy = screen.getByRole('region', { name: 'Verdict match rate after five tests' });
     expect(accuracy.textContent).toContain('88%');
     expect(accuracy.textContent).toContain('81.0, 94.0');
-    const tests = screen.getByRole('region', { name: 'Holm-corrected comparisons' });
+    const tests = screen.getByRole('region', { name: 'Strategy comparisons' });
     expect(tests.textContent).toContain('Tauchstone');
     expect(tests.textContent).toContain('0.000900');
-    expect(tests.textContent).toContain('experiments to verdict');
-    const median = screen.getByText('Experiments to correct verdict');
+    expect(tests.textContent).toContain('tests to correct verdict');
+    const median = screen.getByText('Tests to correct verdict');
     expect(accuracy.compareDocumentPosition(median) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 

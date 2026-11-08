@@ -7,13 +7,13 @@ export const CO_PRIMARY = ['tauchstone_hybrid', 'decision_lookahead_hybrid'] as 
 
 /** Short display name and an optional qualifier for each benchmark policy id. */
 export const POLICY_NAMES: Record<string, { name: string; detail?: string }> = {
-  tauchstone_hybrid: { name: 'Tauchstone' },
-  decision_lookahead_hybrid: { name: 'Decision-aware' },
+  tauchstone_hybrid: { name: 'Tauchstone', detail: 'informative + likely to fail' },
+  decision_lookahead_hybrid: { name: 'Two-step lookahead' },
   random: { name: 'Random' },
-  greedy_strongest: { name: 'Confirmation', detail: 'greedy strongest' },
-  max_failure: { name: 'Attack', detail: 'max failure' },
-  max_uncertainty: { name: 'Max uncertainty' },
-  expected_decision_change: { name: 'Learn', detail: 'expected decision change' },
+  greedy_strongest: { name: 'Most likely to pass first' },
+  max_failure: { name: 'Most likely to fail first', detail: 'Attack mode' },
+  max_uncertainty: { name: 'Most uncertain first' },
+  expected_decision_change: { name: 'Most informative first', detail: 'Learn mode' },
 };
 
 /** Display labels for benchmark policies (API sends raw ids as labels). */
@@ -31,9 +31,9 @@ export function metricLabel(metric: string): string {
   const base = descriptive ? metric.replace('_head_to_head_descriptive', '') : metric;
   const name =
     base === 'experiments_to_correct_verdict'
-      ? 'experiments to verdict'
+      ? 'tests to correct verdict'
       : base === 'decision_accuracy'
-        ? 'decision accuracy'
+        ? 'verdict match rate'
         : base.replaceAll('_', ' ');
   return descriptive ? `${name}, descriptive` : name;
 }
@@ -98,8 +98,8 @@ export function buildCalibrationOption(
     textStyle: { color: ink3, fontFamily: 'Instrument Sans Variable, sans-serif' },
     legend: { show: false },
     grid: { left: 48, right: 12, top: 12, bottom: 36 },
-    xAxis: { ...axis, name: 'predicted', nameGap: 22 },
-    yAxis: { ...axis, name: 'observed', nameGap: 34 },
+    xAxis: { ...axis, name: 'predicted chance to pass', nameGap: 22 },
+    yAxis: { ...axis, name: 'observed pass rate', nameGap: 34 },
     tooltip: {
       trigger: 'item',
       formatter: (p: { data?: number[] }) =>
@@ -128,24 +128,24 @@ export function buildCalibrationOption(
   };
 }
 
-/** Policies whose decision accuracy equals Tauchstone's, by their raw id words. */
+/** Policies whose decision accuracy equals Tauchstone's, by display name. */
 export function tiedWith(policies: Schema<'Benchmark'>['policies']): string[] {
   const tau = policies.find((p) => p.policy === 'tauchstone_hybrid')?.decision_accuracy.estimate;
   if (tau === undefined || !Number.isFinite(tau)) return [];
   return policies
     .filter((p) => p.policy !== 'tauchstone_hybrid' && Math.abs(p.decision_accuracy.estimate - tau) < 1e-9)
-    .map((p) => p.policy.replaceAll('_', ' '));
+    .map((p) => policyName(p.policy));
 }
 
 /** Tooltip for a headline p-value: what was tested, plus the median tie when there is one. */
 export function pairTip(analysis: Pick<Schema<'Benchmark'>, 'policies'>, a: string, b: string, metric: string | null): string {
-  const base = `Paired Wilcoxon test across candidates on ${metricLabel(metric ?? 'decision_accuracy')}, Holm corrected.`;
+  const base = `Paired Wilcoxon test across candidates on ${metricLabel(metric ?? 'decision_accuracy')}. p adjusted for multiple comparisons (Holm).`;
   if (metric !== 'experiments_to_correct_verdict') return base;
   const med = (id: string) => analysis.policies.find((p) => p.policy === id)?.experiments_to_correct_verdict.median;
   const ma = med(a);
   const mb = med(b);
   return ma !== undefined && mb !== undefined && Number.isFinite(ma) && ma === mb
-    ? `${base} Medians tie at ${ma}; the test uses paired per-candidate differences, not medians.`
+    ? `${base} Both medians are ${ma}. The test compares paired differences per candidate, not medians.`
     : base;
 }
 
