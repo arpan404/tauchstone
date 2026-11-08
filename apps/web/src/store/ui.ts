@@ -8,7 +8,6 @@ export type StepId =
   | "evidence"
   | "attack"
   | "benchmark"
-  | "lab"
   | "projects"
   | "screen"
   | "compare"
@@ -87,8 +86,7 @@ export const useUi = create<UiState>()(
 
 export const STEPS: { id: StepId; label: string; hint: string }[] = [
   { id: "candidates", label: "Candidates", hint: "Discovery ranking" },
-  { id: "lab", label: "AI lab", hint: "Ask and train" },
-  { id: "signature", label: "Disease signature", hint: "AD minus control" },
+  { id: "signature", label: "Disease signature", hint: "Alzheimer's vs control" },
   { id: "evidence", label: "Evidence", hint: "Targets and exposure" },
   { id: "attack", label: "Experiments", hint: "Held-out validation" },
   { id: "benchmark", label: "Benchmark", hint: "Policy replay" },

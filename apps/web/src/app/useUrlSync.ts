@@ -17,7 +17,6 @@ const SLUGS: Record<StepId, string> = {
   report: "report",
   compounds: "compounds",
   benchmark: "validation",
-  lab: "lab",
   signature: "signature",
 };
 const STEPS = Object.fromEntries(Object.entries(SLUGS).map(([k, v]) => [v, k])) as Record<string, StepId>;

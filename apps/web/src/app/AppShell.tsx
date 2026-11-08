@@ -12,7 +12,6 @@ import {
   PillIcon,
   RowsIcon,
   SealCheckIcon,
-  SparkleIcon,
   SquaresFourIcon,
   type Icon,
 } from "@phosphor-icons/react";
@@ -60,7 +59,6 @@ const ICONS: Partial<Record<StepId, Icon>> = {
   report: FileTextIcon,
   compounds: ListMagnifyingGlassIcon,
   benchmark: SealCheckIcon,
-  lab: SparkleIcon,
   signature: FlowArrowIcon,
 };
 
@@ -76,7 +74,8 @@ export function AppShell({
   children,
 }: {
   title: string;
-  active: StepId | null;
+  /** Current view: a nav step, or an extra page ("cells", "about"). */
+  active: StepId | "cells" | "about" | null;
   onNavigate: (id: StepId) => void;
   onExtra: (v: "about" | "cells") => void;
   onSearch: () => void;
@@ -193,18 +192,27 @@ export function AppShell({
                 </SidebarGroupLabel>
                 <SidebarMenu className="gap-0.5">
                   <SidebarMenuItem>
-                    <SidebarMenuButton className={navButton} onClick={() => onNavigate("lab")}>
-                      <SparkleIcon /> <span>AI lab</span>
+                    <SidebarMenuButton
+                      isActive={active === "signature"}
+                      aria-current={active === "signature" ? "page" : undefined}
+                      className={navButton}
+                      tooltip="Disease signature"
+                      onClick={() => onNavigate("signature")}
+                    >
+                      <FlowArrowIcon weight={active === "signature" ? "fill" : "regular"} />{" "}
+                      <span>Disease signature</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton className={navButton} onClick={() => onNavigate("signature")}>
-                      <FlowArrowIcon /> <span>Disease signature</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton className={navButton} onClick={() => onExtra("cells")}>
-                      <GridFourIcon /> <span>Cell types</span>
+                    <SidebarMenuButton
+                      isActive={active === "cells"}
+                      aria-current={active === "cells" ? "page" : undefined}
+                      className={navButton}
+                      tooltip="Cell types"
+                      onClick={() => onExtra("cells")}
+                    >
+                      <GridFourIcon weight={active === "cells" ? "fill" : "regular"} />{" "}
+                      <span>Cell types</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>
@@ -212,8 +220,14 @@ export function AppShell({
             )}
           </SidebarContent>
           <SidebarFooter className="px-3 pb-3 group-data-[collapsible=icon]:px-2">
-            <SidebarMenuButton className={navButton} tooltip="Methods" onClick={() => onExtra("about")}>
-              <InfoIcon /> <span>Methods</span>
+            <SidebarMenuButton
+              isActive={active === "about"}
+              aria-current={active === "about" ? "page" : undefined}
+              className={navButton}
+              tooltip="Methods"
+              onClick={() => onExtra("about")}
+            >
+              <InfoIcon weight={active === "about" ? "fill" : "regular"} /> <span>Methods</span>
             </SidebarMenuButton>
           </SidebarFooter>
         </Sidebar>

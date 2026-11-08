@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
 import { About } from "@/features/about";
-import { LabView } from "@/features/lab";
 import { BenchmarkView } from "@/features/benchmark/BenchmarkView";
 import { DiseaseSignatureView } from "@/features/disease-signature/DiseaseSignatureView";
 import { EvidenceView } from "@/features/evidence/EvidenceView";
@@ -91,7 +90,6 @@ const VIEWS: Record<StepId, ComponentType> = {
   attack: AttackView,
   report: Report,
   benchmark: BenchmarkView,
-  lab: LabView,
   signature: DiseaseSignatureView,
 };
 import { NAV_ITEMS as ITEMS } from "@/app/nav";
@@ -109,8 +107,7 @@ export default function App() {
       ? "Methods"
       : extra === "cells"
         ? "Cell types"
-        : (ITEMS.find(([id]) => id === step)?.[1] ??
-          (step === "lab" ? "AI lab" : "Disease signature"));
+        : (ITEMS.find(([id]) => id === step)?.[1] ?? "Disease signature");
   const View =
     extra === "about" ? About : extra === "cells" ? SingleCellPanel : VIEWS[step];
   function navigate(id: StepId) {
@@ -133,7 +130,7 @@ export default function App() {
     <TooltipProvider>
       <AppShell
         title={title}
-        active={extra ? null : step}
+        active={extra ?? step}
         onNavigate={navigate}
         onExtra={setExtra}
         onSearch={() => setSearch(true)}
