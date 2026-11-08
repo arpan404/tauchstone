@@ -34,6 +34,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useUi } from "@/store/ui";
 import { cn } from "cn";
+import { EstimateAbout } from "./EstimateAbout";
+import { ESTIMATE_COLUMN, EstimateCaption, EstimateCell, EstimateHeader } from "./EstimateColumn";
+import { useEstimates } from "./useEstimates";
 
 type Result = Schema<"LookupResult">;
 
@@ -84,6 +87,11 @@ export function CompoundsView({
     .map((name) => name.trim())
     .filter(Boolean);
   const results = lookup.data ?? [];
+  const estimates = useEstimates(results);
+  // Exploratory AI estimate sits after Conditions; left out quietly when the model is unavailable.
+  const columns: readonly string[] = estimates.show
+    ? [...COLUMNS.slice(0, 6), ESTIMATE_COLUMN, ...COLUMNS.slice(6)]
+    : COLUMNS;
   const counts = results.reduce<Record<string, number>>((acc, r) => {
     acc[r.status] = (acc[r.status] ?? 0) + 1;
     return acc;
@@ -217,17 +225,17 @@ export function CompoundsView({
               >
                 <TableHeader className="[&_tr]:border-0">
                   <TableRow className="border-0 hover:bg-transparent">
-                    {COLUMNS.map((h) => (
+                    {columns.map((h) => (
                       <TableHead
                         key={h}
                         scope="col"
                         className={cn(
                           "h-8 px-2 text-[11.5px] font-medium text-ink-3 first:pl-3 last:pr-3",
-                          NUMERIC.has(h) && "text-right",
+                          (NUMERIC.has(h) || h === ESTIMATE_COLUMN) && "text-right",
                           h === "Action" && "text-right",
                         )}
                       >
-                        {h === "Action" ? <span className="sr-only">Action</span> : h}
+                        {h === "Action" ? <span className="sr-only">Action</span> : h === ESTIMATE_COLUMN ? <EstimateHeader /> : h}
                       </TableHead>
                     ))}
                   </TableRow>
@@ -237,7 +245,7 @@ export function CompoundsView({
                     names.map((n, i) => (
                       <TableRow key={`${n}-${i}`} className={cn(ROW, "hover:bg-transparent")}>
                         <TableCell className="h-11 px-2 pl-3 text-ink-2">{n}</TableCell>
-                        {COLUMNS.slice(1).map((c) => (
+                        {columns.slice(1).map((c) => (
                           <TableCell key={c} className="px-2 last:pr-3">
                             <Skeleton className="h-4 w-full max-w-20 rounded-full bg-ink/[0.06]" />
                           </TableCell>
@@ -288,6 +296,11 @@ export function CompoundsView({
                           <TableCell className="px-2 text-right font-mono tabular-nums">
                             {result.n_contexts ?? <Dash />}
                           </TableCell>
+                          {estimates.show && (
+                            <TableCell className="px-2 text-right">
+                              <EstimateCell estimate={estimates.get(result.drug_id)} loading={estimates.loading} />
+                            </TableCell>
+                          )}
                           <TableCell className="px-2">
                             {ranked ? (
                               result.attack_ready ? (
@@ -338,7 +351,9 @@ export function CompoundsView({
                 </TableBody>
               </Table>
             )}
+            {estimates.show && results.length > 0 && !lookup.isPending && <EstimateCaption />}
           </Panel>
+          <EstimateAbout className="min-[1400px]:col-start-2" />
         </motion.div>
       </div>
     </div>

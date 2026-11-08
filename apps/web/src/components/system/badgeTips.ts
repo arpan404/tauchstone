@@ -5,6 +5,11 @@
  */
 const EXPOSURE_KEY = "measured = experimental data, curated = from literature databases, predicted = model estimate.";
 
+// Structure-only AI estimate (My compounds). Numbers: scaffold-grouped internal test, n = 1,123,
+// MAE 0.472 vs 0.481 for the training mean, R2 0.023, Spearman 0.18 (docs/integrity_log.md).
+const ESTIMATE_KEY =
+  "Estimated from chemical structure alone by a random forest: a guess at the LINCS reversal score, not evidence about Alzheimer's. On structures it had not seen it is barely better than guessing the average: on average it lands 0.47 from the real score, versus 0.48 for always guessing the mean (rank correlation 0.18). Never used for ranking or for any hidden test.";
+
 const EXACT: Record<string, string> = {
   "not preregistered":
     "Exploratory. Before any results were seen, only the GSE132903 ranking and its hidden tests were fixed in writing (preregistration 21f7460e). This is outside that plan.",
@@ -63,6 +68,10 @@ const EXACT: Record<string, string> = {
   "synthetic data": "Showing built-in example data, not real results.",
   approved: "Approved for at least one indication (ChEMBL). Approval says nothing about Alzheimer's.",
   investigational: "Has reached clinical trials but is not approved for any indication.",
+  "ai estimate": `${ESTIMATE_KEY} "In training data" means the model saw this compound while training, so its estimate looks better than it really is.`,
+  "held out from training": `The model never saw this structure family while training. ${ESTIMATE_KEY}`,
+  "in training data": `The model saw this compound (or an identical structure) while training, so its estimate looks better than it really is. ${ESTIMATE_KEY}`,
+  "new structure": `Not scored in the discovery ranking; the model estimated it fresh from its structure. ${ESTIMATE_KEY}`,
   "target context": "A protein structure of the drug's target, shown for orientation. It is not evidence that the drug binds.",
 };
 
