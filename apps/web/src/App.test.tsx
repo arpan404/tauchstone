@@ -41,6 +41,7 @@ vi.mock("@/features/single-cell", () => ({
 
 vi.mock("@/api/workspace", () => ({
   useProjects: () => ({ data: [] }),
+  useCurrentProjectId: () => undefined,
   workspaceMock: () => true,
 }));
 vi.mock("@/features/projects/ProjectsView", () => ({

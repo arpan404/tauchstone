@@ -14,7 +14,7 @@ it('attributes an Attack response when Learn has just been selected', () => {
 });
 it('shows the returned Learn rationale once the response matches', () => {
   const copy = rationaleCopy('learn', 'learn', 'Largest expected belief change.');
-  expect(copy).toEqual({ stale: false, title: 'Learn recommendation', body: 'Largest expected belief change.', note: null });
+  expect(copy).toEqual({ stale: false, title: 'Learn recommendation', body: 'Largest expected belief change.', note: null, badge: 'Learn pick' });
 });
 it('also identifies a stale Learn response after switching back to Attack', () => {
   const copy = rationaleCopy('learn', 'attack', 'Largest expected belief change.');
@@ -25,4 +25,9 @@ it('renders a short badge and keeps the rationale out of the row text', () => {
   render(<TooltipProvider><RecommendedBadge responseMode="attack" selectedMode="attack" rationale="Lowest predicted survival." /></TooltipProvider>);
   expect(screen.getByText('Recommended')).toBeTruthy();
   expect(screen.queryByText(/Lowest predicted survival/)).toBeNull();
+});
+it('marks a stale pick with the mode that made it', () => {
+  render(<TooltipProvider><RecommendedBadge responseMode="attack" selectedMode="learn" rationale="Most likely to break the claim." /></TooltipProvider>);
+  expect(screen.getByText('Attack pick')).toBeTruthy();
+  expect(screen.queryByText('Recommended')).toBeNull();
 });

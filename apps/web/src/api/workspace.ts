@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Schema } from "./types";
 import { api } from "./client";
 import { isMockMode, mockApi } from "./mock";
+import { useUi } from "@/store/ui";
 export type Project = Schema<"Project">;
 export type Screen = Schema<"Screen">;
 const date = "2026-11-07T00:00:00Z";
@@ -48,9 +49,36 @@ async function request<T>(
         return fallback();
       }
     }
-    throw new Error(`${response.status} · ${path}`);
+    throw new Error(await errorDetail(response));
   }
   return response.json() as Promise<T>;
+}
+/** The server's own error text (FastAPI `detail`), else the status code. */
+export async function errorDetail(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { detail?: unknown };
+    const { detail } = body;
+    if (typeof detail === "string" && detail) return detail;
+    if (Array.isArray(detail) && detail.length) {
+      const first = detail[0] as { msg?: unknown };
+      if (typeof first?.msg === "string") return first.msg;
+    }
+  } catch {
+    // Not JSON: fall through to the status line.
+  }
+  return `Request failed (${response.status})`;
+}
+/** URL of an example upload CSV that passes validation. */
+export const TEMPLATE_CSV_URL = "/api/screens/template.csv";
+/** The open project, or the first project (preregistered primary) when none is chosen. */
+export function useCurrentProject() {
+  const { data } = useProjects();
+  const currentProjectId = useUi((s) => s.currentProjectId);
+  return data?.find((p) => p.id === currentProjectId) ?? data?.[0] ?? null;
+}
+export function useCurrentProjectId() {
+  const currentProjectId = useUi((s) => s.currentProjectId);
+  return useCurrentProject()?.id ?? currentProjectId ?? undefined;
 }
 export function useProjects() {
   return useQuery({
@@ -86,15 +114,36 @@ export function useCreateProject() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
   });
 }
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      request<{ id: string; deleted: boolean }>(
+        `/projects/${encodeURIComponent(id)}`,
+        { method: "DELETE" },
+        () => {
+          projects = projects.filter((p) => p.id !== id);
+          return { id, deleted: true };
+        },
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
+  });
+}
+/**
+ * Start a screen. A file goes with `upload.name` (the server creates the project only after
+ * the CSV validates) or with `upload.projectId` of an existing, empty upload project.
+ */
 export async function startScreen(
   project_id: string,
   signature_id: string,
   file: File | null,
+  upload?: { name: string } | { projectId: string },
 ) {
   let init: RequestInit;
   if (file) {
     const body = new FormData();
-    body.set("project_id", project_id);
+    if (upload && "name" in upload) body.set("name", upload.name);
+    else body.set("project_id", upload?.projectId ?? project_id);
     body.set("file", file);
     init = { method: "POST", body };
   } else
@@ -107,9 +156,24 @@ export async function startScreen(
     const pool = isMockMode()
       ? await mockApi.listCandidates()
       : await api<Schema<"CandidateList">>("/candidates");
+    let target = project_id;
+    if (file && upload && "name" in upload) {
+      target = crypto.randomUUID();
+      projects = [
+        ...projects,
+        {
+          id: target,
+          name: upload.name,
+          signature_id: null,
+          kind: "upload",
+          preregistered: false,
+          created_at: new Date().toISOString(),
+        },
+      ];
+    }
     const job: Screen = {
       id: `mock-${crypto.randomUUID()}`,
-      project_id,
+      project_id: target,
       signature_id: file ? null : signature_id,
       status: "queued",
       n_signatures: 113310,

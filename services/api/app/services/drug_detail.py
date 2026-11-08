@@ -209,4 +209,76 @@ def get_drug_detail(drug_id: str, project_id: str | None = None) -> dict:
     from app.deps import get_repository
     from app.present import public
 
-    return public(get_repository().get_drug_detail(drug_id))
+    return public(project_overlay(adhoc_overlay(get_repository().get_drug_detail(drug_id)), project_id))
+
+
+def project_overlay(detail: dict, project_id: str | None) -> dict:
+    """Rank, total, consensus and method scores from a non-preregistered project's own screen.
+
+    Evidence, gaps and contexts stay from the frozen tables. A drug outside that project's
+    ranking (or a project not screened yet) gets pool_rank null.
+    """
+    from fastapi import HTTPException
+
+    from app.services import projects as store
+    from app.services.repository import NotFoundError
+
+    if not project_id:
+        return detail
+    store.seed()
+    try:
+        project = store.get("project", project_id)
+    except HTTPException as e:
+        raise NotFoundError(f"project not found: {project_id}") from e
+    if project.get("preregistered"):
+        return detail
+    out = dict(detail, preregistered=False, pool_rank=None, rank_total=None)
+    sid = project.get("last_screen_id")
+    if not sid:
+        return out
+    if store.settings.mock:
+        rows = [
+            dict(pert_id=c["id"], pool_rank=c["rank"], consensus_median=c["consensus"],
+                 n_ranking_contexts=c["n_ranking_contexts"],
+                 **{f"z_{k}_median": v for k, v in (c.get("scores") or {}).items()})
+            for c in store.mock_candidates()
+        ]
+        pool = pd.DataFrame(rows)
+    else:
+        path = store.root() / f"{sid}.parquet"
+        if not path.exists():
+            return out
+        pool = pd.read_parquet(path)
+    out["rank_total"] = int(len(pool))
+    hit = pool[pool["pert_id"].astype(str) == str(detail["drug_id"])]
+    if hit.empty:
+        return out
+    row = hit.iloc[0]
+    out.update(pool_rank=int(row["pool_rank"]), consensus=float(row["consensus_median"]))
+    if "n_ranking_contexts" in row:
+        out["n_contexts"] = int(row["n_ranking_contexts"])
+    keys = ("wtcs", "ks", "cosine")
+    if all(f"z_{k}_median" in row and pd.notna(row[f"z_{k}_median"]) for k in keys):
+        out["scores"] = {k: float(row[f"z_{k}_median"]) for k in keys}
+    return out
+
+
+def adhoc_overlay(detail: dict) -> dict:
+    """Count hidden tests built on the fly for this drug in a live attack session.
+
+    Reads only the size of the server-side session (never outcomes); the sealed truth-table
+    count wins when the drug has one. Stays not preregistered.
+    """
+    if detail.get("n_hidden_tests"):
+        return detail
+    from app.deps import get_session_store
+
+    sessions = getattr(get_session_store(), "_sessions", {})
+    for rec in list(sessions.values()):
+        if rec.candidate_id == detail.get("drug_id") and not rec.preregistered:
+            try:
+                n = len(rec.engine.state()["contexts"])
+            except Exception:
+                continue
+            return dict(detail, n_hidden_tests=n, attack_ready=n > 0)
+    return detail

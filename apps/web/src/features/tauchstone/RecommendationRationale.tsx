@@ -13,7 +13,7 @@ export function RecommendedBadge({
   return (
     <Tooltip>
       <TooltipTrigger render={<span />} className="inline-flex">
-        <StatusBadge tone={copy.stale ? 'neutral' : 'accent'}>Recommended</StatusBadge>
+        <StatusBadge tone={copy.stale ? 'neutral' : 'accent'}>{copy.stale ? copy.badge : 'Recommended'}</StatusBadge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-72 flex-col items-start gap-1 text-left">
         <span className="font-medium">{copy.title}</span>

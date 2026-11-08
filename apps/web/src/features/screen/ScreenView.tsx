@@ -11,12 +11,14 @@ import { motion, useReducedMotion } from "motion/react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRightIcon,
+  DownloadSimpleIcon,
   FileCsvIcon,
   UploadSimpleIcon,
 } from "@phosphor-icons/react";
 import { cn } from "cn";
 import {
   startScreen,
+  TEMPLATE_CSV_URL,
   useProjects,
   useCreateProject,
   watchScreen,
@@ -36,6 +38,7 @@ import {
 } from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dot } from "./Dot";
 import { FROZEN_SIGNATURE, SIGNATURES } from "./signatures";
 
@@ -74,7 +77,14 @@ const METHOD = [
 
 export function ScreenView() {
   const { data: projects } = useProjects();
-  const { currentProjectId, setProject, setStep, selectCandidate } = useUi();
+  const {
+    currentProjectId,
+    setProject,
+    setStep,
+    selectCandidate,
+    uploadName,
+    setUploadName,
+  } = useUi();
   const project =
     projects?.find((p) => p.id === currentProjectId) ?? projects?.[0];
   const [source, setSource] = useState<string | null>(null);
@@ -124,26 +134,55 @@ export function ScreenView() {
     setError("");
     setJob(null);
     stop.current?.();
+    const previous = project.id;
     try {
       // Keep uploads and alternate cohorts out of an existing cohort's results.
-      const matches = file
-        ? project.kind === "upload" && !project.last_screen_id
-        : project.signature_id === signature;
-      const target = matches
-        ? project
-        : await createProject.mutateAsync({
-            name: file ? file.name.replace(/\.csv$/i, "") : signature,
-            signature_id: file ? null : signature,
-          });
-      setProject(target.id);
-      const next = await startScreen(target.id, signature, file);
+      let next: Screen;
+      let created = false;
+      if (file) {
+        // The server creates the project only once the CSV validates; an empty upload
+        // project made earlier is reused.
+        const empty = project.kind === "upload" && !project.last_screen_id;
+        const name = uploadName?.trim() || file.name.replace(/\.csv$/i, "");
+        next = await startScreen(
+          project.id,
+          signature,
+          file,
+          empty ? { projectId: project.id } : { name },
+        );
+        created = !empty;
+        setUploadName(null);
+        void qc.invalidateQueries({ queryKey: ["projects"] });
+      } else {
+        // One project per built-in signature: reuse it, never duplicate.
+        const target =
+          project.signature_id === signature
+            ? project
+            : (projects?.find(
+                (p) => p.kind === "builtin" && p.signature_id === signature,
+              ) ??
+              (await createProject.mutateAsync({
+                name: signature,
+                signature_id: signature,
+              })));
+        next = await startScreen(target.id, signature, null);
+      }
+      setProject(next.project_id);
       setJob(next);
       stop.current = watchScreen(
         next,
         (event) => {
           setJob(event);
-          if (event.status === "done")
+          if (event.status === "done") {
             void qc.invalidateQueries({ queryKey: ["projects"] });
+            void qc.invalidateQueries({ queryKey: ["project-candidates"] });
+            void qc.invalidateQueries({ queryKey: ["drug"] });
+          }
+          if (event.status === "failed" && created) {
+            // The server removes a new upload project whose first screen fails.
+            setProject(previous);
+            void qc.invalidateQueries({ queryKey: ["projects"] });
+          }
         },
         () => {
           setError("Connection interrupted");
@@ -214,9 +253,23 @@ export function ScreenView() {
                         <span key={m}>{m}</span>
                       ))}
                     </span>
+                    {s.warning && (
+                      <span className="col-span-2 col-start-2 mt-1.5 flex">
+                        <Tooltip>
+                          <TooltipTrigger render={<span />} className="inline-flex">
+                            <StatusBadge tone="gap">
+                              {s.warning.label}
+                              <span className="sr-only">: {s.warning.detail}</span>
+                            </StatusBadge>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">{s.warning.detail}</TooltipContent>
+                        </Tooltip>
+                      </span>
+                    )}
                   </button>
                 );
               })}
+              <div className="relative border-b border-line">
               <label
                 onDragEnter={(e) => {
                   e.preventDefault();
@@ -230,26 +283,30 @@ export function ScreenView() {
                   if (!running) chooseFile(e.dataTransfer.files[0]);
                 }}
                 className={cn(
-                  "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-line px-4 py-2.5 transition-colors has-[input:focus-visible]:bg-surface-2",
+                  "grid cursor-pointer grid-cols-[16px_minmax(0,1fr)] items-start gap-x-3 px-4 py-2.5 transition-colors has-[input:focus-visible]:bg-surface-2",
                   file ? "bg-accent-soft/50" : "hover:bg-surface-2",
                   drag && "bg-accent-soft outline-2 -outline-offset-2 outline-dashed outline-primary",
                   running && "cursor-not-allowed",
                 )}
               >
-                <Dot on={!!file} />
-                <span className="min-w-0">
-                  <span className="block truncate text-[13px] font-medium text-ink">
-                    {file?.name ?? "Upload CSV"}
-                  </span>
-                  <span className="block font-mono text-[11px] text-ink-3">
-                    gene · log2fc · stat · fdr
+                <span className="mt-0.5">
+                  <Dot on={!!file} />
+                </span>
+                <span className="min-w-0 pr-32">
+                  <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-ink">
+                    {file ? (
+                      <FileCsvIcon className="size-4 shrink-0 text-primary" />
+                    ) : (
+                      <UploadSimpleIcon className="size-4 shrink-0 text-ink-3" />
+                    )}
+                    <span className="truncate">
+                      {file?.name ?? uploadName ?? "Upload CSV"}
+                    </span>
                   </span>
                 </span>
-                {file ? (
-                  <FileCsvIcon className="size-4 text-primary" />
-                ) : (
-                  <UploadSimpleIcon className="size-4 text-ink-3" />
-                )}
+                <span className="col-start-2 mt-1 font-mono text-[11px] whitespace-nowrap text-ink-3">
+                  gene · log2fc · stat · fdr
+                </span>
                 <input
                   aria-label="Upload signature CSV"
                   type="file"
@@ -259,6 +316,15 @@ export function ScreenView() {
                   onChange={(e) => chooseFile(e.target.files?.[0])}
                 />
               </label>
+              <a
+                href={TEMPLATE_CSV_URL}
+                download="signature_template.csv"
+                className="absolute top-2.5 right-4 inline-flex items-center gap-1 rounded-sm text-[12px] text-primary outline-none hover:underline focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <DownloadSimpleIcon className="size-3.5" />
+                Download template
+              </a>
+              </div>
             </div>
             <dl
               aria-label="Method"
@@ -281,9 +347,9 @@ export function ScreenView() {
               </Button>
               {failure && (
                 <div role="alert" className="mt-3 flex items-center gap-2">
-                  <StatusBadge tone="bad" className="min-w-0 truncate">
+                  <p className="m-0 min-w-0 flex-1 text-[12.5px] leading-snug text-bad">
                     {failure}
-                  </StatusBadge>
+                  </p>
                   {!running && project && (
                     <Button variant="outline" size="sm" onClick={run}>
                       Retry
@@ -346,7 +412,7 @@ export function ScreenView() {
               <dd className="m-0 flex items-baseline gap-2 whitespace-nowrap font-mono text-[44px] leading-none font-medium tracking-tight text-ink tabular-nums">
                 <NumberTicker value={job?.n_scored ?? 0} />
                 <span className="text-[13px] font-normal tracking-normal text-ink-3">
-                  / {(job?.n_signatures ?? 113310).toLocaleString("en-US")}
+                  / {(job?.n_signatures || 113310).toLocaleString("en-US")}
                 </span>
               </dd>
             </div>
@@ -367,8 +433,16 @@ export function ScreenView() {
               label="Ranked"
               className="self-end"
               tone={done ? "accent" : "neutral"}
-              value={<NumberTicker value={job?.n_ranked ?? 0} />}
-              unit="drugs"
+              value={
+                done && job?.n_ranked != null ? (
+                  <NumberTicker value={job.n_ranked} />
+                ) : (
+                  <span className="text-ink-3">
+                    {running ? "pending" : "none"}
+                  </span>
+                )
+              }
+              unit={done && job?.n_ranked != null ? "drugs" : undefined}
             />
           </dl>
           <div className="grid flex-1 @2xl:grid-cols-[minmax(0,1fr)_248px] @3xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -381,7 +455,7 @@ export function ScreenView() {
               <div className="flex w-full max-w-[720px] items-center gap-4 pl-[17px] text-[12px] text-ink-3">
                 <Legend className="bg-primary/35" label="Scored" />
                 <Legend className="border border-line bg-surface-2" label="Pending" />
-                <span className="ml-auto font-mono text-[11px]">1 well ≈ {Math.round((job?.n_signatures ?? 113310) / PLATE_WELLS)} signatures</span>
+                <span className="ml-auto font-mono text-[11px]">1 well ≈ {Math.round((job?.n_signatures || 113310) / PLATE_WELLS)} signatures</span>
               </div>
             </div>
             <section

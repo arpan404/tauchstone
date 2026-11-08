@@ -230,7 +230,8 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [project_id, file]
+              description: "Send name to create an upload project only after the CSV validates (removed again if its first screen fails), or project_id of an existing upload project."
+              required: [file]
               properties:
                 project_id: { type: string }
                 name: { type: string }
@@ -246,6 +247,13 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+
+  /screens/template.csv:
+    get:
+      operationId: getScreenTemplate
+      summary: Example upload CSV (gene, log2fc, stat, fdr) that passes upload validation.
+      responses:
+        "200": { description: CSV template, content: { text/csv: { schema: { type: string } } } }
 
   /screens/{screen_id}:
     get:
@@ -273,6 +281,30 @@ paths:
             text/event-stream:
               schema: { $ref: "#/components/schemas/ScreenEvent" }
 
+  /projects/{project_id}:
+    delete:
+      operationId: deleteProject
+      summary: Delete an upload project with its screens and saved signature. Built-in projects return 403.
+      parameters:
+        - { name: project_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, deleted]
+                properties:
+                  id: { type: string }
+                  deleted: { type: boolean }
+        "403":
+          description: built-in project
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /projects/{project_id}/candidates:
     get:
       operationId: listProjectCandidates
@@ -290,13 +322,18 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/ProjectCandidates" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: project not screened yet (detail "Project not screened")
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
 
   /drugs/{drug_id}:
     get:
       operationId: getDrug
       parameters:
         - { name: drug_id, in: path, required: true, schema: { type: string } }
-        - { name: project_id, in: query, schema: { type: string } }
+        - { name: project_id, in: query, schema: { type: string }, description: "non-preregistered project: pool_rank, rank_total, consensus and scores come from that project's own screen (pool_rank null if the drug is not in it) and preregistered is false" }
       responses:
         "200":
           description: drug detail with evidence gaps, contexts and 3D molecule

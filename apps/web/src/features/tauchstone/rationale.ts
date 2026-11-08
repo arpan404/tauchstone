@@ -14,5 +14,7 @@ export function rationaleCopy(responseMode: Mode, selectedMode: Mode, rationale:
     title: stale ? `Last server recommendation (${modeName(responseMode)})` : `${modeName(responseMode)} recommendation`,
     body: rationale,
     note: stale ? `${modeName(selectedMode)} applies after the next reveal` : null,
+    /** Badge text on a stale pick: whose recommendation it still is. */
+    badge: `${modeName(responseMode)} pick`,
   };
 }

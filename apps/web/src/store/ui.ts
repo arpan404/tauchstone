@@ -28,6 +28,9 @@ interface UiState {
   setMode: (mode: AttackMode) => void;
   setStep: (step: StepId) => void;
   setSessionId: (id: string | null) => void;
+  /** Name for the next CSV upload, set by New project before a file is chosen. */
+  uploadName: string | null;
+  setUploadName: (name: string | null) => void;
 }
 
 export const useUi = create<UiState>()(
@@ -35,7 +38,18 @@ export const useUi = create<UiState>()(
     (set) => ({
       currentProjectId: null,
       compareIds: [],
-      setProject: (id) => set({ currentProjectId: id }),
+      // Selections belong to one project's ranking; a different project starts clean.
+      setProject: (id) =>
+        set((state) =>
+          state.currentProjectId === id
+            ? {}
+            : {
+                currentProjectId: id,
+                selectedCandidateId: null,
+                compareIds: [],
+                sessionId: null,
+              },
+        ),
       toggleCompare: (id) =>
         set((state) => ({
           compareIds: state.compareIds.includes(id)
@@ -57,6 +71,8 @@ export const useUi = create<UiState>()(
       setMode: (mode) => set({ mode }),
       setStep: (step) => set({ step }),
       setSessionId: (id) => set({ sessionId: id }),
+      uploadName: null,
+      setUploadName: (name) => set({ uploadName: name }),
     }),
     {
       name: "tauchstone-investigation-selection",
