@@ -1,111 +1,133 @@
-import { CheckIcon, LockSimpleIcon, XIcon } from '@phosphor-icons/react';
+import type { ReactNode } from 'react';
+import { CheckCircleIcon, CircleNotchIcon, LockSimpleIcon, TargetIcon, XCircleIcon } from '@phosphor-icons/react';
 import { motion, useReducedMotion } from 'motion/react';
 import { cn } from 'cn';
+import type { Schema } from '@/api/types';
+import { fmt2 } from './format';
+import { kindOf, pct, VERDICT_CUTOFFS } from './attackCopy';
+import { typeIcon, unit, VERDICT_ICON, VERDICT_TEXT, VERDICT_TONE } from './attackMeta';
 
-export type WellMarkerState = 'sealed' | 'next' | 'running' | 'survive' | 'fail';
+type Verdict = Schema<'Verdict'>;
+type Revealed = Schema<'RevealedOutcome'>;
 
-const WELL: Record<WellMarkerState, string> = {
-  sealed: 'bg-ink/[0.06] text-ink-3',
-  next: 'bg-frost text-primary ring-2 ring-primary',
-  running: 'bg-accent-soft text-primary',
-  survive: 'bg-ok text-white',
-  fail: 'bg-bad text-white',
+const BANDS: { verdict: Verdict; range: string }[] = [
+  { verdict: 'SUPPORTED_SO_FAR', range: `${pct(VERDICT_CUTOFFS.supported)} or more` },
+  { verdict: 'INSUFFICIENT_EVIDENCE', range: 'In between' },
+  { verdict: 'FRAGILE_CONTEXT_DEPENDENT', range: `${pct(VERDICT_CUTOFFS.fragile)} or less` },
+];
+
+/**
+ * Horizontal meter for the chance the claim holds, with the preregistered verdict cut-offs
+ * marked and named. `p` null = no session yet (no marker).
+ */
+export function ChanceMeter({ p, verdict }: { p: number | null; verdict: Verdict | null }) {
+  const reduce = useReducedMotion();
+  const lo = VERDICT_CUTOFFS.fragile * 100;
+  const hi = VERDICT_CUTOFFS.supported * 100;
+  const at = p === null ? null : Math.min(100, Math.max(0, p * 100));
+  return (
+    <div>
+      <div className="relative pt-5" aria-hidden>
+        {[lo, hi].map((v) => (
+          <span key={v} className="absolute top-0 -translate-x-1/2 font-mono text-[11px] text-ink-3 tabular-nums" style={{ left: `${v}%` }}>
+            {v}%
+          </span>
+        ))}
+        <div className="relative h-3 overflow-hidden rounded-full bg-ink/[0.06] ring-1 ring-ink/[0.05]">
+          <span className="absolute inset-y-0 left-0 bg-bad/20" style={{ width: `${lo}%` }} />
+          <span className="absolute inset-y-0 right-0 bg-ok/20" style={{ width: `${100 - hi}%` }} />
+          {[lo, hi].map((v) => <span key={v} className="absolute inset-y-0 w-px bg-ink/30" style={{ left: `${v}%` }} />)}
+        </div>
+        {at !== null && (
+          <motion.span
+            className="absolute top-5 -mt-1 size-5 -translate-x-1/2 rounded-full bg-primary ring-[3px] ring-frost"
+            initial={false}
+            animate={{ left: `${at}%` }}
+            transition={{ duration: reduce ? 0 : 0.9, ease: [0.16, 1, 0.3, 1] }}
+          />
+        )}
+        <div className="mt-1.5 flex justify-between font-mono text-[11px] text-ink-3 tabular-nums">
+          <span>0%</span>
+          <span>100%</span>
+        </div>
+      </div>
+      <ul className="m-0 mt-2 grid list-none gap-1 p-0" aria-label="Verdict cut-offs">
+        {BANDS.map((b) => {
+          const on = verdict === b.verdict;
+          const tone = VERDICT_TONE[b.verdict];
+          return (
+            <li key={b.verdict}
+              aria-current={on ? 'true' : undefined}
+              className={cn(
+                'flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-2.5 py-1.5 text-[12px] [&>svg]:size-3.5',
+                on ? (tone === 'ok' ? 'bg-ok/10 text-ok' : tone === 'bad' ? 'bg-bad/10 text-bad' : 'bg-ink/[0.06] text-ink') : 'text-ink-3',
+              )}>
+              {VERDICT_ICON[b.verdict]}
+              <span className={cn('font-mono tracking-wide', on && 'font-medium')}>{VERDICT_TEXT[b.verdict]}</span>
+              <span className={cn('ml-auto', on ? 'opacity-90' : '')}>{b.range}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+export type CardState = 'sealed' | 'suggested' | 'running' | 'passed' | 'failed';
+
+const STATE_BADGE: Record<CardState, { text: string; icon: ReactNode; cls: string }> = {
+  sealed: { text: 'Result sealed', icon: <LockSimpleIcon />, cls: 'bg-ink/[0.06] text-ink-2' },
+  suggested: { text: 'Suggested next', icon: <TargetIcon weight="bold" />, cls: 'bg-primary/12 text-primary' },
+  running: { text: 'Running', icon: <CircleNotchIcon className="animate-spin motion-reduce:animate-none" />, cls: 'bg-primary/12 text-primary' },
+  passed: { text: 'Passed', icon: <CheckCircleIcon weight="bold" />, cls: 'bg-ok/12 text-ok' },
+  failed: { text: 'Failed', icon: <XCircleIcon weight="bold" />, cls: 'bg-bad/12 text-bad' },
 };
 
-/** Plate-well marker for one hidden test. The outcome glyph only exists after a server reveal. */
-export function WellMarker({ state, size = 30 }: { state: WellMarkerState; size?: number }) {
-  const reduce = useReducedMotion();
-  const revealed = state === 'survive' || state === 'fail';
+export function StateBadge({ state, text }: { state: CardState; text?: string }) {
+  const b = STATE_BADGE[state];
   return (
-    <span className="relative inline-grid shrink-0 place-items-center" style={{ width: size, height: size }} data-state={state} aria-hidden>
-      <motion.span
-        key={revealed ? state : 'hidden'}
-        initial={reduce || !revealed ? false : { scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-        className={cn('grid size-full place-items-center rounded-full transition-colors duration-300 motion-reduce:transition-none', WELL[state])}
-      >
-        {state === 'survive' && <CheckIcon weight="bold" className="size-3.5" />}
-        {state === 'fail' && <XIcon weight="bold" className="size-3.5" />}
-        {(state === 'sealed' || state === 'next') && <LockSimpleIcon weight={state === 'next' ? 'fill' : 'regular'} className="size-3.5" />}
-      </motion.span>
-      {state === 'running' && (
-        <motion.span
-          className="absolute inset-0 rounded-full border-2 border-primary/15 border-t-primary"
-          animate={reduce ? undefined : { rotate: 360 }}
-          transition={{ duration: 0.9, ease: 'linear', repeat: Infinity }}
-        />
-      )}
+    <span className={cn('inline-flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-medium whitespace-nowrap [&>svg]:size-3.5', b.cls)}>
+      {b.icon}
+      {text ?? b.text}
     </span>
   );
 }
 
-/**
- * P(claim holds) across reveals. One slot per budgeted experiment, so the trace shows how much
- * of the session is spent. Dots after the first carry the reveal outcome.
- */
-export function BeliefTrace({
-  points, slots, className,
-}: { points: { p: number; outcome?: 'survive' | 'fail' }[]; slots: number; className?: string }) {
-  const reduce = useReducedMotion();
-  const n = Math.max(1, slots);
-  const x = (i: number) => (i / n) * 100;
-  const y = (p: number) => (1 - Math.min(1, Math.max(0, p))) * 100;
-  const line = points.map((pt, i) => `${i === 0 ? 'M' : 'L'}${x(i)} ${y(pt.p)}`).join(' ');
-  const area = points.length > 1 ? `${line} L${x(points.length - 1)} 100 L0 100 Z` : '';
+/** Observed value, pass rule and the move in the chance; exists only after a server reveal. */
+export function ResultDetail({ r }: { r: Revealed }) {
+  const passed = r.outcome === 'survive';
+  const what = r.type === 'brain_exposure' ? 'Observed value' : 'Reversal score';
+  const moved = Math.round(r.belief_after * 100) !== Math.round(r.belief_before * 100);
   return (
-    <div className={cn('flex items-stretch gap-2', className)} aria-hidden>
-      <div className="flex flex-col justify-between font-mono text-[10px] leading-none text-ink-3">
-        <span>1.0</span>
-        <span>0.5</span>
-        <span>0.0</span>
-      </div>
-      <div className="relative h-full min-h-16 flex-1">
-        <svg className="absolute inset-0 size-full overflow-visible" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="belief-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.18" />
-              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          {[0, 50, 100].map((v) => (
-            <line key={v} x1="0" x2="100" y1={v} y2={v} stroke="var(--ink)" strokeOpacity="0.08" strokeWidth="1" vectorEffect="non-scaling-stroke" strokeDasharray={v === 50 ? '3 3' : undefined} />
-          ))}
-          {Array.from({ length: n + 1 }, (_, i) => (
-            <line key={i} x1={x(i)} x2={x(i)} y1="95" y2="100" stroke="var(--ink)" strokeOpacity="0.18" strokeWidth="1" vectorEffect="non-scaling-stroke" />
-          ))}
-          {area && (
-            <motion.path d={area} fill="url(#belief-fill)" initial={false} animate={{ d: area }}
-              transition={{ duration: reduce ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }} />
-          )}
-          {points.length > 1 && (
-            <motion.path
-              d={line}
-              fill="none"
-              className="stroke-primary"
-              strokeWidth="2"
-              strokeLinejoin="round"
-              vectorEffect="non-scaling-stroke"
-              initial={false}
-              animate={{ d: line }}
-              transition={{ duration: reduce ? 0 : 0.5, ease: [0.16, 1, 0.3, 1] }}
-            />
-          )}
-        </svg>
-        {points.map((pt, i) => (
-          <motion.span
-            key={i}
-            className={cn(
-              'absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-rim',
-              pt.outcome === 'fail' ? 'bg-bad' : pt.outcome === 'survive' ? 'bg-ok' : 'bg-primary',
-            )}
-            style={{ left: `${x(i)}%`, top: `${y(pt.p)}%` }}
-            initial={reduce || i === 0 ? false : { scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 22 }}
-          />
-        ))}
-      </div>
+    <div className={cn('grid gap-1.5 rounded-lg px-3 py-2.5 text-[12.5px] leading-snug', passed ? 'bg-ok/[0.08]' : 'bg-bad/[0.08]')}>
+      <p className="m-0 text-ink">
+        <span className={cn('font-medium', passed ? 'text-ok' : 'text-bad')}>{passed ? 'Passed.' : 'Failed.'}</span>{' '}
+        {what} <span className="font-mono tabular-nums">{fmt2(r.value)}</span>
+        {r.threshold != null && <>, needed <span className="font-mono tabular-nums">{fmt2(r.threshold)}</span> or lower</>}.
+      </p>
+      <p className="m-0 text-ink-2">
+        Chance the claim holds: <span className="font-mono tabular-nums">{pct(r.belief_before)} → {pct(r.belief_after)}</span>
+        {!moved && ' (no change)'}
+      </p>
+      {r.rule && <p className="m-0 text-[11.5px] text-ink-3">Exact rule: {r.rule}</p>}
     </div>
+  );
+}
+
+/** Icon chip + plain title + what the test checks, for one hidden test or one kind of test. */
+export function TestHeading({ type, label, badge }: { type: string; label?: string; badge?: ReactNode }) {
+  const kind = kindOf(type);
+  return (
+    <span className="flex min-w-0 items-start gap-3">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-[18px]">{typeIcon(type)}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+          <span className="text-[14px] font-medium text-ink">{kind.title}</span>
+          {badge}
+        </span>
+        {kind.checks && <span className="mt-1 block text-[12.5px] leading-snug text-ink-2">{kind.checks}</span>}
+        {label && <span className="mt-1.5 block font-mono text-[11.5px] break-words text-ink-3">{unit(label)}</span>}
+      </span>
+    </span>
   );
 }
