@@ -31,22 +31,22 @@ export function SingleCellPanel() {
   return <section className="single-cell" aria-labelledby="single-cell-title">
     <BoundaryBanner /><MockRibbon show={mock || synthetic} />
     <div className="sc-content">
-      <h2 id="single-cell-title">Exploratory cell types</h2>
-      <Alert><AlertTitle>Exploratory analysis</AlertTitle><AlertDescription>{data?.label ?? 'Exploratory, not part of the preregistered benchmark'}</AlertDescription></Alert>
+      <h2 id="single-cell-title">Reversal by cell type</h2>
+      <Alert><AlertTitle>Exploratory analysis</AlertTitle><AlertDescription>{data?.label ?? 'Exploratory. Not part of the preregistered validation.'}</AlertDescription></Alert>
       {isLoading && <p role="status">Loading cell-type signatures…</p>}
       {error && <div role="alert"><p>{/failed: 404\b/.test(error.message) ? 'Panel not built yet' : 'Could not load cell-type signatures.'}</p><Button variant="outline" onClick={() => void refetch()}>Retry</Button></div>}
       {groups && (!groups.drugs.length || !groups.signatures.length) && <p role="status">No cell-type scores available.</p>}
       {groups && groups.drugs.length > 0 && groups.signatures.length > 0 && <>
-        <p className="sc-caption">Consensus by cell-type signature. Blue / negative = reversal; warm / positive = same direction. Grey hatching / × = not scored.</p>
+        <p className="sc-caption">Reversal score per cell-type signature. Blue, negative = opposite to Alzheimer's. Warm, positive = same direction as Alzheimer's. Grey hatching or × = not scored.</p>
         <div className="sc-scroll" tabIndex={0} aria-label="Cell-type heatmap, scroll horizontally">
           <div style={{ minWidth: Math.max(1200, groups.signatures.length * 60 + 260) }}>
             <div className="sc-column-groups" aria-hidden="true"><span style={{ flex: 1 }}>Bulk</span>{columnGroups.map(g => <span key={g.label} style={{ flex: g.count }}>{g.label}</span>)}</div>
             <InstrumentChart option={option!} style={{ height: groups.drugs.length * 28 + 250 }} />
           </div>
         </div>
-        <details><summary>Score values and keyboard-accessible tooltips</summary><div className="sc-scroll"><table><caption>Consensus and method scores</caption><thead><tr><th>Drug by pool rank</th><th>Bulk reference</th>{groups.signatures.map(s => <th key={s.signature_id}>{s.cohort} / {s.region ?? 'unspecified'} / {s.cell_type.replaceAll('_', ' ')}</th>)}</tr></thead><tbody>{groups.drugs.map(d => <tr key={d.candidate_id}><th>{d.pool_rank}. {d.name}</th><td>{fmt(d.bulk_consensus)}</td>{groups.signatures.map(s => <td key={s.signature_id} className={s.status === 'insufficient_donors' ? 'sc-unscored' : ''}><span tabIndex={0} title={scoreText(d, s)}>{scoreText(d, s)}</span></td>)}</tr>)}</tbody></table></div></details>
+        <details><summary>Score values as a table</summary><div className="sc-scroll"><table><caption>Reversal score and the three match scores (WTCS, KS, cosine)</caption><thead><tr><th>Drug (clinical-stage rank)</th><th>Bulk reference</th>{groups.signatures.map(s => <th key={s.signature_id}>{s.cohort} / {s.region ?? 'unspecified'} / {s.cell_type.replaceAll('_', ' ')}</th>)}</tr></thead><tbody>{groups.drugs.map(d => <tr key={d.candidate_id}><th>{d.pool_rank}. {d.name}</th><td>{fmt(d.bulk_consensus)}</td>{groups.signatures.map(s => <td key={s.signature_id} className={s.status === 'insufficient_donors' ? 'sc-unscored' : ''}><span tabIndex={0} title={scoreText(d, s)}>{scoreText(d, s)}</span></td>)}</tr>)}</tbody></table></div></details>
       </>}
-      {groups && groups.signatures.length > 0 && <div className="sc-scroll" tabIndex={0} aria-label="Signature table"><table><caption>Signature inventory, AD minus control</caption><thead><tr>{['Cohort', 'Region', 'Cell type', 'Donors AD / control', 'Nuclei', 'Genes FDR < 0.05', 'Status'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{groups.signatures.map(s => <tr key={s.signature_id}><td>{s.cohort}</td><td>{s.region ?? 'unspecified'}</td><td>{s.cell_type.replaceAll('_', ' ')}</td><td>{s.n_donors_ad} / {s.n_donors_control}</td><td>{s.n_nuclei.toLocaleString()}</td><td>{s.n_fdr05?.toLocaleString() ?? 'unspecified'}</td><td title={s.status === 'insufficient_donors' ? 'not scored: fewer than 3 donors per group' : undefined}>{s.status.replaceAll('_', ' ')}</td></tr>)}</tbody></table></div>}
+      {groups && groups.signatures.length > 0 && <div className="sc-scroll" tabIndex={0} aria-label="Signature table"><table><caption>Signatures used, Alzheimer's vs control</caption><thead><tr>{['Cohort', 'Region', 'Cell type', "Donors Alzheimer's / control", 'Nuclei', 'Genes FDR < 0.05', 'Status'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>{groups.signatures.map(s => <tr key={s.signature_id}><td>{s.cohort}</td><td>{s.region ?? 'unspecified'}</td><td>{s.cell_type.replaceAll('_', ' ')}</td><td>{s.n_donors_ad} / {s.n_donors_control}</td><td>{s.n_nuclei.toLocaleString()}</td><td>{s.n_fdr05?.toLocaleString() ?? 'unspecified'}</td><td title={s.status === 'insufficient_donors' ? 'not scored: fewer than 3 donors per group' : undefined}>{s.status.replaceAll('_', ' ')}</td></tr>)}</tbody></table></div>}
       {data?.note && <p className="sc-caption">{data.note}</p>}
       {data?.cell_typing && <p className="sc-caption">{data.cell_typing}</p>}
     </div><ProvenanceStrip provenance={data?.provenance} />

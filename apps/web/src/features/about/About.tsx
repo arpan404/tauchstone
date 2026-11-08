@@ -19,6 +19,7 @@ import { useBenchmark, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
+import { metricLabel } from '@/features/benchmark/benchmarkOptions';
 import { integrityMarkdown, frozenPreregistrationSha256 } from './integrity';
 import './about.css';
 
@@ -52,15 +53,15 @@ export function IntegrityLog() {
 }
 
 const pipeline: [string, string, ReactNode][] = [
-  ['Construct', 'Find the genes that change in Alzheimer brain tissue.', <DnaIcon key="c" />],
-  ['Rank', 'Score drugs whose cell response pushes those genes back.', <ListNumbersIcon key="r" />],
-  ['Seal', 'Freeze the rules and hide the test outcomes first.', <LockIcon key="s" />],
-  ['Attack', 'Pick a hidden test, commit, then reveal one outcome.', <CrosshairIcon key="a" />],
-  ['Replay', 'Compare test-picking strategies on the same budget.', <ArrowsCounterClockwiseIcon key="p" />],
+  ['Signature', "Genes up or down in Alzheimer's vs control brain (GSE132903)", <DnaIcon key="c" />],
+  ['Rank', 'Score LINCS drug responses that push those genes the opposite way', <ListNumbersIcon key="r" />],
+  ['Preregister', 'Write down the test rules and hide test outcomes before testing', <LockIcon key="s" />],
+  ['Attack', 'Pick a hidden test, run it, see if the claim holds', <CrosshairIcon key="a" />],
+  ['Replay', 'Compare test-picking strategies with the same test budget', <ArrowsCounterClockwiseIcon key="p" />],
 ];
 
 const policyLabel = (id: string) =>
-  id === 'tauchstone_hybrid' ? 'Tauchstone' : id === 'random' ? 'Random' : 'Decision-aware co-primary';
+  id === 'tauchstone_hybrid' ? 'Tauchstone' : id === 'random' ? 'Random' : 'Two-step lookahead';
 
 export function About() {
   const { data, isLoading, isError } = useBenchmark();
@@ -75,16 +76,16 @@ export function About() {
           <PathIcon aria-hidden className="size-4 text-primary" /> Methods
         </p>
         <h2 className="m-0 mt-2 max-w-[24ch] font-heading text-[30px] leading-[1.1] font-normal tracking-[-0.035em] text-ink sm:text-[42px]">
-          Find a drug. Attack the hypothesis. Keep only what survives.
+          How candidates are ranked and tested
         </h2>
         <ul className="m-0 mt-5 flex list-none flex-wrap gap-2 p-0" aria-label="Record">
           <li><StatusBadge title={frozenPreregistrationSha256} className="font-mono"><FingerprintIcon aria-hidden className="text-primary" /><span className="font-sans">Preregistration</span> {frozenPreregistrationSha256.slice(0, 8)}</StatusBadge></li>
-          <li><StatusBadge tone="gap"><ClockCounterClockwiseIcon aria-hidden /> Retrospective tests</StatusBadge></li>
-          <li><StatusBadge><LockIcon aria-hidden /> Truth table stays on the server</StatusBadge></li>
+          <li><StatusBadge tone="gap" tip="Strategies are replayed on drugs whose hidden test outcomes were fixed in advance. This scores how well each strategy picks tests, not the drugs."><ClockCounterClockwiseIcon aria-hidden /> Replay on past data</StatusBadge></li>
+          <li><StatusBadge tip="The table of hidden test outcomes never reaches the browser. Only the result of a committed test is sent."><LockIcon aria-hidden /> Outcomes stay on server</StatusBadge></li>
         </ul>
       </header>
 
-      <Panel title={<span id="about-pipeline">A ranking becomes a testable claim</span>} icon={<PathIcon />} aria-labelledby="about-pipeline">
+      <Panel title={<span id="about-pipeline">Method steps</span>} icon={<PathIcon />} aria-labelledby="about-pipeline">
         <ol className="about-pipeline">{pipeline.map(([title, detail, icon], i) => <li key={title}>
           <div className="flex items-center justify-between">
             <span className="about-step-icon" aria-hidden="true">{icon}</span>
@@ -96,23 +97,23 @@ export function About() {
       </Panel>
 
       <Panel
-        title={<span id="about-benchmark">Benchmark</span>}
+        title={<span id="about-benchmark">Validation</span>}
         icon={<ChartScatterIcon />}
         aria-labelledby="about-benchmark"
-        caption={data && <>{data.n_candidates} candidates undecided before testing{data.all_candidates?.n_candidates !== undefined && `, of ${data.all_candidates.n_candidates} sealed`}. {data.n_seeds} seeds. Budget {data.budget}.</>}
+        caption={data && <>{data.n_candidates}{data.all_candidates?.n_candidates !== undefined && ` of ${data.all_candidates.n_candidates}`} candidates undecided at start. {data.n_seeds} random seeds. Test budget {data.budget}.</>}
       >
-        {isLoading && <p role="status" className="m-0 text-[13px] text-ink-3">Loading benchmark…</p>}
-        {isError && <p role="alert" className="m-0 text-[13px] text-bad">Benchmark unavailable. No result is substituted.</p>}
+        {isLoading && <p role="status" className="m-0 text-[13px] text-ink-3">Loading validation results…</p>}
+        {isError && <p role="alert" className="m-0 text-[13px] text-bad">Validation results unavailable. Nothing is shown in their place.</p>}
         {data && <>
           <div className="overflow-x-auto">
             <table className="about-results w-full text-[13px]">
               <thead>
-                <tr><th>Policy</th><th>Decision accuracy after {data.budget} tests</th><th>95% CI</th></tr>
+                <tr><th>Strategy</th><th>Verdict match rate after {data.budget} tests</th><th>95% CI</th></tr>
               </thead>
               <tbody>{selected?.map((p) => <tr key={p.policy} data-primary={p.policy === 'tauchstone_hybrid'}>
                 <td className="font-medium text-ink">{policyLabel(p.policy)}</td>
                 <td className={`font-mono tabular-nums ${p.policy === 'tauchstone_hybrid' ? 'text-primary' : 'text-ink-2'}`}>
-                  <meter className="sr-only" min={0} max={1} value={p.decision_accuracy.estimate} aria-label={`${p.label} decision accuracy`} />
+                  <meter className="sr-only" min={0} max={1} value={p.decision_accuracy.estimate} aria-label={`${policyLabel(p.policy)} verdict match rate`} />
                   {(p.decision_accuracy.estimate * 100).toFixed(1)}%
                 </td>
                 <td className="font-mono text-ink-3 tabular-nums">{p.decision_accuracy.ci95.map((v) => `${(v * 100).toFixed(1)}%`).join(' to ')}</td>
@@ -120,19 +121,19 @@ export function About() {
             </table>
           </div>
           <ul className="m-0 mt-3 flex list-none flex-wrap gap-2 p-0">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i} className="rounded-full bg-frost/55 px-3 py-1 text-[12px] text-ink-2 ring-1 ring-rim/80">
-            {t.policy_a === 'tauchstone_hybrid' ? 'Tauchstone' : 'Decision-aware co-primary'} vs random: Holm p = <span className="font-mono text-primary">{t.p_holm.toPrecision(3)}</span> for {t.metric.replaceAll('_', ' ')}.
+            {policyLabel(t.policy_a)} vs random, {metricLabel(t.metric)}: p = <span className="font-mono text-primary">{t.p_holm.toPrecision(3)}</span> (Holm-adjusted)
           </li>)}</ul>
-          {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert" className="m-0 mt-3 rounded-xl bg-bad/10 px-3 py-2 text-[13px] text-bad">The API hash differs from the frozen record. Verify the serving bundle before citing results.</p>}
+          {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert" className="m-0 mt-3 rounded-xl bg-bad/10 px-3 py-2 text-[13px] text-bad">The API hash differs from the frozen preregistration. Check the served data before citing results.</p>}
         </>}
       </Panel>
 
       <Panel title="What did not hold up" icon={<WarningIcon />} className="about-limitations">
         <ul>
-          <li>The preregistered permutation gate was not met: 17/20 gold clinical-pool compounds had p_perm &lt; 0.05; the gate required every top-20 compound. The selection-aware rank-matched check was 15/20, a different test.</li>
-          <li>The top 5 did not go beyond the shuffled-label null. A high rank alone is insufficient evidence.</li>
-          <li>The decision-aware co-primary did not beat random on the sealed pool. Tauchstone tied max_failure and max_uncertainty.</li>
+          <li>Shuffled-label check not met. Of the top 20 clinical-stage compounds (gold LINCS signatures), 17 had permutation p &lt; 0.05. The preregistered gate required all 20. A separate rank-matched check, which allows for picking the top 20 out of thousands, gave 15 of 20.</li>
+          <li>The top 5 did not score beyond what shuffled Alzheimer's/control labels produce. A high rank alone is not enough evidence.</li>
+          <li>Two-step lookahead, one of the two primary strategies, did not beat random on the benchmark drugs. Tauchstone tied with most likely to fail first and most uncertain first.</li>
         </ul>
-        <p>These are retrospective tests of expression-reversal hypotheses. LINCS cell contexts and bulk brain composition limit interpretation. Brain exposure is labelled measured, curated or predicted. A PDB structure supplies target context, never binding evidence.</p>
+        <p>These tests replay past data on gene expression reversal claims. Results are limited by the LINCS cell lines, concentrations and times measured, and by the mix of cell types in bulk brain tissue. Brain exposure is labelled measured, curated or predicted. A PDB structure shows target context, never binding evidence.</p>
       </Panel>
 
       <details className="about-record glass" aria-label="Full record">
@@ -144,10 +145,10 @@ export function About() {
         <div className="about-record-body">
           <section aria-labelledby="about-boundary">
             <h3 id="about-boundary">What never feeds the ranking</h3>
-            <p>Held-out cohorts, composition sensitivity, unseen LINCS contexts and exposure lookups never feed ranking, threshold selection, tuning or demo-candidate choice. The truth table stays on the server. Signatures are AD minus control (GSE132903); each cohort stays separate. Rankings use gold LINCS L1000 signatures.</p>
+            <p>Hidden-test data never feeds the ranking, the pass thresholds, tuning or the choice of demo candidates. That covers the held-out cohorts, the cell-mix adjusted signature, LINCS conditions held back for testing and brain-exposure lookups. Hidden test outcomes stay on the server. The signature is genes up or down in Alzheimer's vs control (GSE132903). Each cohort is analysed separately. Rankings use LINCS L1000 signatures from the gold set, which pass replicate-quality filters.</p>
           </section>
           <section aria-labelledby="about-freeze">
-            <h3 id="about-freeze">The frozen record</h3>
+            <h3 id="about-freeze">Preregistration record</h3>
             <p>Preregistration committed at <code>8ed0885</code>. SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
             <code className="about-hash"><FingerprintIcon aria-hidden />{frozenPreregistrationSha256}</code>
             {data && <p className="text-[12.5px] text-ink-3">{mock ? 'Synthetic API/fixture hash' : 'API preregistration SHA-256'}: <code className="break-all">{data.preregistration_sha256}</code></p>}

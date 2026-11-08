@@ -22,7 +22,7 @@ export function DiseaseSignatureView() {
             <p className="text-sm text-muted-foreground" aria-label="Cohort summary">
               {data.cohort} · {data.tissue} · {data.method} ·{' '}
               <span className="tabular-nums">
-                n AD {data.n_ad} / n control {data.n_control}
+                n Alzheimer's {data.n_ad} / n control {data.n_control}
               </span>{' '}
               · <span className="tabular-nums">{data.n_fdr05?.toLocaleString()} genes FDR&lt;0.05</span>
             </p>
@@ -41,25 +41,25 @@ export function DiseaseSignatureView() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">
-                  Volcano: AD minus control (warm = up in AD, blue = down in AD)
+                  Alzheimer's vs control (warm = up in Alzheimer's, blue = down)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <VolcanoPlot genes={data.genes} />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Dashed line: FDR 0.05. Emphasised points are the LINCS query set (top 150 up /
-                  down).
+                  Dashed line FDR 0.05. Highlighted points are the top 150 up and top 150 down genes
+                  sent to LINCS.
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Sign check (known AD genes)</CardTitle>
+                <CardTitle className="text-sm font-medium">Sign check on known Alzheimer's genes</CardTitle>
               </CardHeader>
               <CardContent>
                 {data.sign_check && <SignCheckTable rows={data.sign_check} />}
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Positive stat = higher in AD. GFAP expected up; SST / VGF expected down.
+                  Positive stat = higher in Alzheimer's. GFAP expected up, SST and VGF expected down.
                 </p>
               </CardContent>
             </Card>

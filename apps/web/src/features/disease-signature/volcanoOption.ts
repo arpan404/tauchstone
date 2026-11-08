@@ -54,12 +54,12 @@ export function buildVolcanoOption(
         group === 'ns'
           ? 'Not significant'
           : group === 'up'
-            ? 'Up in AD'
+            ? "Up in Alzheimer's"
             : group === 'down'
-              ? 'Down in AD'
+              ? "Down in Alzheimer's"
               : group === 'query_up'
-                ? 'Query set (up)'
-                : 'Query set (down)',
+                ? 'Sent to LINCS (up)'
+                : 'Sent to LINCS (down)',
       type: 'scatter',
       symbolSize: GROUP_STYLE[group].size,
       itemStyle: { color: GROUP_STYLE[group].color, opacity: group === 'ns' ? 0.45 : 0.9 },
@@ -79,7 +79,7 @@ export function buildVolcanoOption(
     grid: { left: 52, right: 28, top: 16, bottom: 88 },
     legend: { bottom: 0, type: 'scroll', width: '90%', textStyle: { fontSize: 11, color: '#687182' } },
     xAxis: {
-      name: 'log2FC (AD minus control)',
+      name: "log2FC (Alzheimer's vs control)",
       nameLocation: 'middle',
       nameGap: 30,
       splitLine: { lineStyle: { color: '#e5e8ed' } }, nameTextStyle: { fontSize: 11 },
