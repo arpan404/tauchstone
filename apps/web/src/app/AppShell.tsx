@@ -177,7 +177,7 @@ export function AppShell({
                           <span>{label}</span>
                         </SidebarMenuButton>
                         {id === "compare" && compareIds.length > 0 && (
-                          <SidebarMenuBadge className="font-mono text-[11px] text-accent-ink">
+                          <SidebarMenuBadge className="font-mono text-[11px] text-accent-ink peer-data-active/menu-button:text-white!">
                             {compareIds.length}
                           </SidebarMenuBadge>
                         )}

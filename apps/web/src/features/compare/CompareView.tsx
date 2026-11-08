@@ -235,12 +235,8 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
     return (
       <div className="p-6">
         <EmptyState
-          className="rounded-[18px] border-solid border-white/80 bg-white/75 shadow-[0_1px_2px_rgb(15_24_48/0.05),0_20px_48px_-18px_rgb(30_60_140/0.28)] backdrop-blur-xl"
-          icon={
-            <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-primary">
-              <ColumnsIcon className="size-5" />
-            </span>
-          }
+          
+          icon={<ColumnsIcon />}
           title="Choose 2 to 4 candidates"
           action={choose}
         />
