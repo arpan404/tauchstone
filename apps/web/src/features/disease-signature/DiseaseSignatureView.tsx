@@ -12,7 +12,8 @@ import { EmptyState, NumberTicker, Panel, StatusBadge } from '@/components/syste
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Schema } from '@/api/types';
-import { GeneMatchTable, GeneSearch, focusGene, matchGenes } from './GeneSearch';
+import { GeneMatchTable, GeneSearch } from './GeneSearch';
+import { focusGene, matchGenes } from './geneMatch';
 import { SignCheckTable } from './SignCheckTable';
 import { VolcanoPlot } from './VolcanoPlot';
 import { ProvenanceFooter } from './ProvenanceFooter';

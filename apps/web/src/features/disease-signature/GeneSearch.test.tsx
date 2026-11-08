@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
-import { GeneMatchTable, GeneSearch, focusGene, matchGenes } from './GeneSearch';
+import { GeneMatchTable, GeneSearch } from './GeneSearch';
+import { focusGene, matchGenes } from './geneMatch';
 import type { Schema } from '@/api/types';
 afterEach(cleanup);
 
