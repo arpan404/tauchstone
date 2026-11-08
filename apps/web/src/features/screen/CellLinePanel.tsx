@@ -49,13 +49,13 @@ export function CellLinePanel({
         <>
           <div
             aria-hidden
-            className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[12px] text-ink-3"
+            className="mb-2.5 flex flex-wrap items-center gap-x-5 gap-y-1 px-1 text-[13.5px] text-ink-3"
           >
             <span>
-              <span className="font-mono text-ink-2">count</span> signatures scored
+              <span className="font-mono text-ink">count</span> signatures scored
             </span>
             <span>
-              <span className="font-mono text-primary">score</span> strongest reversal so far
+              <span className="font-mono font-medium text-primary">score</span> strongest single-signature reversal so far
             </span>
           </div>
           <LayoutGroup>
@@ -94,7 +94,7 @@ export function CellLinePanel({
 
 function Tile({ line, max }: { line: CellLine; max: number }) {
   const best = line.best_consensus;
-  const label = `${line.cell_id}${line.neural ? ", neural" : ""}: ${line.n_scored.toLocaleString("en-US")} signatures scored, strongest reversal ${best == null ? "not available" : best.toFixed(2)}`;
+  const label = `${line.cell_id}${line.neural ? ", neural" : ""}: ${line.n_scored.toLocaleString("en-US")} signatures scored, strongest single-signature reversal ${best == null ? "not available" : best.toFixed(2)}`;
   return (
     <div
       className={cn(
