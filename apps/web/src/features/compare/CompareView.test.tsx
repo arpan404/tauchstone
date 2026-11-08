@@ -1,5 +1,6 @@
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { useUi } from '@/store/ui';
 import { CompareView } from './CompareView';
 
 const detail = (id: string) => ({ drug_id: id, name: id === 'a' ? 'Piperacillin' : 'Brinzolamide',
@@ -20,11 +21,13 @@ describe('CompareView', () => {
     const headers = screen.getAllByRole('columnheader');
     expect(headers[1].textContent).toContain('Piperacillin');
     expect(headers[2].textContent).toContain('Brinzolamide');
-    for (const label of ['Pool rank', 'Reversal', 'Cell lines', 'Concentrations', 'Time', 'Brain exposure', 'Targets', 'Attack']) {
+    for (const label of ['Reversal', 'Contexts', 'Cell lines', 'Doses', 'Times', 'Brain-cell data', 'Brain exposure', 'Targets', 'Hidden tests', 'Approval']) {
       expect(screen.getByRole('rowheader', { name: label })).toBeTruthy();
     }
     expect(screen.getByText('-1.79')).toBeTruthy();
+    expect(screen.getByText('#5')).toBeTruthy();
     expect(screen.getByText('CA2')).toBeTruthy();
+    expect(screen.getAllByText('not preregistered')).toHaveLength(2);
     expect(screen.getAllByText('predicted low')).toHaveLength(2);
     expect(screen.queryByText('SECRET_OUTCOME')).toBeNull();
   });
@@ -32,13 +35,15 @@ describe('CompareView', () => {
     vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: url.endsWith('a'), json: async () => detail('a') })));
     render(<CompareView drugIds={['a', 'b']} />);
     await screen.findByText('Piperacillin');
-    expect(screen.getAllByText('Unavailable').length).toBe(8);
+    expect(screen.getAllByText('Unavailable')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Remove b' })).toBeTruthy();
     expect(screen.getByText('-1.79')).toBeTruthy();
   });
   it.each([[], ['a'], ['a','b','c','d','e']])('rejects invalid column counts %j', async (...ids) => {
     const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
     render(<CompareView drugIds={ids as string[]} />);
-    expect(screen.getByText('Select 2–4 compounds')).toBeTruthy();
+    expect(screen.getByText('Choose 2 to 4 candidates')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Choose candidates' })).toBeTruthy();
     expect(fetcher).not.toHaveBeenCalled();
   });
   it('supports four columns and encodes project scope', async () => {
@@ -56,5 +61,21 @@ describe('CompareView', () => {
     await waitFor(() => expect(screen.queryByText('Piperacillin')).toBeNull());
     const row = screen.getByRole('rowheader', { name: 'Targets' }).closest('tr')!;
     await waitFor(() => expect(within(row).getAllByText('CA2')).toHaveLength(2));
+  });
+  it('removes a column from compare and emphasises the strongest reversal', async () => {
+    useUi.setState({ compareIds: ['a', 'b'] });
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () => detail(url.endsWith('a') ? 'a' : 'b') })));
+    render(<CompareView drugIds={['a', 'b']} />);
+    await screen.findByText('Brinzolamide');
+    expect(screen.getByText('-1.79').className).toContain('text-primary');
+    expect(screen.getByText('-1.67').className).not.toContain('text-primary');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Piperacillin' }));
+    expect(useUi.getState().compareIds).toEqual(['b']);
+  });
+  it('sends Choose candidates back to the Candidates step', () => {
+    useUi.setState({ step: 'compare' });
+    render(<CompareView drugIds={['a']} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Choose candidates' }));
+    expect(useUi.getState().step).toBe('candidates');
   });
 });

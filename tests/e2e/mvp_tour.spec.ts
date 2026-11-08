@@ -42,7 +42,7 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   for (const i of [0, 1, 2]) await boxes.nth(i).check();
   await pause(page);
   await nav(page, 'Compare');
-  await expect(page.locator('.shell-content table, .shell-content [role="table"]').first()).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Compare candidates' })).toBeVisible();
   await pause(page, 2000);
 
   // Drug page: gaps, 3D molecule, context map, resource agreement.
