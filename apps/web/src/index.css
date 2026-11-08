@@ -150,6 +150,7 @@
   --rim: #ffffff;
   --on-ink: #f3f6fd;
   --overlay-bg: rgb(255 255 255 / 0.78);
+  --dialog-bg: rgb(250 251 254 / 0.97);
   --overlay-scrim: rgb(15 24 48 / 0.18);
   --overlay-shadow: 0 1px 2px rgb(20 21 26 / 0.06), 0 12px 32px -8px rgb(20 60 120 / 0.16);
   --solid-panel: #ffffff;
@@ -194,6 +195,7 @@
   --rim: #3a3a40;
   --on-ink: #08080a;
   --overlay-bg: rgb(28 28 31 / 0.9);
+  --dialog-bg: rgb(26 26 29 / 0.98);
   --overlay-scrim: rgb(0 0 0 / 0.6);
   --overlay-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -8px rgb(0 0 0 / 0.7);
   --solid-panel: #161618;
@@ -358,6 +360,12 @@ select:focus-visible:not([data-slot]) {
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
   border: 1px solid var(--glass-border);
+}
+/* Dialogs carry dense content: nearly opaque so nothing behind shows through, blur or not. */
+[data-slot="dialog-content"] {
+  background: var(--dialog-bg) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 [data-slot="dialog-overlay"] { background: var(--overlay-scrim); backdrop-filter: blur(4px); }
 /* Floating sidebar renders as glass. */
