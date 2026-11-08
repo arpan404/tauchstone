@@ -44,7 +44,7 @@ export function CandidatePicker({
         aria-label={selectedCandidateId ? `Selected candidate ${label}` : "Choose drug"}
         className={cn(
           variant === "bar"
-            ? "flex h-8 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-2.5 pl-1.5 text-[13px] hover:border-line-strong"
+            ? "flex h-8 shrink-0 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-2.5 pl-1.5 text-[13px] whitespace-nowrap hover:border-line-strong"
             : "flex h-10 min-w-64 items-center gap-2.5 rounded-md border border-line-strong bg-surface px-3 text-[14px] hover:border-primary",
           className,
         )}
@@ -53,11 +53,11 @@ export function CandidatePicker({
           weight="fill"
           className={cn("shrink-0 rounded-full bg-accent-soft p-0.5 text-primary", variant === "bar" ? "size-5" : "size-6")}
         />
-        <span className={cn("max-w-44 truncate", selected || selectedCandidateId ? "font-medium text-ink" : "text-ink-3")}>
+        <span className={cn("max-w-48 min-w-0 truncate", selected || selectedCandidateId ? "font-medium text-ink" : "text-ink-3")}>
           {label}
         </span>
         {selected && typeof selected.consensus === "number" && (
-          <span className="font-mono text-[12px] text-ink-3">
+          <span className={cn("shrink-0 font-mono text-[12px] whitespace-nowrap text-ink-3", variant === "bar" && "hidden lg:inline")}>
             #{selected.rank} <span className="text-primary">{selected.consensus.toFixed(2)}</span>
           </span>
         )}
