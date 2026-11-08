@@ -73,7 +73,7 @@ const exposureText = (d: Detail) => {
 
 const ROWS: Row[] = [
   {
-    label: "Reversal",
+    label: "Reversal score",
     term: "reversal",
     value: (d) => (
       <span className="flex flex-col gap-1.5">
@@ -82,14 +82,14 @@ const ROWS: Row[] = [
           <span className="flex flex-wrap gap-x-3 font-mono text-[11.5px] whitespace-nowrap text-ink-3 tabular-nums">
             <span>WTCS {d.scores.wtcs.toFixed(2)}</span>
             <span>KS {d.scores.ks.toFixed(2)}</span>
-            <span>Cos {d.scores.cosine.toFixed(2)}</span>
+            <span>Cosine {d.scores.cosine.toFixed(2)}</span>
           </span>
         )}
       </span>
     ),
   },
   {
-    label: "Contexts",
+    label: "Conditions",
     term: "contexts",
     metric: (d) => d.n_contexts,
     value: (d, best) => <span className={num(best)}>{d.n_contexts}</span>,
@@ -104,7 +104,7 @@ const ROWS: Row[] = [
       </span>
     ),
   },
-  { label: "Doses", value: (d) => <Values values={d.gaps.doses_um} unit="µM" /> },
+  { label: "Concentrations", value: (d) => <Values values={d.gaps.doses_um} unit="µM" /> },
   { label: "Times", value: (d) => <Values values={d.gaps.times_h} unit="h" /> },
   {
     label: "Brain-cell data",
@@ -147,10 +147,10 @@ const ROWS: Row[] = [
       <span className="flex items-center gap-2">
         <span className="font-mono text-ink tabular-nums">{d.n_hidden_tests ?? unspecified}</span>
         {d.attack_ready ? (
-          <Term term="attackReady" className="text-[12px] text-ink-3">Attack-ready</Term>
+          <Term term="attackReady" className="text-[12px] text-ink-3">Ready for Attack</Term>
         ) : (
           <Term term="attackReady" className="no-underline">
-            <StatusBadge size="sm">Not attack-ready</StatusBadge>
+            <StatusBadge size="sm">Not ready for Attack</StatusBadge>
           </Term>
         )}
       </span>
@@ -173,7 +173,7 @@ const ROWS: Row[] = [
 
 /** Rows are grouped into soft tinted blocks instead of ruled lines. */
 const GROUPS: { label: string; icon: Icon; rows: string[] }[] = [
-  { label: "Signal", icon: ChartLineDownIcon, rows: ["Reversal", "Contexts", "Cell lines", "Doses", "Times"] },
+  { label: "LINCS match", icon: ChartLineDownIcon, rows: ["Reversal score", "Conditions", "Cell lines", "Concentrations", "Times"] },
   { label: "Brain", icon: BrainIcon, rows: ["Brain-cell data", "Brain exposure"] },
   { label: "Evidence", icon: ListChecksIcon, rows: ["Targets", "Hidden tests", "Approval"] },
 ];

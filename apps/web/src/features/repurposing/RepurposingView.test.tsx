@@ -67,7 +67,7 @@ it("sends each filter to the project API and preserves Cholic acid neural eviden
     ["Approved", "approved=true"],
     ["Brain-cell data", "brain_cells=true"],
     ["Brain-penetrant", "penetrant=true"],
-    ["≥ 5 contexts", "min_contexts=5"],
+    ["≥ 5 conditions", "min_contexts=5"],
   ]) {
     const chip = screen.getByRole("button", { name: label });
     fireEvent.click(chip);
@@ -162,10 +162,10 @@ it("sorts loaded rows by column and marks the active sort", async () => {
       .getAllByRole("row")
       .slice(1)
       .map((r) => within(r).queryAllByRole("button")[0]?.textContent);
-  fireEvent.click(screen.getByRole("button", { name: /Contexts/ }));
-  expect(names()[0]).toBe("Cholic acid"); // 13 contexts, most first
+  fireEvent.click(screen.getByRole("button", { name: /Conditions/ }));
+  expect(names()[0]).toBe("Cholic acid"); // 13 conditions, most first
   expect(
-    screen.getByRole("columnheader", { name: /Contexts/ }).getAttribute("aria-sort"),
+    screen.getByRole("columnheader", { name: /Conditions/ }).getAttribute("aria-sort"),
   ).toBe("descending");
   fireEvent.click(screen.getByRole("button", { name: /Drug/ }));
   expect(names()[0]).toBe("Bavisant");

@@ -8,7 +8,7 @@ export function VolcanoPlot({ genes }: { genes: Schema<'GeneStat'>[] }) {
   const [animate] = useState(true);
   const option = useMemo(() => buildVolcanoOption(genes, animate), [genes, animate]);
   return (
-    <div role="img" aria-label={`Volcano plot of ${genes.length} genes. Negative x means lower in AD.`}>
+    <div role="img" aria-label={`Volcano plot of ${genes.length} genes. Negative x means lower in Alzheimer's.`}>
       <ReactECharts
         className="signature-chart"
         option={option}

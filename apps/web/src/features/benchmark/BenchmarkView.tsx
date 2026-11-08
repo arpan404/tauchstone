@@ -53,7 +53,8 @@ type Policy = BenchmarkAnalysis['policies'][number];
 
 /** Documented permutation gate result (README, integrity log): 17 of 20 compounds, gate needs 20. */
 const PERMUTATION_GATE = '17/20';
-const PERMUTATION_GATE_TIP = '17/20 top compounds at p_perm < 0.05; gate required 20/20.';
+const PERMUTATION_GATE_TIP =
+  'Shuffled-label check: 17 of the top 20 compounds reached permutation p < 0.05. The preset gate required 20 of 20.';
 
 function TipBadge({ tip, children, ...props }: { tip: string; children: ReactNode } & Parameters<typeof StatusBadge>[0]) {
   return (
@@ -100,7 +101,7 @@ function PolicyLabel({ id }: { id: string }) {
         {policyName(id)}
       </span>
       {isCoPrimary(id) ? (
-        <Term term="coPrimary" className="shrink-0 text-[11px] font-medium text-accent-ink">co-primary</Term>
+        <Term term="coPrimary" className="shrink-0 text-[11px] font-medium text-accent-ink">primary</Term>
       ) : (
         p?.detail && <span className="truncate text-[12px] text-ink-3">{p.detail}</span>
       )}
@@ -139,7 +140,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 function ScopeControl({ scope, onChange }: { scope: Scope; onChange: (s: Scope) => void }) {
   return (
     <ToggleGroup
-      aria-label="Benchmark scope"
+      aria-label="Which candidates"
       spacing={1}
       value={[scope]}
       onValueChange={(v) => v[0] && onChange(v[0] as Scope)}
@@ -147,7 +148,7 @@ function ScopeControl({ scope, onChange }: { scope: Scope; onChange: (s: Scope) 
     >
       {(['contested', 'all'] as const).map((s) => (
         <ToggleGroupItem key={s} value={s} className={SEGMENT}>
-          {s === 'contested' ? <Term term="undecided" focusable={false} className="decoration-current/40">Undecided</Term> : 'All candidates'}
+          {s === 'contested' ? <Term term="undecided" focusable={false} className="decoration-current/40">Undecided at start</Term> : 'All candidates'}
         </ToggleGroupItem>
       ))}
     </ToggleGroup>
@@ -212,15 +213,25 @@ function Headline({
                 </dd>
                 <ul aria-label="Limits" className="m-0 flex list-none flex-col items-start gap-1.5 p-0">
                   <li>
-                    <StatusBadge tone="gap"><ClockCounterClockwiseIcon aria-hidden /> Retrospective benchmark</StatusBadge>
+                    <StatusBadge
+                      tone="gap"
+                      tip={`Replayed on ${analysis.n_candidates} candidates whose hidden test outcomes were fixed in advance. It scores how well each strategy picks tests, not the drugs.`}
+                    >
+                      <ClockCounterClockwiseIcon aria-hidden /> Replay on past data
+                    </StatusBadge>
                   </li>
                   {ties.length > 0 && (
-                    <li><StatusBadge><EqualsIcon aria-hidden />{`Ties ${ties.join(' and ')}`}</StatusBadge></li>
+                    <li>
+                      <StatusBadge tip={`Same verdict match rate as Tauchstone: ${ties.join(', ')}.`}>
+                        <EqualsIcon aria-hidden />
+                        {`Tied with ${ties.length} other${ties.length === 1 ? '' : 's'}`}
+                      </StatusBadge>
+                    </li>
                   )}
                   <li>
                     <TipBadge tone="bad" className="font-mono" tip={PERMUTATION_GATE_TIP}>
                       <ShuffleIcon aria-hidden />
-                      <span className="font-sans">Permutation gate</span>{' '}
+                      <span className="font-sans">Shuffled-label check</span>{' '}
                       {PERMUTATION_GATE} not met
                     </TipBadge>
                   </li>
@@ -238,7 +249,7 @@ function Headline({
                 <dd className="m-0 font-mono text-[30px] leading-none font-light tracking-[-0.03em] text-ink-2 tabular-nums">
                   {pct(aware)}
                 </dd>
-                <dt className="mt-2 text-[12px] text-ink-3">Decision-aware</dt>
+                <dt className="mt-2 text-[12px] text-ink-3">Two-step lookahead</dt>
               </div>
             </div>
           </dl>
@@ -247,7 +258,7 @@ function Headline({
           {metric && (
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 text-[12px] font-medium text-ink-2">
               <ScalesIcon aria-hidden className="size-4 text-primary" />
-              <span><Term term="holmP">Holm p</Term> · {metricLabel(metric)}</span>
+              <span><Term term="holmP">p (Holm-adjusted)</Term> · {metricLabel(metric)}</span>
             </div>
           )}
           <dl className="m-0 grid min-w-0 grid-cols-[minmax(0,1fr)] md:max-[1399px]:grid-cols-2 md:max-[1399px]:gap-x-2">
@@ -256,12 +267,12 @@ function Headline({
                 {formatP(vsRandom)}
               </TipBadge>
             </Fact>
-            <Fact label="Tauchstone vs confirmation">
+            <Fact label="Tauchstone vs most likely to pass first">
               <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'greedy_strongest', confirmationMetric)}>
                 {formatP(vsConfirmation)}
               </TipBadge>
             </Fact>
-            <Fact label="Decision-aware vs random">
+            <Fact label="Two-step lookahead vs random">
               {awareNotBetter && <span className="text-[12px] text-ink-3">not better</span>}
               <TipBadge className="font-mono" tip={pairTip(analysis, 'decision_lookahead_hybrid', 'random', awareMetric)}>
                 {formatP(awareVsRandom)}
@@ -292,21 +303,21 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
         : metricLabel(metric);
   return (
     <Panel
-      title="Pairwise tests"
+      title="Strategy comparisons"
       icon={<ScalesIcon />}
       caption={primary ? metricLabel(primary) : undefined}
-      aria-label="Holm-corrected comparisons"
+      aria-label="Strategy comparisons"
       bodyClassName="px-3 pt-1 pb-3"
     >
       {tests.length === 0 ? (
-        <p className="m-0 px-2 py-4 text-[13px] text-ink-3">No paired tests in this scope</p>
+        <p className="m-0 px-2 py-4 text-[13px] text-ink-3">No comparisons for these candidates</p>
       ) : (
         <Table className="border-separate border-spacing-y-0.5 text-[13px]">
           <TableHeader className="[&_tr]:border-0">
             <TableRow className={HEAD_ROW}>
               <TableHead className={cn(HEAD, 'pl-3')}>Comparison</TableHead>
               <TableHead className={cn(HEAD, 'pr-3 text-right')}>
-                <Term term="holmP">Holm p</Term>
+                <Term term="holmP">p (Holm)</Term>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -343,13 +354,21 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
 
 function RecallTable({ policies }: { policies: Policy[] }) {
   return (
-    <Panel title="Fragile recall" icon={<TargetIcon />} bodyClassName="px-3 pt-1 pb-3">
+    <Panel
+      title={
+        <Term tip="Runs on candidates whose verdict with every hidden test shown is FRAGILE / CONTEXT-DEPENDENT: share that reach that verdict after 3 or 5 tests.">
+          Fragile claims caught
+        </Term>
+      }
+      icon={<TargetIcon />}
+      bodyClassName="px-3 pt-1 pb-3"
+    >
       <Table className="border-separate border-spacing-y-0.5 text-[13px]">
         <TableHeader className="[&_tr]:border-0">
           <TableRow className={HEAD_ROW}>
-            <TableHead className={cn(HEAD, 'pl-3')}>Policy</TableHead>
-            <TableHead className={cn(HEAD, 'text-right')}>@3</TableHead>
-            <TableHead className={cn(HEAD, 'pr-3 text-right')}>@5</TableHead>
+            <TableHead className={cn(HEAD, 'pl-3')}>Strategy</TableHead>
+            <TableHead className={cn(HEAD, 'text-right')}>After 3 tests</TableHead>
+            <TableHead className={cn(HEAD, 'pr-3 text-right')}>After 5 tests</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -371,7 +390,7 @@ function RecallTable({ policies }: { policies: Policy[] }) {
 
 function LoadingState() {
   return (
-    <div className="space-y-4" aria-busy="true" aria-label="Loading benchmark">
+    <div className="space-y-4" aria-busy="true" aria-label="Loading validation results">
       <Skeleton className="h-[260px] w-full rounded-[18px] bg-frost/50" />
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
         <Skeleton className="h-[360px] rounded-[18px] bg-frost/50" />
@@ -405,7 +424,7 @@ export function BenchmarkView() {
     const rows: IntervalRow[] = sorted.map((p) => ({
       key: p.policy,
       label: <PolicyLabel id={p.policy} />,
-      ariaLabel: `${policyName(p.policy)} decision accuracy ${pct(p.decision_accuracy.estimate)}`,
+      ariaLabel: `${policyName(p.policy)} verdict match rate ${pct(p.decision_accuracy.estimate)}`,
       value: p.decision_accuracy.estimate,
       ci: p.decision_accuracy.ci95 as [number, number],
       valueText: pct(p.decision_accuracy.estimate),
@@ -426,7 +445,7 @@ export function BenchmarkView() {
     const rows: IntervalRow[] = sorted.map((p) => ({
       key: p.policy,
       label: <PolicyLabel id={p.policy} />,
-      ariaLabel: `${policyName(p.policy)} median experiments ${p.experiments_to_correct_verdict.median}`,
+      ariaLabel: `${policyName(p.policy)} median tests ${p.experiments_to_correct_verdict.median}`,
       value: p.experiments_to_correct_verdict.median,
       ci: p.experiments_to_correct_verdict.ci95 as [number, number],
       valueText: p.experiments_to_correct_verdict.median.toFixed(1),
@@ -452,13 +471,13 @@ export function BenchmarkView() {
         >
           {isLoading && <LoadingState />}
           {notRun && (
-            <EmptyState icon={<ChartScatterIcon />} title="Benchmark not run" className={EMPTY} />
+            <EmptyState icon={<ChartScatterIcon />} title="Validation not run yet" className={EMPTY} />
           )}
           {isError && !notRun && (
             <EmptyState
               icon={<ChartScatterIcon />}
               className={EMPTY}
-              title={<span role="alert">Benchmark failed to load</span>}
+              title={<span role="alert">Could not load validation results</span>}
               action={
                 <Button variant="outline" size="sm" onClick={() => void refetch()}>
                   <ArrowClockwiseIcon /> Retry
@@ -475,24 +494,24 @@ export function BenchmarkView() {
                 scopeControl={hasAll && <ScopeControl scope={scope} onChange={setScope} />}
                 meta={[
                   ['Candidates', allN && scope === 'contested' && hasAll ? `${analysis.n_candidates} / ${allN}` : String(analysis.n_candidates), <StackIcon key="c" />],
-                  ['Seeds', String(analysis.n_seeds), <DiceFiveIcon key="s" />],
-                  ['Budget', String(analysis.budget), <TestTubeIcon key="b" />],
+                  ['Random seeds', String(analysis.n_seeds), <DiceFiveIcon key="s" />],
+                  ['Test budget', String(analysis.budget), <TestTubeIcon key="b" />],
                 ]}
               />
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
                 <Panel
-                  title={<Term term="decisionAccuracy">{`Decision accuracy after ${analysis.budget} tests`}</Term>}
+                  title={<Term term="decisionAccuracy">{`Verdict match rate after ${analysis.budget} tests`}</Term>}
                   icon={<ChartScatterIcon />}
                   caption="dot = estimate · line = 95% CI"
-                  aria-label="Decision accuracy after five tests"
+                  aria-label="Verdict match rate after five tests"
                 >
                   <IntervalPlot
                     rows={accuracy.rows}
                     domain={accuracy.domain}
                     ticks={accuracy.ticks}
                     tickFormat={(v) => `${Math.round(v * 100)}`}
-                    valueHeader="Accuracy"
+                    valueHeader="Match rate"
                   />
                 </Panel>
                 <PairwiseTable tests={analysis.tests} />
@@ -500,7 +519,7 @@ export function BenchmarkView() {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <Panel
-                  title={<Term term="experimentsToVerdict">Experiments to correct verdict</Term>}
+                  title={<Term term="experimentsToVerdict">Tests to correct verdict</Term>}
                   icon={<HourglassIcon />}
                   caption="median · fewer is better"
                   className="lg:col-span-2"
@@ -514,9 +533,9 @@ export function BenchmarkView() {
                   />
                 </Panel>
                 <RecallTable policies={byAccuracy(analysis.policies)} />
-                <Panel title="Calibration" icon={<GaugeIcon />} caption="predicted vs observed survival">
+                <Panel title="Calibration" icon={<GaugeIcon />} caption="predicted vs observed pass rate">
                   {calibOption && (
-                    <div role="img" aria-label="Calibration plot of predicted versus observed survival rates.">
+                    <div role="img" aria-label="Calibration plot of predicted chance to pass versus observed pass rate.">
                       <InstrumentChart option={calibOption} style={{ height: 248 }} />
                     </div>
                   )}

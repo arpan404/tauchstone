@@ -41,9 +41,9 @@ const VERDICT: Record<Verdict, { text: string; tone: Tone; icon: ReactNode }> = 
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  held_out_cohort: 'Held-out cohort',
-  composition_adjusted: 'Composition-adjusted',
-  lincs_context: 'LINCS held-out',
+  held_out_cohort: 'Independent cohort',
+  composition_adjusted: 'Cell-mix adjusted',
+  lincs_context: 'Held-back LINCS condition',
   brain_exposure: 'Brain exposure',
   cell_type: 'Cell type',
 };
@@ -71,7 +71,7 @@ function HelpLabel({ text, help, className }: { text: string; help: string; clas
   );
 }
 
-type LogKind = 'SEAL' | 'REVEAL' | 'BELIEF';
+type LogKind = 'SETUP' | 'RESULT' | 'UPDATE';
 interface LogLine { kind: LogKind; text: string; detail?: string; tone?: 'ok' | 'bad'; at: number | null }
 
 export function AttackView() {
@@ -92,7 +92,7 @@ function PreregisteredOnly() {
         <div className="mx-auto mt-[8vh] max-w-xl">
           <EmptyState
             icon={<LockSimpleIcon weight="duotone" />}
-            title={<span role="heading" aria-level={2}>Attack runs on the preregistered project</span>}
+            title={<span role="heading" aria-level={2}>Hidden tests exist only for the preregistered project</span>}
             action={
               <Button
                 disabled={!prereg}
@@ -179,11 +179,11 @@ function AttackSessionView() {
 
   const log = useMemo<LogLine[]>(() => {
     if (!session) return [];
-    const lines: LogLine[] = [{ kind: 'SEAL', text: `${session.contexts.length} hidden tests sealed`, at: t0 }];
+    const lines: LogLine[] = [{ kind: 'SETUP', text: `${session.contexts.length} hidden tests set up`, at: t0 }];
     for (const h of history) {
       const at = revealAt[h.context_id] ?? null;
-      lines.push({ kind: 'REVEAL', text: unit(h.label), detail: `consensus ${fmt2(h.value)} ${h.outcome}`, tone: h.outcome === 'fail' ? 'bad' : 'ok', at });
-      lines.push({ kind: 'BELIEF', text: `P(claim) ${h.belief_before.toFixed(2)} → ${h.belief_after.toFixed(2)}`, at });
+      lines.push({ kind: 'RESULT', text: unit(h.label), detail: `score ${fmt2(h.value)} ${h.outcome === 'fail' ? 'failed' : 'passed'}`, tone: h.outcome === 'fail' ? 'bad' : 'ok', at });
+      lines.push({ kind: 'UPDATE', text: `Chance claim holds ${h.belief_before.toFixed(2)} → ${h.belief_after.toFixed(2)}`, at });
     }
     return lines;
   }, [session, history, t0, revealAt]);
@@ -257,9 +257,9 @@ function AttackSessionView() {
   const budgetSelect = (
     <Select value={budget} onValueChange={(value) => value !== null && setBudget(value)} disabled={busy}>
       <SelectTrigger aria-labelledby="session-budget-label" className="h-9 min-w-40 rounded-full border-0 bg-frost/70 pr-3 pl-3.5 font-mono text-[12.5px] ring-1 ring-ink/12 backdrop-blur hover:bg-frost/90">
-        <SelectValue><FlaskIcon className="text-ink-3" />{budget} experiment{budget === 1 ? '' : 's'}</SelectValue>
+        <SelectValue><FlaskIcon className="text-ink-3" />{budget} test{budget === 1 ? '' : 's'}</SelectValue>
       </SelectTrigger>
-      <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} experiment{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
+      <SelectContent>{[1, 2, 3, 4, 5].map(n => <SelectItem key={n} value={n}>{n} test{n === 1 ? '' : 's'}</SelectItem>)}</SelectContent>
     </Select>
   );
 
@@ -288,15 +288,15 @@ function AttackSessionView() {
             />
           </div>
         ) : (
-          <section className="glass mx-auto mt-[4vh] max-w-3xl p-5 md:p-8" aria-label="New experiment session">
+          <section className="glass mx-auto mt-[4vh] max-w-3xl p-5 md:p-8" aria-label="New test session">
             <Eyebrow />
             <h2 className="mt-2 font-heading text-[34px] leading-[1.05] font-normal tracking-[-0.035em] text-ink md:text-[44px]">{candidateName}</h2>
-            <p className="mt-2 text-[13.5px] text-ink-2">Seal held-out tests for this drug, then reveal them one committed experiment at a time.</p>
-            <ol className="mt-6 grid gap-2 sm:grid-cols-3" aria-label="How a session runs">
+            <p className="mt-2 text-[13.5px] text-ink-2">Run hidden tests on this drug one at a time and see whether its claim holds.</p>
+            <ol className="mt-6 grid gap-2 sm:grid-cols-3" aria-label="Steps">
               {[
-                { icon: <LockSimpleIcon />, title: 'Seal', text: 'Outcomes stay hidden' },
-                { icon: <PlayIcon />, title: 'Commit', text: 'Lock in one test' },
-                { icon: <EyeIcon />, title: 'Reveal', text: 'Belief updates' },
+                { icon: <LockSimpleIcon />, title: 'Pick a hidden test', text: 'Results stay hidden until run' },
+                { icon: <PlayIcon />, title: 'Run it', text: 'Uses 1 test of the budget' },
+                { icon: <EyeIcon />, title: 'See the result', text: 'Chance it holds updates' },
               ].map((s, i) => (
                 <li key={s.title} className="flex items-center gap-3 rounded-xl bg-frost/55 px-3 py-2.5 ring-1 ring-rim/80">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-4">{s.icon}</span>
@@ -309,7 +309,7 @@ function AttackSessionView() {
             </ol>
             <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
               <div className="grid gap-2">
-                <label id="session-budget-label" className="text-[12px] text-ink-3">Session budget</label>
+                <label id="session-budget-label" className="text-[12px] text-ink-3">Tests to run</label>
                 <div className="flex items-center gap-3">
                   {budgetSelect}
                   <span className="flex gap-1.5" aria-hidden>
@@ -321,16 +321,16 @@ function AttackSessionView() {
               </div>
               <Button size="lg" className="h-11 w-full px-6 text-[13.5px] sm:w-auto" onClick={() => handleStart()} disabled={busy}>
                 <PlayIcon weight="fill" />
-                {start.isPending ? 'Starting…' : 'Create experiment session'}
+                {start.isPending ? 'Starting…' : 'Start test session'}
               </Button>
             </div>
-            {start.isError && <p role="alert" className="mt-3 text-[12.5px] text-bad">Could not create the session. Retry.</p>}
+            {start.isError && <p role="alert" className="mt-3 text-[12.5px] text-bad">Could not start the session. Retry.</p>}
           </section>
         ))}
 
         {session && verdict && (
           <div className="mx-auto grid max-w-[1280px] gap-4">
-            <section aria-label="Claim and belief" className="glass p-5 md:p-7">
+            <section aria-label="Claim and result" className="glass p-5 md:p-7">
               <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                 <div className="min-w-0 flex-1 basis-80">
                   <Eyebrow session={session.session_id} />
@@ -349,8 +349,8 @@ function AttackSessionView() {
               <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)] lg:items-end">
                 <div className="grid gap-5">
                   <div className="grid items-end gap-5 sm:grid-cols-[auto_minmax(0,1fr)]">
-                    <div role="img" aria-label={`P(claim holds) ${session.belief.p_claim_holds.toFixed(2)}`}>
-                      <p className="text-[12px] text-ink-3"><HelpLabel text="P(claim holds)" help={P_CLAIM_HELP} /></p>
+                    <div role="img" aria-label={`Chance the claim holds ${session.belief.p_claim_holds.toFixed(2)}`}>
+                      <p className="text-[12px] text-ink-3"><HelpLabel text="Chance the claim holds" help={P_CLAIM_HELP} /></p>
                       <div className="mt-1 flex items-end gap-3">
                         <span className="font-mono text-[52px] leading-none font-light tracking-[-0.05em] text-primary tabular-nums md:text-[58px]">
                           <NumberTicker value={session.belief.p_claim_holds} format={(v) => v.toFixed(2)} duration={0.9} />
@@ -369,19 +369,19 @@ function AttackSessionView() {
                   </div>
 
                   <dl className="m-0 flex flex-wrap gap-x-8 gap-y-3">
-                    <div role="group" aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden contexts; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}>
-                      <Stat icon={<FlaskIcon />} label="Budget" value={<>{session.budget_remaining}<span className="text-ink-3">/{session.budget}</span></>} />
+                    <div role="group" aria-label={`Budget ${session.budget_remaining} of ${session.budget}; ${hiddenCount} hidden tests; ${testsLeftText(Math.min(session.budget_remaining, hiddenCount))}`}>
+                      <Stat icon={<FlaskIcon />} label="Budget left" value={<>{session.budget_remaining}<span className="text-ink-3">/{session.budget}</span></>} />
                     </div>
-                    <Stat icon={<LockSimpleIcon />} label="Hidden" value={hiddenCount} />
-                    <Stat icon={<EyeIcon />} label="Revealed" value={revealedCount} />
+                    <Stat icon={<LockSimpleIcon />} label="Not run" value={hiddenCount} />
+                    <Stat icon={<EyeIcon />} label="Done" value={revealedCount} />
                   </dl>
                 </div>
 
                 <div className="grid gap-3">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[12px] text-ink-3">Mode</span>
+                    <span className="text-[12px] text-ink-3">Suggest</span>
                     <ModeToggle
-                      label="Attack or learn mode" value={mode} disabled={busy} withHelp
+                      label="How to suggest the next test" value={mode} disabled={busy} withHelp
                       onChange={(m) => { modeTouched.current = true; setMode(m); }}
                     />
                   </div>
@@ -393,23 +393,23 @@ function AttackSessionView() {
                   <div className="flex items-center justify-between gap-3 rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80">
                     <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-ink-3"><ArrowRightIcon className="size-3.5" />Next test</span>
                     <p className="m-0 min-w-0 truncate font-mono text-[12.5px] text-ink" aria-label="Next experiment" aria-live="polite">
-                      {selectedContext ? unit(selectedContext.label) : 'none selected'}
+                      {selectedContext ? unit(selectedContext.label) : 'None picked'}
                     </p>
                   </div>
                   <Button size="lg" className={cn('h-11 w-full text-[13.5px]', busy && 'disabled:opacity-100')} onClick={handleRunNext} disabled={!selectedContext || busy || session.budget_remaining <= 0}>
                     {busy ? <span className="size-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white motion-reduce:animate-none" aria-hidden /> : <PlayIcon weight="fill" />}
-                    {run.isPending ? 'Committed · awaiting result…' : runningId ? 'Running…' : 'Commit & run test'}
+                    {run.isPending ? 'Waiting for result…' : runningId ? 'Running…' : 'Run test'}
                   </Button>
                   {run.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">No result was returned. Retry.</p>}
-                  {session.budget_remaining <= 0 && <p className="m-0 text-center font-mono text-[12px] text-ink-3">Budget exhausted</p>}
+                  {session.budget_remaining <= 0 && <p className="m-0 text-center font-mono text-[12px] text-ink-3">No tests left in budget</p>}
                   <div className="flex flex-wrap items-center gap-2">
-                    <label id="session-budget-label" className="sr-only">Session budget</label>
+                    <label id="session-budget-label" className="sr-only">Tests to run</label>
                     <Button variant="outline" className="h-9 flex-1" onClick={handleNewSession} disabled={busy}>
                       <ArrowCounterClockwiseIcon />
-                      {start.isPending ? 'Creating session…' : 'Start new session'}
+                      {start.isPending ? 'Starting…' : 'Start new session'}
                     </Button>
                     {budgetSelect}
-                    {start.isError && <p role="alert" className="m-0 w-full text-[12.5px] text-bad">Could not create a new session. Retry.</p>}
+                    {start.isError && <p role="alert" className="m-0 w-full text-[12.5px] text-bad">Could not start a new session. Retry.</p>}
                   </div>
                 </div>
               </div>
@@ -417,8 +417,8 @@ function AttackSessionView() {
 
             <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
               <div className="grid min-w-0 gap-4">
-                <Panel aria-label="Hidden tests" title="Hidden tests" icon={<LockIcon />} caption="Sealed until committed" flush bodyClassName="px-3 pt-2 pb-3"
-                  actions={<span className="font-mono text-[12px] whitespace-nowrap text-ink-3 tabular-nums">{hiddenCount} sealed · {revealedCount} revealed</span>}>
+                <Panel aria-label="Hidden tests" title="Hidden tests" icon={<LockIcon />} caption="Results hidden until run" flush bodyClassName="px-3 pt-2 pb-3"
+                  actions={<span className="font-mono text-[12px] whitespace-nowrap text-ink-3 tabular-nums">{hiddenCount} to run · {revealedCount} done</span>}>
                   {rec && <span id="attack-rec-rationale" className="sr-only">{rec.title}: {joinSentences(rec.body, rec.note)}</span>}
                   <ul className="m-0 grid list-none gap-1.5 p-0">
                     {session.contexts.map((c) => {
@@ -454,13 +454,13 @@ function AttackSessionView() {
                             <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                               <span className="min-w-0 flex-1 basis-44">
                                 <span className={cn('block truncate text-[13.5px] font-medium', revealed ? 'text-ink-2' : 'text-ink')}>{unit(c.label)}</span>
-                                <span className="mt-0.5 block truncate text-[12px] text-ink-3">{revealed ? 'Revealed' : 'Hidden'} · {TYPE_LABEL[c.type] ?? c.type}</span>
+                                <span className="mt-0.5 block truncate text-[12px] text-ink-3">{revealed ? 'Done' : 'Hidden'} · {TYPE_LABEL[c.type] ?? c.type}</span>
                               </span>
                               {state === 'running' && <StatusBadge tone="accent"><CircleNotchIcon className="animate-spin motion-reduce:animate-none" />Running</StatusBadge>}
                               {revealed && (
                                 <StatusBadge tone={c.outcome === 'fail' ? 'bad' : 'ok'}>
                                   {c.outcome === 'fail' ? <XCircleIcon /> : <CheckCircleIcon />}
-                                  {c.outcome === 'fail' ? 'Failed' : 'Survived'}
+                                  {c.outcome === 'fail' ? 'Failed' : 'Passed'}
                                 </StatusBadge>
                               )}
                               {isRec && state !== 'running' && <RecommendedBadge responseMode={session.mode} selectedMode={mode} rationale={session.rationale} />}
@@ -469,12 +469,12 @@ function AttackSessionView() {
                               {revealed ? (
                                 <>
                                   <span className="block text-[14px] text-ink">{fmt2(outcome?.value)}</span>
-                                  <span className="block text-[11px] text-ink-3">{outcome?.threshold == null ? 'consensus' : `vs ${fmt2(outcome.threshold)}`}</span>
+                                  <span className="block text-[11px] text-ink-3">{outcome?.threshold == null ? 'score' : `vs ${fmt2(outcome.threshold)}`}</span>
                                 </>
                               ) : (
                                 <>
                                   <span className="block text-[14px] text-ink">{failPct}%</span>
-                                  <span className="block text-[11px] text-ink-3"><HelpLabel text="fail risk" help={FAIL_RISK_HELP} /></span>
+                                  <span className="block text-[11px] text-ink-3"><HelpLabel text="to fail" help={FAIL_RISK_HELP} /></span>
                                 </>
                               )}
                             </span>
@@ -512,14 +512,14 @@ function AttackSessionView() {
                       <div className="flex min-w-0 items-center gap-2">
                         <StatusBadge tone={lastRevealed.outcome === 'survive' ? 'ok' : 'bad'}>
                           {lastRevealed.outcome === 'survive' ? <CheckCircleIcon /> : <XCircleIcon />}
-                          {lastRevealed.outcome === 'survive' ? 'Survived' : 'Failed'}
+                          {lastRevealed.outcome === 'survive' ? 'Passed' : 'Failed'}
                         </StatusBadge>
                         <span className="truncate text-[13px] font-medium text-ink">{unit(lastRevealed.label)}</span>
                       </div>
                       <dl className="m-0 grid grid-cols-3 gap-2">
-                        <Readout label="Observed" size="sm" value={fmt2(lastRevealed.value)} className={TILE} />
-                        <Readout label="Threshold" size="sm" value={lastRevealed.threshold == null ? 'rank' : fmt2(lastRevealed.threshold)} className={TILE} />
-                        <Readout label="P(claim)" size="sm" className={TILE} value={
+                        <Readout label="Score" size="sm" value={fmt2(lastRevealed.value)} className={TILE} />
+                        <Readout label="Threshold" size="sm" value={lastRevealed.threshold == null ? 'rank rule' : fmt2(lastRevealed.threshold)} className={TILE} />
+                        <Readout label="Chance holds" size="sm" className={TILE} value={
                           <span className="inline-flex items-center gap-1">
                             {lastRevealed.belief_before.toFixed(2)}
                             <ArrowRightIcon className="size-3 text-ink-3" />
@@ -532,13 +532,13 @@ function AttackSessionView() {
                   ) : (
                     <div className="flex items-center gap-2.5 rounded-xl bg-ink/[0.035] px-3 py-3 text-ink-3">
                       <EyeSlashIcon className="size-4" />
-                      <span className="font-mono text-[12px]">No reveals yet</span>
+                      <span className="font-mono text-[12px]">No tests run yet</span>
                     </div>
                   )}
                 </Panel>
 
                 {gaps && gaps.length > 0 && (
-                  <Panel aria-label="Open gaps" title="Open gaps" icon={<CircleDashedIcon />} caption="What this evidence does not cover">
+                  <Panel aria-label="Evidence gaps" title="Evidence gaps" icon={<CircleDashedIcon />} caption="What this evidence does not cover">
                     <div className="flex flex-wrap gap-1.5">
                       {gaps.map((g) => <StatusBadge key={g.text} tone={g.tone}>{g.text}</StatusBadge>)}
                     </div>
@@ -559,10 +559,10 @@ function AttackSessionView() {
           </DialogHeader>
           <dl className="m-0 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 text-[12.5px]">
             <dt className="text-ink-3">Current</dt>
-            <dd className="m-0 font-mono text-ink-2">{revealedCount} revealed · {verdict?.text}</dd>
-            <dt className="text-ink-3">Mode</dt>
+            <dd className="m-0 font-mono text-ink-2">{revealedCount} run · {verdict?.text}</dd>
+            <dt className="text-ink-3">Suggest</dt>
             <dd className="m-0">
-              <ModeToggle label="New session mode" value={confirmNew ?? 'attack'} onChange={(m) => setConfirmNew(m)} />
+              <ModeToggle label="How to suggest the next test" value={confirmNew ?? 'attack'} onChange={(m) => setConfirmNew(m)} />
             </dd>
           </dl>
           <DialogFooter className="-mx-5 -mb-5 rounded-b-[18px] border-ink/[0.06] bg-ink/[0.03] px-5 py-3">
@@ -580,7 +580,7 @@ function AttackSessionView() {
 const TILE = 'rounded-xl bg-frost/55 px-3 py-2 ring-1 ring-rim/80';
 
 type LogTint = 'seal' | 'ok' | 'bad' | 'belief';
-const logTint = (line: LogLine): LogTint => (line.kind === 'SEAL' ? 'seal' : line.kind === 'BELIEF' ? 'belief' : line.tone === 'bad' ? 'bad' : 'ok');
+const logTint = (line: LogLine): LogTint => (line.kind === 'SETUP' ? 'seal' : line.kind === 'UPDATE' ? 'belief' : line.tone === 'bad' ? 'bad' : 'ok');
 const LOG_TINT: Record<LogTint, string> = {
   seal: 'bg-ink/[0.035]',
   ok: 'bg-ok/[0.07]',
@@ -619,6 +619,7 @@ const SEG_ITEM = cn(
   'aria-pressed:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]',
   'aria-pressed:hover:from-[#3a7ddd] aria-pressed:hover:to-[#185cbc] aria-pressed:hover:text-white aria-pressed:hover:[&_svg]:text-white',
 );
+const MODE_LABEL: Record<AttackMode, string> = { attack: 'Likely to fail', learn: 'Informative' };
 const MODE_ICON: Record<AttackMode, ReactNode> = { attack: <CrosshairIcon />, learn: <LightbulbIcon /> };
 
 /** Attack / Learn pill segmented control. The active mode is the solid blue pill. */
@@ -629,7 +630,7 @@ function ModeToggle({ label, value, onChange, disabled, withHelp }: {
     <ToggleGroup aria-label={label} spacing={1} className="rounded-full bg-ink/[0.05] p-0.5 ring-1 ring-ink/[0.06]"
       value={[value]} onValueChange={(v: string[]) => { if (v[0]) onChange(v[0] as AttackMode); }} disabled={disabled}>
       {(['attack', 'learn'] as const).map((m) => {
-        const text = m === 'attack' ? 'Attack' : 'Learn';
+        const text = MODE_LABEL[m];
         if (!withHelp) return <ToggleGroupItem key={m} value={m} className={SEG_ITEM}>{MODE_ICON[m]}{text}</ToggleGroupItem>;
         return (
           <Tooltip key={m}>

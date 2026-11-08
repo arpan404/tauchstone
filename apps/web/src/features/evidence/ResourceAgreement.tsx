@@ -25,7 +25,7 @@ import { sourcesDisagree } from "./agreement";
 type Resource = Schema<"ResourceAgreement">;
 
 const NAMES: Record<Resource["resource"], string> = {
-  tauchstone_lincs_gold: "LINCS gold",
+  tauchstone_lincs_gold: "Our LINCS ranking",
   perturb_seqr: "Perturb-Seqr",
   clue: "CLUE",
 };
@@ -59,9 +59,9 @@ export function ResourceAgreement({
   const disagree = sourcesDisagree(rows);
   return (
     <Panel
-      title="Agreement across resources"
+      title="Rank in other resources"
       icon={<UsersThreeIcon />}
-      caption="Rank in each resource · left is the top of its list"
+      caption="Left is the top of each list"
       aria-label="Agreement across resources"
       className={className}
     >
@@ -73,7 +73,7 @@ export function ResourceAgreement({
                 Sources disagree
               </TooltipTrigger>
               <TooltipContent className="max-w-72 text-left leading-snug">
-                {`LINCS gold rank ${int(disagree.lincs.rank!)} / ${int(disagree.lincs.n_ranked!)}. Perturb-Seqr rank ${int(disagree.seqr.rank!)} / ${int(disagree.seqr.n_ranked!)}. The resources use different compound libraries and assays.`}
+                {`Our LINCS rank ${int(disagree.lincs.rank!)} / ${int(disagree.lincs.n_ranked!)}. Perturb-Seqr rank ${int(disagree.seqr.rank!)} / ${int(disagree.seqr.n_ranked!)}. The resources use different compound libraries and assays.`}
               </TooltipContent>
             </Tooltip>
           )}
@@ -81,7 +81,7 @@ export function ResourceAgreement({
             <TooltipTrigger render={<StatusBadge tone="neutral" tabIndex={0} />}>
               Report only
             </TooltipTrigger>
-            <TooltipContent>Not preregistered. Not used for ranking.</TooltipContent>
+            <TooltipContent>Not preregistered. Shown for comparison only, never used in the ranking.</TooltipContent>
           </Tooltip>
         </div>
       {resources.isPending && (
@@ -93,7 +93,7 @@ export function ResourceAgreement({
       )}
       {resources.isError && (
         <div role="alert" className="flex items-center gap-3 text-[13px] text-ink-2">
-          Resources unavailable
+          Could not load resources
           <Button variant="outline" onClick={() => void resources.refetch()}>
             Retry
           </Button>

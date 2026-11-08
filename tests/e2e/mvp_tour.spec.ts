@@ -64,8 +64,8 @@ test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   await nav(page, 'Candidates');
   await table.getByRole('row').nth(1).getByRole('button').first().click();
   await nav(page, 'Attack');
-  await page.getByRole('button', { name: 'Create experiment session' }).click();
-  const commit = page.getByRole('button', { name: 'Commit & run test' });
+  await page.getByRole('button', { name: 'Start test session' }).click();
+  const commit = page.getByRole('button', { name: 'Run test' });
   await expect(commit).toBeEnabled();
   await pause(page);
   const ran = page.waitForResponse(r => /\/attack\/[^/]+\/run$/.test(new URL(r.url()).pathname));

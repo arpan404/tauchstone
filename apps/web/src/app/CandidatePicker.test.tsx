@@ -38,7 +38,7 @@ function open() {
 
 it("searches the whole ranked pool and caps the rendered rows", () => {
   const input = open();
-  expect(screen.getByText("Ranked pool · 1,816")).toBeTruthy();
+  expect(screen.getByText("Ranked drugs · 1,816")).toBeTruthy();
   expect(screen.getAllByRole("option")).toHaveLength(MAX_RENDERED);
   fireEvent.change(input, { target: { value: "donepezil" } });
   expect(screen.getAllByRole("option")).toHaveLength(1);

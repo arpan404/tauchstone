@@ -48,8 +48,8 @@ export function TargetsPanel({
             <thead className="sticky top-0 z-[1] bg-frost/85 backdrop-blur">
               <tr className="text-left text-[11.5px] text-ink-3">
                 <th scope="col" className="px-4 py-2 font-normal">Symbol</th>
-                <th scope="col" className="px-4 py-2 font-normal">Action</th>
-                <th scope="col" className="px-4 py-2 text-right font-normal">Brain nTPM</th>
+                <th scope="col" className="px-4 py-2 font-normal">Drug action</th>
+                <th scope="col" className="px-4 py-2 text-right font-normal">Brain expression (nTPM)</th>
                 <th scope="col" className="px-4 py-2 font-normal">Entrez</th>
                 <th scope="col" className="px-4 py-2 font-normal">UniProt</th>
               </tr>
@@ -65,7 +65,7 @@ export function TargetsPanel({
                     <td className="px-4 py-2 text-ink-2">{titleCase(t.action_type)}</td>
                     <td
                       className="px-4 py-2 text-right font-mono tabular-nums text-ink"
-                      title={peak ? `Peak: ${peak.context}` : undefined}
+                      title={peak ? `Highest in ${peak.context}` : undefined}
                     >
                       {peak ? peak.ntpm.toFixed(1) : "unspecified"}
                     </td>

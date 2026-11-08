@@ -109,7 +109,7 @@ it("deletes upload projects only, after confirmation", () => {
 it("labels the frozen run and clears selections when the project changes", () => {
   useUi.setState({ selectedCandidateId: "d1", compareIds: ["d1"], sessionId: "s" });
   render(<ProjectsView />);
-  expect(screen.getByText("frozen run")).toBeTruthy();
+  expect(screen.getByText("original run")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /middle temporal gyrus/ }));
   expect(useUi.getState().selectedCandidateId).toBe("d1");
   fireEvent.click(screen.getByRole("button", { name: /hippocampus/ }));

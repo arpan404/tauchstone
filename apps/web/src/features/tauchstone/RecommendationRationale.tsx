@@ -16,7 +16,7 @@ export function RecommendedBadge({
       <TooltipTrigger render={<span />} className="inline-flex">
         <StatusBadge tone={copy.stale ? 'neutral' : 'accent'} className="cursor-help">
           <TargetIcon weight={copy.stale ? 'regular' : 'bold'} />
-          {copy.stale ? copy.badge : 'Recommended'}
+          {copy.stale ? copy.badge : 'Suggested'}
         </StatusBadge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-72 flex-col items-start gap-1 text-left">

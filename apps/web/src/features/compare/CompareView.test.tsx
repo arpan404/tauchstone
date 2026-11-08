@@ -24,7 +24,7 @@ describe('CompareView', () => {
     const headers = screen.getAllByRole('columnheader');
     expect(headers[1].textContent).toContain('Piperacillin');
     expect(headers[2].textContent).toContain('Brinzolamide');
-    for (const label of ['Reversal', 'Contexts', 'Cell lines', 'Doses', 'Times', 'Brain-cell data', 'Brain exposure', 'Targets', 'Hidden tests', 'Approval']) {
+    for (const label of ['Reversal score', 'Conditions', 'Cell lines', 'Concentrations', 'Times', 'Brain-cell data', 'Brain exposure', 'Targets', 'Hidden tests', 'Approval']) {
       expect(screen.getByRole('rowheader', { name: label })).toBeTruthy();
     }
     expect(screen.getByText('-1.79')).toBeTruthy();

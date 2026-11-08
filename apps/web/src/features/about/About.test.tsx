@@ -30,7 +30,7 @@ describe('About integrity and API boundary', () => {
     vi.mocked(useMockStatus).mockReturnValue(true);
     mount();
     expect(screen.getByText('73.1%')).toBeTruthy();
-    expect(screen.getByRole('columnheader', { name: 'Decision accuracy after 3 tests' })).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Verdict match rate after 3 tests' })).toBeTruthy();
     expect(screen.getByText(/Synthetic API\/fixture hash/)).toBeTruthy();
     expect(screen.getByText(/Mock data: not real results/)).toBeTruthy();
     const record = screen.getByText('Full record').closest('details')!;
@@ -52,7 +52,7 @@ describe('About integrity and API boundary', () => {
     vi.mocked(useBenchmark).mockReturnValue({ isError: true, isLoading: false } as ReturnType<typeof useBenchmark>);
     vi.mocked(useMockStatus).mockReturnValue(false);
     mount();
-    expect(screen.getByRole('alert').textContent).toContain('Benchmark unavailable');
+    expect(screen.getByRole('alert').textContent).toContain('Validation results unavailable');
     expect(screen.queryByText('100.0%')).toBeNull();
   });
 });

@@ -2,11 +2,12 @@ import type { AttackMode } from '@/store/ui';
 
 /** What each mode optimises; the server picks the recommended test for the session's mode. */
 export const MODE_HELP: Record<AttackMode, string> = {
-  attack: 'Run the test most likely to break the claim',
-  learn: 'Run the test expected to change the verdict most',
+  attack: 'Suggest the test most likely to break the claim',
+  learn: 'Suggest the test expected to move the chance the claim holds the most',
 };
-export const FAIL_RISK_HELP = 'Model chance this test fails the claim, before it is revealed';
-export const P_CLAIM_HELP = 'Model probability that the claim holds across the predefined validation contexts';
+export const FAIL_RISK_HELP = 'Model estimate of the chance this test fails, before you run it';
+export const P_CLAIM_HELP =
+  'Model estimate (0 to 1) that the claim holds across all the preset hidden tests. Each result moves it. 0.8 or more is SUPPORTED SO FAR; 0.2 or less is FRAGILE / CONTEXT-DEPENDENT';
 
 /** A display name for the drug; the BRD id only when no name exists anywhere. */
 export function drugDisplayName(id: string | null, ...names: (string | null | undefined)[]): string | null {

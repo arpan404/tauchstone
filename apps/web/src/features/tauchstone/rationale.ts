@@ -1,7 +1,7 @@
 import type { Schema } from '@/api/types';
 
 type Mode = Schema<'AttackSession'>['mode'];
-const modeName = (mode: Mode) => (mode === 'learn' ? 'Learn' : 'Attack');
+const modeName = (mode: Mode) => (mode === 'learn' ? 'Informative' : 'Likely to fail');
 
 /**
  * Tooltip copy for the recommended test. A mode toggle does not fetch a new recommendation,
@@ -11,10 +11,10 @@ export function rationaleCopy(responseMode: Mode, selectedMode: Mode, rationale:
   const stale = responseMode !== selectedMode;
   return {
     stale,
-    title: stale ? `Last server recommendation (${modeName(responseMode)})` : `${modeName(responseMode)} recommendation`,
+    title: stale ? `Earlier suggestion (${modeName(responseMode)})` : `Suggested (${modeName(responseMode)})`,
     body: rationale,
-    note: stale ? `${modeName(selectedMode)} applies after the next reveal` : null,
+    note: stale ? `${modeName(selectedMode)} applies after the next result` : null,
     /** Badge text on a stale pick: whose recommendation it still is. */
-    badge: `${modeName(responseMode)} pick`,
+    badge: 'Earlier pick',
   };
 }

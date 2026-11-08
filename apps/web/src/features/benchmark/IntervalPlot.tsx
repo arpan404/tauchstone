@@ -45,7 +45,7 @@ export function IntervalPlot({
   return (
     <div className={cn('overflow-x-auto text-[13px]', className)}>
       <div className="grid min-w-[32rem] items-end gap-x-4 px-3 pb-1.5 text-[11.5px] font-medium text-ink-3" style={cols}>
-        <span>Policy</span>
+        <span>Strategy</span>
         <span />
         <span className="text-right">{valueHeader}</span>
         <span className="text-right">95% CI</span>

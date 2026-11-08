@@ -14,7 +14,7 @@ export function scoreText(drug: Data['drugs'][number], signature: Data['signatur
   const score = drug.scores.find(s => s.signature_id === signature.signature_id);
   if (signature.status === 'insufficient_donors') return notScored;
   if (score?.consensus == null) return 'not scored: score unavailable';
-  return `consensus ${fmt(score.consensus)}; WTCS ${fmt(score.scores?.wtcs)}; KS ${fmt(score.scores?.ks)}; cosine ${fmt(score.scores?.cosine)}`;
+  return `reversal ${fmt(score.consensus)}; WTCS ${fmt(score.scores?.wtcs)}; KS ${fmt(score.scores?.ks)}; cosine ${fmt(score.scores?.cosine)}`;
 }
 export function heatmapOption(data: Data, colors: { teal: string; warm: string; surface: string; muted: string }) {
   const { drugs, signatures } = ordered(data);
@@ -37,7 +37,7 @@ export function heatmapOption(data: Data, colors: { teal: string; warm: string; 
     grid: { left: 220, right: 20, top: 115, bottom: 65 },
     xAxis: { type: 'category', position: 'top', data: ['Bulk reference', ...signatures.map(s => s.cell_type.replaceAll('_', ' '))], axisLabel: { interval: 0, rotate: 55, fontSize: 12 } },
     yAxis: { type: 'category', inverse: true, data: drugs.map(d => `${d.pool_rank}. ${d.name}`), axisLabel: { fontSize: 14 } },
-    visualMap: { min: -limit, max: limit, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: [colors.teal, colors.surface, colors.warm] }, text: ['Positive', 'Negative = reversal'], seriesIndex: 0 },
+    visualMap: { min: -limit, max: limit, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: [colors.teal, colors.surface, colors.warm] }, text: ['Same direction as Alzheimer\'s', 'Opposite (reversal)'], seriesIndex: 0 },
     tooltip: { renderMode: 'richText', formatter: (p: { value: number[] }) => {
       const [x, y] = p.value;
       const drug = drugs[y!]!;

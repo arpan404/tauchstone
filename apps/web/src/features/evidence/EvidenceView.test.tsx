@@ -43,7 +43,7 @@ it("renders Piperacillin gaps, ranking contexts, resources, and hidden test coun
     "10 µM only",
     "6 h only",
     "Brain exposure · predicted low",
-    "No neural-line ranking data",
+    "No neural cell line data",
     "rank 5 / 1,816",
     "not available",
   ])
@@ -111,7 +111,7 @@ it("keeps context-map combinations empty and retains multiple time points", () =
   );
   expect(screen.getAllByText("Not measured")).toHaveLength(2);
   expect(screen.getByText("24 h")).toBeTruthy();
-  expect(screen.getByText("Neural-line ranking data")).toBeTruthy();
+  expect(screen.getByText("Neural cell line data")).toBeTruthy();
 });
 it("opens Compare with this drug and Report from the hero when the shell passes no handlers", async () => {
   useUi.setState({ compareIds: [] });
