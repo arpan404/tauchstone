@@ -49,22 +49,22 @@ export type TestKind = 'held_out_cohort' | 'composition_adjusted' | 'lincs_conte
 export const TEST_KIND: Record<TestKind, { title: string; checks: string; passRule: string }> = {
   held_out_cohort: {
     title: 'Different people',
-    checks: "Does it still reverse the Alzheimer's signature from an independent group of donors?",
+    checks: 'Does the reversal hold in brains from different donors?',
     passRule: "Passes if the drug ranks in the top 25% of drugs against that group's signature.",
   },
   composition_adjusted: {
     title: 'Cell loss corrected',
-    checks: "Alzheimer's brains have lost neurons. Does the reversal survive after correcting for the cell mix?",
+    checks: 'Does the reversal survive correcting for neuron loss?',
     passRule: 'Passes if the drug still ranks in the top 25% of drugs after the correction.',
   },
   lincs_context: {
     title: 'Held-back lab measurement',
-    checks: 'A cell line, concentration and time point left out of the ranking. Does it still reverse the signature there?',
+    checks: 'Does the reversal hold in a lab condition left out of the ranking?',
     passRule: 'Passes if its reversal score is at or below the threshold fixed in advance (about -0.66).',
   },
   brain_exposure: {
     title: 'Reaches the brain?',
-    checks: 'Uses measured or curated exposure data to ask whether the drug gets into the brain.',
+    checks: 'Is there evidence the drug gets into the brain?',
     passRule: 'Passes on measured human brain data, brain/plasma Kp of 0.1 or more, or PAMPA-BBB of 4e-6 cm/s or more.',
   },
   cell_type: {

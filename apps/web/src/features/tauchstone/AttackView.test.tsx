@@ -103,12 +103,13 @@ it('restores continuity and reveals only the committed server result', () => {
   const view = restore();
   expect(mocks.start).not.toHaveBeenCalled();
   expect(screen.queryByText(/Reversal score/)).toBeNull();
-  expect(within(card(/Held-out cohort A/)).getByRole('button', { name: 'Run test' })).toBeTruthy();
+  expect(within(screen.getByLabelText('Next test')).getByText(/Held-out cohort A/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Run test' })).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: /Held-out cohort B/ }));
   expect(mocks.run).not.toHaveBeenCalled();
   expect(screen.getByRole('button', { name: /Held-out cohort B/ }).getAttribute('aria-pressed')).toBe('true');
-  // The run action moves to the chosen test; the suggestion stays marked.
-  expect(within(card(/Held-out cohort B/)).getByRole('button', { name: 'Run test' })).toBeTruthy();
+  // The run action now targets the chosen test; the suggestion stays marked.
+  expect(within(screen.getByLabelText('Next test')).getByText(/Held-out cohort B/)).toBeTruthy();
   expect(within(card(/Held-out cohort A/)).getByText('Suggested next')).toBeTruthy();
   vi.useFakeTimers();
   try {

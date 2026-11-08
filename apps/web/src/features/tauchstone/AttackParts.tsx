@@ -5,7 +5,7 @@ import { cn } from 'cn';
 import type { Schema } from '@/api/types';
 import { fmt2 } from './format';
 import { kindOf, pct, VERDICT_CUTOFFS } from './attackCopy';
-import { typeIcon, unit, VERDICT_ICON, VERDICT_TEXT, VERDICT_TONE } from './attackMeta';
+import { typeIcon, unit, VERDICT_TEXT } from './attackMeta';
 
 type Verdict = Schema<'Verdict'>;
 type Revealed = Schema<'RevealedOutcome'>;
@@ -51,23 +51,10 @@ export function ChanceMeter({ p, verdict }: { p: number | null; verdict: Verdict
           <span>100%</span>
         </div>
       </div>
-      <ul className="m-0 mt-2 grid list-none gap-1 p-0" aria-label="Verdict cut-offs">
-        {BANDS.map((b) => {
-          const on = verdict === b.verdict;
-          const tone = VERDICT_TONE[b.verdict];
-          return (
-            <li key={b.verdict}
-              aria-current={on ? 'true' : undefined}
-              className={cn(
-                'flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg px-2.5 py-1.5 text-[12px] [&>svg]:size-3.5',
-                on ? (tone === 'ok' ? 'bg-ok/10 text-ok' : tone === 'bad' ? 'bg-bad/10 text-bad' : 'bg-ink/[0.06] text-ink') : 'text-ink-3',
-              )}>
-              {VERDICT_ICON[b.verdict]}
-              <span className={cn('font-mono tracking-wide', on && 'font-medium')}>{VERDICT_TEXT[b.verdict]}</span>
-              <span className={cn('ml-auto', on ? 'opacity-90' : '')}>{b.range}</span>
-            </li>
-          );
-        })}
+      <ul className="sr-only" aria-label="Verdict cut-offs">
+        {BANDS.map((b) => (
+          <li key={b.verdict} aria-current={verdict === b.verdict ? 'true' : undefined}>{VERDICT_TEXT[b.verdict]}: {b.range}</li>
+        ))}
       </ul>
     </div>
   );
@@ -99,23 +86,21 @@ export function ResultDetail({ r }: { r: Revealed }) {
   const what = r.type === 'brain_exposure' ? 'Observed value' : 'Reversal score';
   const moved = Math.round(r.belief_after * 100) !== Math.round(r.belief_before * 100);
   return (
-    <div className={cn('grid gap-1.5 rounded-lg px-3 py-2.5 text-[12.5px] leading-snug', passed ? 'bg-ok/[0.08]' : 'bg-bad/[0.08]')}>
-      <p className="m-0 text-ink">
-        <span className={cn('font-medium', passed ? 'text-ok' : 'text-bad')}>{passed ? 'Passed.' : 'Failed.'}</span>{' '}
-        {what} <span className="font-mono tabular-nums">{fmt2(r.value)}</span>
-        {r.threshold != null && <>, needed <span className="font-mono tabular-nums">{fmt2(r.threshold)}</span> or lower</>}.
-      </p>
+    <div className={cn('rounded-lg px-3 py-2 text-[12.5px] leading-snug', passed ? 'bg-ok/[0.08]' : 'bg-bad/[0.08]')} title={r.rule ?? undefined}>
       <p className="m-0 text-ink-2">
-        Chance the claim holds: <span className="font-mono tabular-nums">{pct(r.belief_before)} → {pct(r.belief_after)}</span>
+        {what} <span className="font-mono text-ink tabular-nums">{fmt2(r.value)}</span>
+        {r.threshold != null && <> (needed <span className="font-mono tabular-nums">{fmt2(r.threshold)}</span> or lower)</>}
+        <span aria-hidden className="text-ink/25"> · </span>
+        chance <span className="font-mono tabular-nums">{pct(r.belief_before)} → {pct(r.belief_after)}</span>
         {!moved && ' (no change)'}
       </p>
-      {r.rule && <p className="m-0 text-[11.5px] text-ink-3">Exact rule: {r.rule}</p>}
+      {r.rule && <p className="sr-only">Exact rule: {r.rule}</p>}
     </div>
   );
 }
 
 /** Icon chip + plain title + what the test checks, for one hidden test or one kind of test. */
-export function TestHeading({ type, label, badge }: { type: string; label?: string; badge?: ReactNode }) {
+export function TestHeading({ type, label, badge, hideChecks = false }: { type: string; label?: string; badge?: ReactNode; hideChecks?: boolean }) {
   const kind = kindOf(type);
   return (
     <span className="flex min-w-0 items-start gap-3">
@@ -125,8 +110,8 @@ export function TestHeading({ type, label, badge }: { type: string; label?: stri
           <span className="text-[14px] font-medium text-ink">{kind.title}</span>
           {badge}
         </span>
-        {kind.checks && <span className="mt-1 block text-[12.5px] leading-snug text-ink-2">{kind.checks}</span>}
-        {label && <span className="mt-1.5 block font-mono text-[11.5px] break-words text-ink-3">{unit(label)}</span>}
+        {kind.checks && !hideChecks && <span className="mt-0.5 block text-[12.5px] leading-snug text-ink-2">{kind.checks}</span>}
+        {label && <span className="mt-0.5 block font-mono text-[11px] break-words text-ink-3">{unit(label)}</span>}
       </span>
     </span>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { CandidatePicker } from '@/app/CandidatePicker';
 import {
-  ArrowCounterClockwiseIcon, ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, CircleDashedIcon, ClockCounterClockwiseIcon,
+  ArrowCounterClockwiseIcon, ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, ClockCounterClockwiseIcon,
   CrosshairIcon, FileTextIcon, FlaskIcon, LightbulbIcon, ListBulletsIcon, LockSimpleIcon, PlayIcon, TargetIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react';
@@ -26,10 +26,9 @@ import { fmt2 } from './format';
 import { rationaleCopy } from './rationale';
 import { ChanceMeter, ResultDetail, StateBadge, TestHeading, type CardState } from './AttackParts';
 import { unit, VERDICT_ICON, VERDICT_TEXT, VERDICT_TONE } from './attackMeta';
-import { useDrugGaps } from './useDrugGaps';
 import {
-  budgetFor, budgetText, claimSentence, drugDisplayName, FAIL_RISK_HELP, joinSentences, kindOf, MODE_HELP, MODE_LINE,
-  cannotHoldLine, P_CLAIM_HELP, pct, PREREG_BUDGET, summarySentence, WHY_LINE,
+  budgetFor, budgetText, claimSentence, drugDisplayName, joinSentences, kindOf, MODE_HELP,
+  cannotHoldLine, P_CLAIM_HELP, pct, PREREG_BUDGET, summarySentence,
 } from './attackCopy';
 import './attack.css';
 
@@ -41,8 +40,7 @@ const EXPLORATORY_TIP = badgeTip('exploratory') ?? badgeTip('not preregistered')
 /** Kinds shown on the start screen when the drug's own tests are not listed yet. */
 const GENERIC_KINDS = ['held_out_cohort', 'composition_adjusted', 'lincs_context', 'brain_exposure'] as const;
 
-const SEALED_LINE =
-  'Results were computed before anyone looked and stay sealed. You see one only when you spend a test on it, so nobody can tune the method after seeing answers.';
+const SEALED_LINE = 'Fixed in advance and sealed until you run them.';
 
 function mmss(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -130,7 +128,6 @@ function AttackSessionView() {
   const start = useStartAttack();
   const preview = useStartAttack();
   const run = useRunExperiment(session?.session_id ?? null);
-  const gaps = useDrugGaps(session ? selectedCandidateId : null);
   const reduce = useReducedMotion();
 
   // Start screen: for a drug in the sealed set, open a session in the background so the screen can
@@ -298,7 +295,7 @@ function AttackSessionView() {
   }
 
   const runButton = (
-    <Button size="lg" className={cn('mt-3 h-10 w-full text-[13px]', busy && 'disabled:opacity-100')} onClick={handleRunNext}
+    <Button size="lg" className={cn('h-10 w-full text-[13px]', busy && 'disabled:opacity-100')} onClick={handleRunNext}
       disabled={!selectedContext || busy || session?.budget_remaining === undefined || session.budget_remaining <= 0}>
       {busy ? <span className="size-3.5 animate-spin rounded-full border-2 border-on-ink/40 border-t-on-ink motion-reduce:animate-none" aria-hidden /> : <PlayIcon weight="fill" />}
       {run.isPending ? 'Waiting for result…' : runningId ? 'Running…' : 'Run test'}
@@ -329,9 +326,6 @@ function AttackSessionView() {
                     {claimSentence(shownName ?? 'This drug', view?.claim.q ?? 0.7)}
                   </p>
                 </blockquote>
-                <p className="m-0 mt-3 max-w-2xl text-[13.5px] leading-snug text-ink-2">
-                  The ranking found this in one Alzheimer's brain dataset (GSE132903). {WHY_LINE}
-                </p>
                 {notPrereg && (
                   <p className="m-0 mt-3 flex flex-wrap items-center gap-2 text-[12.5px] text-ink-2">
                     <StatusBadge tone="gap" tip={EXPLORATORY_TIP}><WarningCircleIcon />Exploratory</StatusBadge>
@@ -357,14 +351,14 @@ function AttackSessionView() {
                   </p>
                   {rec && <span id="attack-rec-rationale" className="sr-only">{rec.title}: {joinSentences(rec.body, rec.note)}</span>}
 
-                  <ul className="m-0 mt-4 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                  <ul className="m-0 mt-3 grid list-none gap-2 p-0">
                     {!view && GENERIC_KINDS.map((t) => (
-                      <li key={t} className="rounded-xl bg-frost/55 p-3.5 ring-1 ring-rim/80">
+                      <li key={t} className="rounded-xl bg-frost/55 px-3.5 py-3 ring-1 ring-rim/80">
                         <TestHeading type={t} badge={<StateBadge state="sealed" />} />
-                        <p className="m-0 mt-2 pl-12 text-[12px] leading-snug text-ink-3">{kindOf(t).passRule}</p>
                       </li>
                     ))}
-                    {view?.contexts.map((c) => {
+                    {view?.contexts.map((c, i, all) => {
+                      const repeatKind = i > 0 && all[i - 1].type === c.type;
                       const revealed = !!session && c.status === 'revealed';
                       const outcome = revealed ? revealedById.get(c.context_id) : undefined;
                       const hidden = c.status === 'hidden';
@@ -379,7 +373,7 @@ function AttackSessionView() {
                         <li key={c.context_id}
                           data-state={state} data-recommended={isRec || undefined} data-outcome={revealed ? outcome?.outcome : undefined}
                           className={cn(
-                            'flex min-w-0 flex-col rounded-xl p-3.5 ring-1 transition-colors duration-200 motion-reduce:transition-none',
+                            'flex min-w-0 flex-col rounded-xl px-3.5 py-3 ring-1 transition-colors duration-200 motion-reduce:transition-none',
                             isSelected ? 'bg-primary/[0.07] ring-2 ring-primary/45'
                               : isRec ? 'bg-primary/[0.04] ring-primary/30'
                                 : revealed ? 'bg-frost/40 ring-rim/60' : 'bg-frost/55 ring-rim/80',
@@ -388,25 +382,12 @@ function AttackSessionView() {
                             <button type="button" aria-pressed={hidden ? isSelected : undefined} disabled={!pickable}
                               onClick={() => setPicked(c.context_id)} aria-describedby={isRec ? 'attack-rec-rationale' : undefined}
                               className="-m-1 rounded-lg p-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary enabled:cursor-pointer disabled:cursor-default">
-                              <TestHeading type={c.type} label={c.label} badge={badge} />
+                              <TestHeading type={c.type} label={c.label} badge={badge} hideChecks={repeatKind} />
                             </button>
                           ) : (
-                            <TestHeading type={c.type} label={c.label} badge={badge} />
+                            <TestHeading type={c.type} label={c.label} badge={badge} hideChecks={repeatKind} />
                           )}
-                          {!revealed && <p className="m-0 mt-2 pl-12 text-[12px] leading-snug text-ink-3">{kindOf(c.type).passRule}</p>}
-                          {isRec && (
-                            <p className="m-0 mt-2 ml-12 flex items-start gap-1.5 rounded-lg bg-primary/[0.07] px-2.5 py-1.5 text-[12px] leading-snug text-ink-2">
-                              <TargetIcon className="mt-0.5 size-3.5 shrink-0 text-primary" />
-                              <span><span className="font-medium text-ink">Why this one:</span> {session?.rationale}</span>
-                            </p>
-                          )}
-                          {session && hidden && !isRec && c.p_survive != null && (
-                            <p className="m-0 mt-2 pl-12 text-[11.5px] text-ink-3">
-                              <HelpLabel text="Estimated chance to fail" help={FAIL_RISK_HELP} />: <span className="font-mono tabular-nums">{pct(1 - c.p_survive)}</span>
-                            </p>
-                          )}
-                          {isSelected && !ended && <div className="mt-auto pl-12">{runButton}</div>}
-                          {outcome && <div className="mt-3"><ResultDetail r={outcome} /></div>}
+                          {outcome && <div className="mt-2 ml-12"><ResultDetail r={outcome} /></div>}
                         </li>
                       );
                     })}
@@ -428,7 +409,7 @@ function AttackSessionView() {
                 )}
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0" role="img" aria-label={view ? `Chance the claim holds ${pct(view.belief.p_claim_holds)}` : 'Chance the claim holds: shown when the session starts'}>
-                    <p className="m-0 text-[12px] text-ink-3">Chance the claim holds</p>
+                    <p className="m-0 text-[12px] text-ink-3"><HelpLabel text="Chance the claim holds" help={`${P_CLAIM_HELP} 80% or more is SUPPORTED SO FAR, 20% or less is FRAGILE / CONTEXT-DEPENDENT, in between is INSUFFICIENT EVIDENCE.`} /></p>
                     <div className="mt-1 flex items-end gap-2">
                       <span className="font-mono text-[48px] leading-none font-light tracking-[-0.05em] text-primary tabular-nums md:text-[54px]">
                         {view ? <NumberTicker value={view.belief.p_claim_holds * 100} format={(v) => `${Math.round(v)}%`} duration={0.9} /> : '?'}
@@ -454,16 +435,13 @@ function AttackSessionView() {
                 {session && cannotHoldLine(failed, session.claim.n_contexts, session.claim.q) && (
                   <p className="m-0 rounded-lg bg-bad/[0.07] px-3 py-2 text-[12.5px] leading-snug text-ink-2">{cannotHoldLine(failed, session.claim.n_contexts, session.claim.q)}</p>
                 )}
-                <p className="m-0 text-[12px] leading-snug text-ink-3">{P_CLAIM_HELP}</p>
 
                 {!session && (
                   <div className="grid gap-3 border-t border-ink/[0.07] pt-4">
                     <p className="m-0 flex items-start gap-2 text-[13px] text-ink">
                       <FlaskIcon className="mt-0.5 size-4 shrink-0 text-primary" />
-                      <span>
-                        {nShown != null ? budgetText(nShown) : `Up to ${PREREG_BUDGET} tests can be run (budget fixed in advance)`}
-                        <span className="block text-[12px] text-ink-3">Like a real lab, you cannot run every experiment. Each test you run uses one.</span>
-                      </span>
+                      <HelpLabel text={nShown != null ? budgetText(nShown) : `Up to ${PREREG_BUDGET} tests can be run (budget fixed in advance)`}
+                        help="Like a real lab, you cannot run every experiment. The budget of 5 was fixed before any result was seen; each test you run uses one." />
                     </p>
                     <Button size="lg" className="h-11 w-full text-[13.5px]" onClick={() => handleStart()} disabled={busy}>
                       <PlayIcon weight="fill" />
@@ -487,8 +465,24 @@ function AttackSessionView() {
                         })}
                       </span>
                     </div>
+                    {!ended && selectedContext && (
+                      <div className="grid gap-2 rounded-xl bg-primary/[0.06] p-3 ring-1 ring-primary/15" aria-label="Next test">
+                        <p className="m-0 text-[11.5px] text-ink-3">
+                          {selectedContext.context_id === session.recommended_context_id ? 'Suggested next test' : 'Your pick'}
+                        </p>
+                        <p className="m-0 text-[14px] leading-snug font-medium text-ink">
+                          {kindOf(selectedContext.type).title}
+                          <span className="ml-1.5 font-mono text-[11px] font-normal text-ink-3">{unit(selectedContext.label)}</span>
+                        </p>
+                        {selectedContext.context_id === session.recommended_context_id && session.rationale && (
+                          <p className="m-0 flex items-start gap-1.5 text-[12px] leading-snug text-primary">
+                            <TargetIcon className="mt-0.5 size-3.5 shrink-0" />{session.rationale}
+                          </p>
+                        )}
+                        {runButton}
+                      </div>
+                    )}
                     {run.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">No result was returned. Retry.</p>}
-                    {!ended && <p className="m-0 text-[12.5px] text-ink-2">Run the suggested test below, or choose any sealed test.</p>}
                     <div className="flex flex-wrap gap-2">
                       {ended && (
                         <Button className="h-9 flex-1" onClick={() => setStep('report')}>
@@ -503,17 +497,12 @@ function AttackSessionView() {
                     </div>
                     {start.isError && <p role="alert" className="m-0 text-[12.5px] text-bad">Could not start a new session. Retry.</p>}
                     {!ended && (
-                      <div className="grid gap-2 rounded-lg bg-ink/[0.03] p-2.5">
+                      <div className="grid gap-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-[11.5px] text-ink-3">How the next test is suggested</span>
+                          <span className="text-[11.5px] text-ink-3">Suggest</span>
                           <ModeToggle label="How to suggest the next test" value={mode} disabled={busy} withHelp
                             onChange={(m) => { modeTouched.current = true; setMode(m); }} />
                         </div>
-                        <ul className="m-0 grid list-none gap-1 p-0 text-[11.5px] leading-snug text-ink-3">
-                          {(['attack', 'learn'] as const).map((m) => (
-                            <li key={m} className={cn(mode === m && 'text-ink-2')}>{MODE_LINE[m]}</li>
-                          ))}
-                        </ul>
                         {rec?.stale && <p className="m-0 font-mono text-[11px] text-ink-3" aria-live="polite">{rec.note}</p>}
                       </div>
                     )}
@@ -525,7 +514,7 @@ function AttackSessionView() {
           </section>
 
           {session && (
-            <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+            <div className="grid items-start gap-4">
               <Panel aria-label="Session log" title="Session log" icon={<ClockCounterClockwiseIcon />} caption="Every step, in order" flush bodyClassName="px-3 pt-2 pb-3">
                 <ol className="m-0 grid max-h-64 list-none gap-1 overflow-auto p-0 font-mono text-[12px]" aria-live="polite" aria-label="Session event log">
                   <AnimatePresence initial={false}>
@@ -544,13 +533,6 @@ function AttackSessionView() {
                   </AnimatePresence>
                 </ol>
               </Panel>
-              {gaps && gaps.length > 0 && (
-                <Panel aria-label="Evidence gaps" title="Evidence gaps" icon={<CircleDashedIcon />} caption="What this evidence does not cover">
-                  <div className="flex flex-wrap gap-1.5">
-                    {gaps.map((g) => <StatusBadge key={g.text} tone={g.tone}>{g.text}</StatusBadge>)}
-                  </div>
-                </Panel>
-              )}
             </div>
           )}
         </div>
