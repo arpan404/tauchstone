@@ -1,20 +1,20 @@
 import type { ComponentProps } from "react";
+import { Button } from "@/components/ui/button";
+import { StatusBadge, type Tone } from "@/components/system";
+
+const TONE: Record<string, Tone> = { "": "neutral", gap: "gap", bad: "bad", ok: "ok", accent: "accent" };
+
+/** Legacy alias: renders the system StatusBadge. */
 export function Chip({
   tone = "",
-  className = "",
   ...props
 }: ComponentProps<"span"> & { tone?: "" | "gap" | "bad" | "ok" | "accent" }) {
-  return <span className={`mvp-chip ${tone} ${className}`} {...props} />;
+  return <StatusBadge tone={TONE[tone]} {...props} />;
 }
+/** Legacy alias: renders the system Button. */
 export function Action({
   secondary = false,
-  className = "",
   ...props
 }: ComponentProps<"button"> & { secondary?: boolean }) {
-  return (
-    <button
-      className={`mvp-button ${secondary ? "secondary" : ""} ${className}`}
-      {...props}
-    />
-  );
+  return <Button variant={secondary ? "outline" : "default"} {...(props as object)} />;
 }

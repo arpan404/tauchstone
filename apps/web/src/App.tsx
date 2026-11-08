@@ -1,6 +1,5 @@
 import { lazy, Suspense, useEffect, useState, type ComponentType } from "react";
-import { useCandidates, useHealth, useMockStatus } from "@/api/hooks";
-import { useProjects } from "@/api/workspace";
+import { useCandidates } from "@/api/hooks";
 import { About } from "@/features/about";
 import { LabView } from "@/features/lab";
 import { BenchmarkView } from "@/features/benchmark/BenchmarkView";
@@ -11,8 +10,10 @@ import { SingleCellPanel } from "@/features/single-cell";
 import { AttackView } from "@/features/tauchstone/AttackView";
 import { ProjectsView } from "@/features/projects/ProjectsView";
 import { ScreenView } from "@/features/screen/ScreenView";
-import { Action, Chip } from "@/components/mvp";
-import { BOUNDARY_TEXT, ShellBoundaryContext } from "@/components/BoundaryBanner";
+import { Chip } from "@/components/mvp";
+import { motion, useReducedMotion } from "motion/react";
+import { ShellBoundaryContext } from "@/components/BoundaryBanner";
+import { AppShell } from "@/app/AppShell";
 import {
   Command,
   CommandDialog,
@@ -69,36 +70,13 @@ const VIEWS: Record<StepId, ComponentType> = {
   lab: LabView,
   signature: DiseaseSignatureView,
 };
-const ITEMS: [StepId, string][] = [
-  ["projects", "Projects"],
-  ["screen", "Screen"],
-  ["candidates", "Candidates"],
-  ["evidence", "Drug"],
-  ["compare", "Compare"],
-  ["compounds", "My compounds"],
-  ["attack", "Attack"],
-  ["report", "Report"],
-  ["benchmark", "Validation"],
-];
+import { NAV_ITEMS as ITEMS } from "@/app/nav";
 export default function App() {
-  const {
-    step,
-    setStep,
-    selectedCandidateId,
-    selectCandidate,
-    currentProjectId,
-    compareIds,
-  } = useUi();
+  const { step, setStep, selectCandidate } = useUi();
   const { data } = useCandidates();
-  const { data: projects } = useProjects();
-  const health = useHealth();
-  const mock = useMockStatus(data?.provenance);
   const [search, setSearch] = useState(false);
   const [extra, setExtra] = useState<"about" | "cells" | null>(null);
-  const project =
-    projects?.find((p) => p.id === currentProjectId) ?? projects?.[0];
-  const candidate = data?.candidates.find((c) => c.id === selectedCandidateId);
-  const expo = import.meta.env.VITE_EXPO === "1";
+  const reduce = useReducedMotion();
   const title =
     extra === "about"
       ? "Methods"
@@ -107,11 +85,7 @@ export default function App() {
         : (ITEMS.find(([id]) => id === step)?.[1] ??
           (step === "lab" ? "AI lab" : "Disease signature"));
   const View =
-    extra === "about"
-      ? About
-      : extra === "cells"
-        ? SingleCellPanel
-        : VIEWS[step];
+    extra === "about" ? About : extra === "cells" ? SingleCellPanel : VIEWS[step];
   function navigate(id: StepId) {
     setExtra(null);
     setStep(id);
@@ -130,122 +104,41 @@ export default function App() {
   }, []);
   return (
     <TooltipProvider>
-      <a className="workspace-skip" href="#workspace">
-        Skip to workspace
-      </a>
-      <div className="shell">
-        <aside className="shell-side" aria-label="Workspace navigation">
-          <div className="shell-logo">
-            <i />
-            Tauchstone
-          </div>
-          {ITEMS.map(([id, label], i) => (
-            <div key={id} className="contents">
-              {i === 1 && (
-                <div className="shell-group">{project?.name ?? "Project"}</div>
-              )}
-              <button
-                className="shell-nav"
-                aria-current={step === id && !extra ? "page" : undefined}
-                onClick={() => navigate(id)}
-              >
-                {label}
-                {id === "compare" && <b>{compareIds.length}</b>}
-              </button>
+      <AppShell
+        title={title}
+        active={extra ? null : step}
+        onNavigate={navigate}
+        onExtra={setExtra}
+        onSearch={() => setSearch(true)}
+      >
+        <Suspense
+          fallback={
+            <div className="mvp-view">
+              <Chip>Loading</Chip>
             </div>
-          ))}
-          {!expo && (
-            <>
-              <div className="shell-group">Lab</div>
-              <button className="shell-nav" onClick={() => navigate("lab")}>
-                AI lab
-              </button>
-              <button
-                className="shell-nav"
-                onClick={() => navigate("signature")}
-              >
-                Disease signature
-              </button>
-              <button className="shell-nav" onClick={() => setExtra("cells")}>
-                Cell types
-              </button>
-              <button className="shell-nav" onClick={() => setExtra("about")}>
-                Methods
-              </button>
-            </>
-          )}
-          <div className="shell-live">
-            <i
-              style={{
-                background: health.isError
-                  ? "var(--bad)"
-                  : health.isPending
-                    ? "var(--warm)"
-                    : "var(--ok)",
-              }}
-            />
-            {health.isError
-              ? "Engine offline"
-              : health.isPending
-                ? "Connecting"
-                : "Engine online"}
-          </div>
-        </aside>
-        <div className="shell-main">
-          <header className="shell-bar">
-            <div>
-              {step !== "projects" && (
-                <div className="shell-crumb">
-                  {["evidence", "attack", "report"].includes(step)
-                    ? (candidate?.name ?? project?.name)
-                    : project?.name}
-                </div>
-              )}
-              <h1>{title}</h1>
-            </div>
-            <div className="shell-actions">
-              {mock && <Chip tone="gap">Synthetic data</Chip>}
-              <button
-                className="shell-crumb"
-                onClick={() => setSearch(true)}
-                aria-label="Search workspace"
-              >
-                ⌘ K
-              </button>
-              {step === "projects" && (
-                <Action onClick={() => navigate("screen")}>New screen</Action>
-              )}
-            </div>
-          </header>
-          <main
-            id="workspace"
-            tabIndex={-1}
-            className="shell-content"
-            aria-label={title}
-          >
-            <Suspense
-              fallback={
-                <div className="mvp-view">
-                  <Chip>Loading</Chip>
-                </div>
-              }
+          }
+        >
+          <ShellBoundaryContext.Provider value={true}>
+            <motion.div
+              key={extra ?? step}
+              initial={reduce ? false : { opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="min-h-full"
             >
-              <ShellBoundaryContext.Provider value={true}>
-                <View />
-              </ShellBoundaryContext.Provider>
-            </Suspense>
-          </main>
-          <footer className="shell-footer">{BOUNDARY_TEXT}</footer>
-        </div>
-      </div>
+              <View />
+            </motion.div>
+          </ShellBoundaryContext.Provider>
+        </Suspense>
+      </AppShell>
       <CommandDialog
         open={search}
         onOpenChange={setSearch}
         title="Search workspace"
-        description="Views · candidates"
+        description="Views and candidates"
       >
         <Command>
-          <CommandInput placeholder="Views · candidates" />
+          <CommandInput placeholder="Go to a view or candidate" />
           <CommandList>
             <CommandEmpty>No matches</CommandEmpty>
             <CommandGroup heading="Workspace">
@@ -266,6 +159,7 @@ export default function App() {
                   }}
                 >
                   {c.name}
+                  <span className="ml-auto font-mono text-[11px] text-ink-3">#{c.rank}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

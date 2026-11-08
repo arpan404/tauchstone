@@ -6,15 +6,14 @@ const BOUNDARY = 'Research hypothesis only. Not a treatment recommendation. Gene
 // Slow enough to narrate over the recording.
 const pause = (page: Page, ms = 1200) => page.waitForTimeout(ms * Number(process.env.TS_E2E_PACE ?? 2.5));
 const nav = (page: Page, label: string) =>
-  page.getByRole('navigation', { name: 'Workspace navigation' }).or(page.locator('aside.shell-side'))
-    .getByRole('button', { name: new RegExp(`^${label}`) }).first().click();
+  page.getByRole('button', { name: label, exact: true }).first().click();
 
 test('expo tour: screen, rank, inspect, attack, report', async ({ page }) => {
   let runs = 0;
   page.on('request', r => {
     if (r.method() === 'POST' && /\/attack\/[^/]+\/run$/.test(new URL(r.url()).pathname)) runs++;
   });
-  const boundary = () => expect(page.locator('footer.shell-footer')).toHaveText(BOUNDARY);
+  const boundary = () => expect(page.getByRole('note', { name: 'Boundary' })).toHaveText(BOUNDARY);
 
   await page.goto('/');
   await boundary();

@@ -85,22 +85,19 @@ describe("MVP workspace shell", () => {
     expect(
       screen.getByRole("main", { name: "Projects" }).textContent,
     ).toContain("Project cards");
-    expect(
-      within(screen.getByRole("complementary"))
-        .getAllByRole("button")
-        .map((b) => b.textContent),
-    ).toEqual([
+    for (const name of [
       "Projects",
       "Screen",
       "Candidates",
+      "Compare",
       "Drug",
-      "Compare0",
-      "My compounds",
       "Attack",
       "Report",
+      "My compounds",
       "Validation",
-    ]);
-    expect(screen.getByRole("contentinfo").textContent).toContain(
+    ])
+      expect(screen.getByRole("button", { name })).toBeTruthy();
+    expect(screen.getByRole("note", { name: "Boundary" }).textContent).toContain(
       "Research hypothesis only.",
     );
     expect(screen.queryByRole("button", { name: "AI lab" })).toBeNull();
