@@ -5,6 +5,7 @@ import { PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { normalizeName, useCompoundSearch, type CompoundMatch } from "@/api/mvpHooks";
 import { CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { useRankedPool } from "@/app/CandidatePicker";
 
 const FREE = "__as-typed__";
 const STATUS_LABEL: Record<CompoundMatch["status"], string> = {
@@ -89,10 +90,18 @@ export function CompoundChipInput({
   const search = useCompoundSearch(query);
   const q = query.trim();
   const fresh = !!search.data && !search.isPlaceholderData;
-  const matches = q ? (search.data ?? []) : [];
   const selected = new Set(names.map(normalizeName));
+  // Before anything is typed, suggest the top-ranked drugs not already chosen.
+  const { list: pool } = useRankedPool();
+  const suggestions: CompoundMatch[] = q
+    ? []
+    : pool
+        .filter((c) => !selected.has(normalizeName(c.name)))
+        .slice(0, 12)
+        .map((c) => ({ id: c.id, name: c.name, status: "ranked", pool_rank: c.rank, consensus: c.consensus }));
+  const matches = q ? (search.data ?? []) : suggestions;
   const exact = fresh && matches.some((m) => normalizeName(m.name) === normalizeName(q));
-  const open = focused && q.length > 0;
+  const open = focused && (q.length > 0 || suggestions.length > 0);
   const style = useDropdownPosition(field, open);
 
   // Each new result set highlights its best match (free text when nothing matches);
@@ -218,7 +227,7 @@ export function CompoundChipInput({
           >
             <CommandList className="max-h-none min-h-0 flex-1">
               {matches.length > 0 && (
-                <CommandGroup heading="Matches" className={cn(!fresh && "opacity-60")}>
+                <CommandGroup heading={q ? "Matches" : "Top-ranked drugs"} className={cn(q && !fresh && "opacity-60")}>
                   {matches.map((m) => (
                     <CommandItem
                       key={m.id}
@@ -258,7 +267,7 @@ export function CompoundChipInput({
                   ))}
                 </CommandGroup>
               )}
-              {!exact && (
+              {q && !exact && (
                 <CommandGroup heading={fresh && !matches.length ? "No match" : undefined}>
                   <CommandItem
                     value={FREE}

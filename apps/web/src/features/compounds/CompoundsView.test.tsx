@@ -179,6 +179,20 @@ it("typing searches, Enter adds the best match as a chip, Backspace on empty rem
   expect(chips()).toEqual(["donepezil", "memantine", "rivastigmine", "nepafenac"]);
 });
 
+it("opens top-ranked suggestions on focus, before anything is typed; Enter still checks", async () => {
+  setup();
+  const input = field();
+  fireEvent.focus(input);
+  expect(await screen.findByText("Top-ranked drugs")).toBeTruthy();
+  const first = (await screen.findAllByRole("option"))[0];
+  expect(within(first).getByText("#1")).toBeTruthy();
+  // Already-chosen names are not suggested again.
+  expect(screen.queryByRole("option", { name: /^Nepafenac/ })).toBeNull();
+  const before = chips();
+  fireEvent.keyDown(input, { key: "Enter" });
+  expect(chips()).toEqual(before);
+});
+
 it("shows brand matches with their status and keeps unmatched free text as a chip", async () => {
   setup();
   const input = field();
