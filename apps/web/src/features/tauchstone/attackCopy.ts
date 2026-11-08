@@ -60,7 +60,7 @@ export const TEST_KIND: Record<TestKind, { title: string; checks: string; passRu
   lincs_context: {
     title: 'Held-back lab measurement',
     checks: 'A cell line, concentration and time point left out of the ranking. Does it still reverse the signature there?',
-    passRule: 'Passes if its reversal score is at or below the preregistered threshold.',
+    passRule: 'Passes if its reversal score is at or below the threshold fixed in advance (about -0.66).',
   },
   brain_exposure: {
     title: 'Reaches the brain?',
