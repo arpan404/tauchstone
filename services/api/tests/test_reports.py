@@ -101,8 +101,9 @@ def test_pdf_contract_offline(client, monkeypatch):
     document = PdfReader(io.BytesIO(response.content))
     assert len(document.pages) == 1
     text = document.pages[0].extract_text()
+    # Section headings are set in capitals by CSS, so compare case-insensitively.
     for value in ['Brinzolamide', 'CA2', 'P00918', 'Data source', '3 hidden tests', 'not preregistered']:
-        assert value in text
+        assert value.lower() in text.lower(), value
     assert 'attachment' in response.headers['content-disposition']
 
 
