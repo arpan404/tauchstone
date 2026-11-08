@@ -28,14 +28,21 @@ import { BenchmarkView } from './BenchmarkView';
 
 afterEach(cleanup);
 describe('benchmark presentation', () => {
-  it('leads with API accuracy and intervals before the tied median chart', () => {
+  it('leads with API accuracy and intervals, then pairwise Holm tests, before the median plot', () => {
     render(<BenchmarkView />);
     const accuracy = screen.getByRole('region', { name: 'Decision accuracy after five tests' });
     expect(accuracy.textContent).toContain('88%');
-    expect(accuracy.textContent).toContain('81.0%, 94.0%');
-    expect(accuracy.textContent).toContain('Holm p = 0.000900');
-    expect(accuracy.textContent).toContain('experiments to correct verdict');
-    const median = screen.getByText('Experiments to correct verdict (median, 95% CI)');
+    expect(accuracy.textContent).toContain('81.0, 94.0');
+    const tests = screen.getByRole('region', { name: 'Holm-corrected comparisons' });
+    expect(tests.textContent).toContain('Tauchstone');
+    expect(tests.textContent).toContain('0.000900');
+    expect(tests.textContent).toContain('experiments to verdict');
+    const median = screen.getByText('Experiments to correct verdict');
     expect(accuracy.compareDocumentPosition(median) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows no em or en dashes', () => {
+    const { container } = render(<BenchmarkView />);
+    expect(container.textContent).not.toMatch(/[\u2013\u2014]/);
   });
 });

@@ -20,6 +20,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
+function rowFor(query: string): HTMLElement {
+  const table = screen.getByRole("table", { name: "Compound results" });
+  const row = within(table)
+    .getAllByRole("row")
+    .find((r) => r.querySelector("td")?.textContent === query);
+  if (!row) throw new Error(`no row for ${query}`);
+  return row;
+}
+async function findRowFor(query: string) {
+  let row: HTMLElement | undefined;
+  await waitFor(() => {
+    row = rowFor(query);
+  });
+  return row!;
+}
 function setup() {
   return render(
     <QueryClientProvider
@@ -33,7 +48,7 @@ function setup() {
 }
 it("renders the supplied pool ranks, positive score, unavailable statuses and Attack readiness", async () => {
   setup();
-  fireEvent.change(screen.getByLabelText("Paste compound names"), {
+  fireEvent.change(screen.getByLabelText("Compound names"), {
     target: {
       value:
         "donepezil, memantine\ngalantamine, rivastigmine, nepafenac, lithium",
@@ -48,17 +63,36 @@ it("renders the supplied pool ranks, positive score, unavailable statuses and At
   ])
     expect(await screen.findByText(rank)).toBeTruthy();
   expect(screen.getByText("+0.21")).toBeTruthy();
-  expect(screen.getByText("not rankable")).toBeTruthy();
-  expect(screen.getByText("not in LINCS")).toBeTruthy();
-  const row = screen.getByText("Nepafenac").closest("tr")!;
-  fireEvent.click(within(row).getByRole("button", { name: "Attack" }));
+  expect(within(rowFor("rivastigmine")).getByText("not rankable")).toBeTruthy();
+  expect(within(rowFor("lithium")).getByText("not in LINCS")).toBeTruthy();
+  for (const q of ["rivastigmine", "lithium"])
+    expect(within(rowFor(q)).queryAllByRole("button")).toHaveLength(0);
+  expect(within(rowFor("donepezil")).getByText("ranked")).toBeTruthy();
+  fireEvent.click(
+    within(rowFor("nepafenac")).getByRole("button", { name: "Attack" }),
+  );
   expect(useUi.getState().selectedCandidateId).toBe("MOCK-0002");
   expect(useUi.getState().step).toBe("attack");
   expect(
-    within(screen.getByText("donepezil").closest("tr")!).getByRole("button", {
-      name: "Build tests",
-    }),
+    within(rowFor("donepezil")).getByRole("button", { name: "Build tests" }),
   ).toBeTruthy();
+});
+it("shows an empty state before the first check and opens a ranked drug", async () => {
+  setup();
+  expect(screen.getByText("No compounds checked")).toBeTruthy();
+  expect(screen.getByText("not preregistered")).toBeTruthy();
+  expect(
+    screen.getByPlaceholderText("Compound names · comma or newline"),
+  ).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Check" }));
+  await screen.findByRole("table", { name: "Compound results" });
+  fireEvent.click(
+    within(await findRowFor("nepafenac")).getByRole("button", {
+      name: "Open drug Nepafenac",
+    }),
+  );
+  expect(useUi.getState().selectedCandidateId).toBe("MOCK-0002");
+  expect(useUi.getState().step).toBe("evidence");
 });
 it("posts comma/newline parsed names in order with project scope and clears stale results after editing", async () => {
   vi.stubEnv("VITE_USE_MOCK", "0");
@@ -71,7 +105,7 @@ it("posts comma/newline parsed names in order with project scope and clears stal
   }));
   vi.stubGlobal("fetch", fetch);
   setup();
-  const textarea = screen.getByLabelText("Paste compound names");
+  const textarea = screen.getByLabelText("Compound names");
   fireEvent.change(textarea, {
     target: { value: " donepezil,\n\n memantine, donepezil " },
   });
