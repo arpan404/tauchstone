@@ -89,10 +89,9 @@ function PreregisteredOnly() {
     <div className="attack flex h-full flex-col">
       <BoundaryBanner />
       <div className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="glass mx-auto mt-[8vh] max-w-xl">
+        <div className="mx-auto mt-[8vh] max-w-xl">
           <EmptyState
-            className="border-0 bg-transparent"
-            icon={<IconChip><LockSimpleIcon weight="duotone" /></IconChip>}
+            icon={<LockSimpleIcon weight="duotone" />}
             title={<span role="heading" aria-level={2}>Attack runs on the preregistered project</span>}
             action={
               <Button
@@ -273,10 +272,9 @@ function AttackSessionView() {
       <MockRibbon show={mockData} />
       <div className="flex-1 overflow-auto p-4 md:p-6">
         {!session && (!selectedCandidateId ? (
-          <div className="glass mx-auto mt-[8vh] max-w-xl">
+          <div className="mx-auto mt-[8vh] max-w-xl">
             <EmptyState
-              className="border-0 bg-transparent"
-              icon={<IconChip><CrosshairIcon weight="duotone" /></IconChip>}
+              icon={<CrosshairIcon weight="duotone" />}
               title={<span role="heading" aria-level={2}>No candidate selected</span>}
               action={
                 <div className="flex flex-col items-center gap-2">
@@ -595,10 +593,6 @@ const LOG_KIND_TEXT: Record<LogTint, string> = {
   bad: 'text-bad',
   belief: 'text-primary',
 };
-
-function IconChip({ children }: { children: ReactNode }) {
-  return <span className="grid size-12 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-6">{children}</span>;
-}
 
 function Eyebrow({ session }: { session?: string }) {
   return (
