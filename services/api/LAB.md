@@ -2,6 +2,11 @@
 
 This additive router preserves frozen routes. The engineering lead owns the extension specification.
 
+**Nov 8, 2026:** the AI lab page was removed from the web app so the structure model has one
+surface only. `GET /lab/model` and the stored predictions still back the AI estimate on My
+compounds (see `/compounds/estimate`), and `POST /lab/model/train` still trains the model.
+`POST /lab/chat` and `GET /lab/status` have no caller in the app today.
+
 - `GET /lab/status`: probes Ollama tags and returns model training state.
 - `POST /lab/chat`: accepts question, candidate_id, optional session_id. Searches explicitly whitelisted public evidence with TF-IDF, bounded to 4,000 serialized source characters. Discovery scores come from a whitelist lookup in list_candidates(200). Evidence coverage records available targets, mechanism and source counts; missing evidence is unknown, not negative. Optional session history requires a matching candidate, and reads only committed history from the public engine snapshot. No snapshot contexts, hidden rows, benchmark, exposure, or truth-table data enters sources. Exposure experiments are excluded even after commitment.
 - `POST /lab/model/train`: accepts random_forest and seed 20261105; starts one background worker per API process. Duplicate requests while running return the current state.

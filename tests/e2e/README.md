@@ -26,7 +26,7 @@ The AI lab test is skipped by default so ordinary runs and recordings retain onl
 the research workflow. To include real local inference, prediction and one retraining job:
 
 ```sh
-TS_E2E_BASE_URL=http://localhost:5273 TS_E2E_LAB=1 TS_E2E_RECORD=0 bun run test
+TS_E2E_BASE_URL=http://localhost:5273 TS_E2E_RECORD=0 bun run test
 ```
 
 Requires a ready local copilot and an existing trained model on the real API.
