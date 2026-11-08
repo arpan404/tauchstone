@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Command as CommandPrimitive } from "cmdk";
-import { PlusIcon, XIcon } from "@phosphor-icons/react";
+import { PlusIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import { normalizeName, useCompoundSearch, type CompoundMatch } from "@/api/mvpHooks";
 import { CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
@@ -153,7 +153,7 @@ export function CompoundChipInput({
           }
         }}
         className={cn(
-          "flex min-h-24 cursor-text flex-wrap content-start items-center gap-1.5 rounded-xl bg-frost/70 p-2 ring-1 ring-ink/12 backdrop-blur min-[1400px]:min-h-40",
+          "relative flex min-h-24 cursor-text flex-wrap content-start items-center gap-1.5 rounded-xl bg-frost/70 p-2 pb-9 ring-1 ring-ink/12 backdrop-blur min-[1400px]:min-h-40",
           focused && "ring-2 ring-primary/45",
         )}
       >
@@ -192,6 +192,21 @@ export function CompoundChipInput({
           placeholder={names.length ? "Add compound" : "Search compound, brand or synonym"}
           className="h-7 min-w-32 flex-1 bg-transparent px-1 text-[13.5px] text-ink outline-none placeholder:text-ink-3"
         />
+        {names.length > 0 && (
+          <button
+            type="button"
+            data-slot="chip-clear"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              onChange([]);
+              setQuery("");
+            }}
+            className="absolute right-2 bottom-2 inline-flex h-6 items-center gap-1 rounded-full px-2 font-mono text-[12px] text-ink-3 hover:bg-primary/8 hover:text-ink focus-visible:ring-2 focus-visible:ring-primary/45 focus-visible:outline-none"
+          >
+            <TrashIcon aria-hidden className="size-3.5" />
+            Clear
+          </button>
+        )}
       </div>
       {open &&
         createPortal(

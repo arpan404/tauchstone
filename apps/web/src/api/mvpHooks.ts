@@ -187,7 +187,9 @@ const mockSearchRows: (CompoundMatch & { aliases?: string[] })[] = [
 ];
 const STATUS_ORDER: Record<CompoundMatch["status"], number> = { ranked: 0, not_rankable: 1, not_in_lincs: 2 };
 
-/** Mirrors GET /compounds/search: exact, prefix, substring (3+); ranked first in rank order. */
+const BRD_CODE = /^BRD-[A-Z]\d/i;
+
+/** Mirrors GET /compounds/search: exact, prefix, substring (3+); named before bare BRD codes, ranked first in rank order. */
 export function mockCompoundSearch(q: string, limit = 20): CompoundMatch[] {
   const nq = normalizeName(q);
   if (!nq) return [];
@@ -204,6 +206,7 @@ export function mockCompoundSearch(q: string, limit = 20): CompoundMatch[] {
   scored.sort(
     ([ta, a], [tb, b]) =>
       ta - tb ||
+      Number(BRD_CODE.test(a.name)) - Number(BRD_CODE.test(b.name)) ||
       STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
       (a.pool_rank ?? 0) - (b.pool_rank ?? 0) ||
       a.name.localeCompare(b.name),

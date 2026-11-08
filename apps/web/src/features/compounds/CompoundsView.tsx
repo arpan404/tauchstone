@@ -12,7 +12,6 @@ import {
   MinusCircleIcon,
   QuestionIcon,
   SealWarningIcon,
-  TrashIcon,
   XCircleIcon,
   type Icon,
 } from "@phosphor-icons/react";
@@ -32,9 +31,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CompoundChipInput } from "./CompoundChipInput";
 import { useUi } from "@/store/ui";
 import { cn } from "cn";
-import { CompoundChipInput } from "./CompoundChipInput";
 
 type Result = Schema<"LookupResult">;
 
@@ -62,8 +61,6 @@ const COLUMNS = [
 
 const NUMERIC = new Set(["Rank", "Reversal score", "Conditions"]);
 
-const DEFAULT_NAMES = ["donepezil", "memantine", "galantamine", "rivastigmine", "nepafenac"];
-
 function Dash() {
   return <span className="text-ink-3">n/a</span>;
 }
@@ -75,7 +72,9 @@ export function CompoundsView({
   projectId?: string;
   onBuildTests?: (result: Result) => void;
 } = {}) {
-  const [names, setNames] = useState(DEFAULT_NAMES);
+  const [names, setNames] = useState([
+    "donepezil", "memantine", "galantamine", "rivastigmine", "nepafenac",
+  ]);
   const lookup = useLookup();
   const mock = useMockStatus();
   const reduce = useReducedMotion();
@@ -145,23 +144,8 @@ export function CompoundsView({
                 onSubmit={() => names.length && !lookup.isPending && check()}
               />
               <div className="flex items-center justify-between gap-3">
-                <span className="flex items-center gap-1 font-mono text-[12px] text-ink-3 tabular-nums">
+                <span className="font-mono text-[12px] text-ink-3 tabular-nums">
                   {names.length} {names.length === 1 ? "name" : "names"}
-                  {names.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 rounded-full px-2 text-[12px] text-ink-3 hover:text-ink"
-                      onClick={() => {
-                        setNames([]);
-                        lookup.reset();
-                      }}
-                    >
-                      <TrashIcon aria-hidden />
-                      Clear
-                    </Button>
-                  )}
                 </span>
                 <Button
                   type="submit"
