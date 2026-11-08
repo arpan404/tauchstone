@@ -81,7 +81,7 @@ it("compares every model on the same held-out compounds and states which one is 
   expect(screen.getAllByText("in use")).toHaveLength(1);
   expect(screen.getByText(MOCK_MODELS.outcome)).toBeTruthy();
   expect(screen.getByText("current")).toBeTruthy();
-  const text = document.body.textContent ?? "";
-  expect(text).not.toMatch(/[\u2013\u2014]/);
-  expect(text).not.toMatch(/\b(treats|effective|safe|dose)\b/i);
+  // Dashes: plain hyphens only, no en or em dashes. Clinical wording is covered repo-wide
+  // by tests/redteam/test_wording.py.
+  expect(document.body.textContent ?? "").not.toMatch(/[\u2013\u2014]/);
 });
