@@ -343,6 +343,7 @@ paths:
       parameters:
         - { name: drug_id, in: path, required: true, schema: { type: string } }
         - { name: project_id, in: query, schema: { type: string } }
+        - { name: session_id, in: query, description: "attack session for this drug; adds a snapshot with revealed tests only", schema: { type: string } }
       responses:
         "200": { description: one-page report, content: { text/html: { schema: { type: string } } } }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -353,6 +354,7 @@ paths:
       parameters:
         - { name: drug_id, in: path, required: true, schema: { type: string } }
         - { name: project_id, in: query, schema: { type: string } }
+        - { name: session_id, in: query, description: "attack session for this drug; adds a snapshot with revealed tests only", schema: { type: string } }
       responses:
         "200": { description: report PDF, content: { application/pdf: { schema: { type: string, format: binary } } } }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -930,7 +932,7 @@ components:
       required: [query, status]
       properties:
         query: { type: string }
-        status: { type: string, enum: [ranked, not_rankable, not_in_lincs] }
+        status: { type: string, enum: [ranked, not_rankable, not_in_lincs, unrecognized], description: "not_in_lincs: a known compound with no LINCS match; unrecognized: no source knows the name" }
         drug_id: { type: [string, "null"] }
         name: { type: [string, "null"] }
         pool_rank: { type: [integer, "null"] }

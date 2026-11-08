@@ -146,3 +146,63 @@ def test_approval_status_dict_renders_as_label():
     assert 'approved · phase 4' in html
     assert "{'status'" not in html and '{&#39;status' not in html
     assert 'Signature GSE132903' in html
+
+
+def _session_store_with_one_reveal(candidate_id='brinzolamide'):
+    from app.services.engine_adapter import Context, EngineConfig, HiddenRow, MockAttackSession
+    from app.services.sessions import SessionStore
+
+    def row(i, outcome, value):
+        ctx = Context(context_id=f'ctx-{i}', type='lincs_context', label=f'LABEL_{i} 10 uM',
+                      cell_id=f'CELL{i}', cohort=f'GSE_SECRET_{i}')
+        return HiddenRow(context=ctx, outcome=outcome, value=value, threshold=-0.5,
+                         rule='rule', detail=f'DETAIL_SECRET_{i}')
+    hidden = [row(0, 'fail', 0.4321), row(1, 'survive', -0.9876), row(2, 'survive', -0.8765)]
+    engine = MockAttackSession(candidate_id, hidden, [], EngineConfig(q=0.7, theta=-0.5, claim_text='claim'),
+                               budget=2)
+    engine.run('ctx-0')
+    store = SessionStore()
+    rec = store.create(engine, candidate_id, preregistered=False)
+    return store, rec.session_id
+
+
+def test_session_snapshot_shows_revealed_and_never_hidden(client):
+    from app.deps import get_session_store
+    store, sid = _session_store_with_one_reveal()
+    app.dependency_overrides[get_session_store] = lambda: store
+    try:
+        html = client.get(f'/reports/brinzolamide?session_id={sid}').text
+    finally:
+        app.dependency_overrides.pop(get_session_store, None)
+    assert '<h2>Session snapshot</h2>' in html and '<h2>Attack</h2>' not in html
+    for value in ['LABEL_0 10 µM', 'LINCS held-out', 'Failed', '0.43', '-0.50', 'Budget used',
+                  '1 of 2', '2 hidden tests sealed', 'not preregistered', 'P(claim holds) start']:
+        assert value in html, value
+    assert any(v in html for v in ('INSUFFICIENT EVIDENCE', 'FRAGILE / CONTEXT-DEPENDENT', 'SUPPORTED SO FAR'))
+    # Unrevealed tests: no label, value, outcome, detail or cohort; revealed detail/cohort stay out too.
+    for secret in ['LABEL_1', 'LABEL_2', '-0.99', '-0.88', 'Survived', 'DETAIL_SECRET', 'GSE_SECRET', 'ctx-1', 'ctx-2']:
+        assert secret not in html, secret
+
+
+def test_session_for_another_drug_is_ignored(client):
+    from app.deps import get_session_store
+    store, sid = _session_store_with_one_reveal('BRD-other')
+    app.dependency_overrides[get_session_store] = lambda: store
+    try:
+        html = client.get(f'/reports/brinzolamide?session_id={sid}').text
+        unknown = client.get('/reports/brinzolamide?session_id=nope').text
+    finally:
+        app.dependency_overrides.pop(get_session_store, None)
+    for page in (html, unknown):
+        assert 'Not attacked yet' in page and 'LABEL_0' not in page and 'Session snapshot' not in page
+
+
+def test_pdf_filename_and_print_title(client, monkeypatch):
+    from datetime import date
+    monkeypatch.setattr(render, 'render_pdf', lambda html: b'%PDF-1.7 fake')
+    response = client.get('/reports/brinzolamide.pdf')
+    stem = f'tauchstone-brinzolamide-{date.today().isoformat()}'
+    assert response.headers['content-type'] == 'application/pdf'
+    assert response.headers['content-disposition'] == f'attachment; filename="{stem}.pdf"'
+    assert f'<title>{stem}</title>' in client.get('/reports/brinzolamide').text
+    assert render.slug('Ácido 5-ASA (HCl)') == 'acido-5-asa-hcl'

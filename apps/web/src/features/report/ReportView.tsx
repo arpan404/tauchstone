@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { DownloadSimpleIcon, FileTextIcon, PrinterIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
+import { useAttackSessionSnapshot } from "@/api/hooks";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUi } from "@/store/ui";
 
 export interface ReportViewProps {
   drugId: string;
@@ -28,8 +30,15 @@ export function ReportView({ drugId, projectId }: ReportViewProps) {
     null,
   );
   const [attempt, setAttempt] = useState(0);
+  const sessionId = useUi((s) => s.sessionId);
+  const session = useAttackSessionSnapshot(sessionId);
+  // Only the Attack session on this drug goes into the report; the server re-checks.
+  const reportSession = session?.candidate_id === drugId ? sessionId : null;
   const url = `/api/reports/${encodeURIComponent(drugId)}`;
-  const query = projectId ? `?project_id=${encodeURIComponent(projectId)}` : "";
+  const params = new URLSearchParams();
+  if (projectId) params.set("project_id", projectId);
+  if (reportSession) params.set("session_id", reportSession);
+  const query = params.size ? `?${params.toString().replace(/\+/g, "%20")}` : "";
   const key = url + query;
   const html = result?.key === key ? result.html : "";
   const error = result?.key === key && result.error;

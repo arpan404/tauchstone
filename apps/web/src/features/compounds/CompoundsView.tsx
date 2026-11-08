@@ -34,6 +34,7 @@ const STATUS: Record<Result["status"], { label: string; tone: Tone }> = {
   ranked: { label: "ranked", tone: "accent" },
   not_rankable: { label: "not rankable", tone: "neutral" },
   not_in_lincs: { label: "not in LINCS", tone: "gap" },
+  unrecognized: { label: "name not recognised", tone: "bad" },
 };
 
 const COLUMNS = [
