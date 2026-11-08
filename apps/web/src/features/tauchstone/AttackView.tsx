@@ -113,6 +113,9 @@ function AttackSessionView() {
     drug.data?.name,
     candidates.data?.candidates.find((c) => c.id === selectedCandidateId)?.name,
   );
+  // While the drug detail loads, say 'this drug' rather than flash its BRD id.
+  const nameLoading = !!drug.isLoading && /^BRD-/i.test(candidateName ?? '');
+  const shownName = nameLoading ? null : candidateName;
   // A new session starts in Attack unless the user chose a mode during this one.
   const modeTouched = useRef(false);
   const [confirmNew, setConfirmNew] = useState<AttackMode | null>(null);
@@ -314,12 +317,12 @@ function AttackSessionView() {
                   {session && <><span aria-hidden className="text-ink/25">·</span><span>session {session.session_id.slice(0, 8)}</span></>}
                 </p>
                 <h2 className="mt-3 font-heading text-[30px] leading-[1.08] font-normal tracking-[-0.035em] text-ink md:text-[42px]">
-                  Can we break the claim about {candidateName}?
+                  Can we break the claim about {shownName ?? 'this drug'}?
                 </h2>
                 <blockquote className="m-0 mt-4 rounded-xl bg-primary/[0.07] px-4 py-3 ring-1 ring-primary/15">
                   <p className="m-0 text-[11.5px] font-medium text-primary">The claim</p>
                   <p className="m-0 mt-1 text-[16px] leading-snug text-ink md:text-[17px]" aria-label="Claim under test">
-                    {claimSentence(candidateName ?? 'This drug', view?.claim.q ?? 0.7)}
+                    {claimSentence(shownName ?? 'This drug', view?.claim.q ?? 0.7)}
                   </p>
                 </blockquote>
                 <p className="m-0 mt-3 max-w-2xl text-[13.5px] leading-snug text-ink-2">
