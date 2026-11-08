@@ -1,8 +1,10 @@
 import { LayoutGroup, motion, useReducedMotion } from "motion/react";
-import { BrainIcon, GridFourIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon, BrainIcon, GridFourIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import type { Screen } from "@/api/workspace";
 import { NumberTicker, Panel, StatusBadge } from "@/components/system";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { type CellLineCard, compositionSentence, useCellLineCards } from "./cellLineCards";
 
 type CellLine = NonNullable<Screen["cell_lines"]>[number];
 
@@ -26,6 +28,8 @@ export function CellLinePanel({
   const lines = job?.cell_lines ?? [];
   const max = Math.max(1, ...lines.map((c) => c.n_scored));
   const neural = lines.filter((c) => c.neural).length;
+  const { data: cards } = useCellLineCards();
+  const composition = compositionSentence(lines, cards);
   // A finished run saved before cell lines were tracked has none to show.
   const untracked = !running && job?.status === "done" && !lines.length;
   // The frozen original run gets its cell lines worked out on the server the first time it is shown.
@@ -67,6 +71,11 @@ export function CellLinePanel({
               <span className="font-mono font-medium text-primary">score</span> strongest single-signature reversal so far
             </span>
           </div>
+          {composition && (
+            <p className="m-0 mb-2.5 px-1 text-[13.5px] text-ink-2">
+              {composition} Select a line for its origin.
+            </p>
+          )}
           <LayoutGroup>
             <ol
               aria-label="Cell lines, most signatures first"
@@ -79,7 +88,7 @@ export function CellLinePanel({
                   transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                   className="min-w-0"
                 >
-                  <Tile line={c} max={max} />
+                  <Tile line={c} max={max} card={cards?.get(c.cell_id)} />
                 </motion.li>
               ))}
             </ol>
@@ -105,16 +114,39 @@ export function CellLinePanel({
   );
 }
 
-function Tile({ line, max }: { line: CellLine; max: number }) {
-  const best = line.best_consensus;
-  const label = `${line.cell_id}${line.neural ? ", neural" : ""}: ${line.n_scored.toLocaleString("en-US")} signatures scored, strongest single-signature reversal ${best == null ? "not available" : best.toFixed(2)}`;
+const TILE =
+  "flex h-full w-full min-w-0 flex-col gap-1 rounded-xl bg-frost/55 px-3 pt-2.5 pb-2 text-left ring-1 ring-rim/80";
+
+function Tile({ line, max, card }: { line: CellLine; max: number; card?: CellLineCard }) {
+  if (!card) return <div className={cn(TILE, line.neural && "bg-primary/[0.07] ring-primary/25")}><TileBody line={line} max={max} /></div>;
   return (
-    <div
-      className={cn(
-        "flex h-full min-w-0 flex-col gap-1 rounded-xl bg-frost/55 px-3 pt-2.5 pb-2 ring-1 ring-rim/80",
-        line.neural && "bg-primary/[0.07] ring-primary/25",
-      )}
-    >
+    <Popover>
+      <PopoverTrigger
+        aria-haspopup="dialog"
+        className={cn(
+          TILE,
+          "cursor-pointer outline-none transition-colors hover:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary data-[popup-open]:bg-primary/10 data-[popup-open]:ring-primary/25",
+          line.neural && "bg-primary/[0.07] ring-primary/25",
+        )}
+      >
+        <TileBody line={line} max={max} hint={`Facts about ${card.display_name}`} />
+      </PopoverTrigger>
+      <PopoverContent
+        side="bottom"
+        align="start"
+        className="w-[min(380px,calc(100vw-24px))] max-h-[min(680px,var(--available-height))] gap-3 overflow-y-auto rounded-[18px] p-4"
+      >
+        <CardBody card={card} />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function TileBody({ line, max, hint }: { line: CellLine; max: number; hint?: string }) {
+  const best = line.best_consensus;
+  const label = `${line.cell_id}${line.neural ? ", neural" : ""}: ${line.n_scored.toLocaleString("en-US")} signatures scored, strongest single-signature reversal ${best == null ? "not available" : best.toFixed(2)}${hint ? `. ${hint}` : ""}`;
+  return (
+    <>
       <span className="sr-only">{label}</span>
       <div aria-hidden className="flex min-w-0 items-center gap-1.5">
         <span className="truncate font-mono text-[15px] font-medium text-ink">{line.cell_id}</span>
@@ -141,6 +173,87 @@ function Tile({ line, max }: { line: CellLine; max: number }) {
           style={{ width: `${(line.n_scored / max) * 100}%` }}
         />
       </span>
-    </div>
+    </>
+  );
+}
+
+const ROWS: [keyof CellLineCard, string][] = [
+  ["organ", "Organ or tissue"],
+  ["sampled_from", "Sampled from"],
+  ["disease", "Donor disease"],
+  ["description", "Cell type"],
+  ["category", "Category"],
+  ["sex", "Donor sex"],
+  ["age", "Donor age"],
+];
+
+function CardBody({ card }: { card: CellLineCard }) {
+  const hasCello = card.cellosaurus_id !== "unspecified";
+  const image = card.image;
+  const rows = ROWS.filter(([k]) => !(k === "description" && card.description === "unspecified"));
+  return (
+    <>
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="m-0 font-heading text-[20px] leading-tight font-normal tracking-[-0.02em] text-ink">
+            {card.display_name}
+          </h3>
+          {card.display_name !== card.cell_id && (
+            <p className="m-0 font-mono text-[12px] text-ink-3">LINCS id {card.cell_id}</p>
+          )}
+        </div>
+        {card.neural && (
+          <StatusBadge tone="ok">
+            <BrainIcon aria-hidden />
+            Neural
+          </StatusBadge>
+        )}
+      </div>
+      <p className="m-0 text-[14px] leading-snug text-ink">{card.summary}</p>
+      {image && (
+        <figure className="m-0 flex flex-col gap-1.5">
+          <img
+            src={`/api${image.url}`}
+            alt={image.caption}
+            loading="lazy"
+            decoding="async"
+            className="aspect-square w-full rounded-xl bg-ink/[0.035] object-cover ring-1 ring-rim/60"
+          />
+          <figcaption className="text-[12px] leading-snug text-ink-3">
+            {image.caption}{" "}
+            <a href={image.page_url} target="_blank" rel="noreferrer" className="text-ink-2 underline decoration-ink/20 underline-offset-2 hover:text-primary">
+              Image: Human Protein Atlas, {image.licence}
+            </a>
+          </figcaption>
+        </figure>
+      )}
+      <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-xl bg-ink/[0.035] px-3 py-2.5 text-[13px]">
+        {rows.map(([k, label]) => {
+          const v = String(card[k]);
+          return (
+            <div key={k} className="contents">
+              <dt className="text-ink-3">{label}</dt>
+              <dd className={cn("m-0 min-w-0 break-words", v === "unspecified" ? "text-ink-3" : "text-ink")}>
+                {v === "unspecified" ? "Unspecified" : v.charAt(0).toUpperCase() + v.slice(1)}
+              </dd>
+            </div>
+          );
+        })}
+      </dl>
+      <p className="m-0 text-[12px] text-ink-3">
+        {hasCello ? (
+          <>
+            Source:{" "}
+            <a href={card.source_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-ink-2 underline decoration-ink/20 underline-offset-2 hover:text-primary">
+              Cellosaurus {card.cellosaurus_id}
+              <ArrowSquareOutIcon aria-hidden className="size-3" />
+            </a>{" "}
+            (CC BY 4.0), with LINCS cell metadata
+          </>
+        ) : (
+          "Source: LINCS cell metadata (GSE92742, GSE70138, LINCS 2020). No Cellosaurus record is linked."
+        )}
+      </p>
+    </>
   );
 }
