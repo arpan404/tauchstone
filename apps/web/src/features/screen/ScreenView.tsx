@@ -410,7 +410,7 @@ export function ScreenView() {
                           initial={reduce ? false : { opacity: 0, x: -4 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                          className="mvp-hit group/hit grid-cols-[24px_minmax(0,1fr)_48px]! @3xl:grid-cols-[24px_minmax(0,1fr)_44px_48px]! mt-0! h-full w-full items-center rounded-none! border-0! bg-transparent! px-4! py-0! text-left outline-none hover:bg-surface-2! focus-visible:bg-surface-2!"
+                          className="mvp-hit group/hit grid h-full w-full grid-cols-[24px_minmax(0,1fr)_48px] items-center gap-3 px-4 text-left outline-none hover:bg-surface-2 focus-visible:bg-surface-2 @3xl:grid-cols-[24px_minmax(0,1fr)_44px_48px]"
                           onClick={() => {
                             selectCandidate(hit.drug_id);
                             setStep("evidence");
@@ -422,7 +422,7 @@ export function ScreenView() {
                           <span className="truncate text-[13px] font-medium text-ink group-hover/hit:text-accent-ink">
                             {hit.name}
                           </span>
-                          <span className="hidden h-1.5 rounded-sm bg-surface-2 @3xl:block" aria-hidden>
+                          <span className="hidden h-1.5 @3xl:block" aria-hidden>
                             <span
                               className="block h-full rounded-sm bg-primary/60 transition-[width] duration-300"
                               style={{ width: `${(Math.abs(hit.consensus) / maxScore) * 100}%` }}
