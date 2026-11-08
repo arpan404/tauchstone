@@ -126,13 +126,19 @@ section conflicts with the sections above, this section wins.
   tags (exposure, brain cells, withdrawn, not preregistered), icons in empty states. Weight
   `regular` (16-18px); `fill` only for the active state; `duotone` allowed in hero chips.
 - **Tables.** Inside `glass`, flush. Header row is quiet 11.5px ink-3. Rows have no hard lines:
-  rounded 12px rows; hover = `bg-white/45`, selected = frosted highlight `bg-white/60 ring-1
-  ring-white/80 backdrop-blur-md`. Numbers mono.
-- **Frosted everywhere, shadows only on floating panels.** Selected and hover states (nav items,
-  rows, segmented controls, chips) never use shadows: they use the frosted highlight above.
-  Inner tiles inside a panel are frosted too (`bg-white/50 ring-1 ring-white/70`), not white
-  cards. Inputs and textareas: `bg-white/60 ring-1 ring-ink/10 backdrop-blur`, focus ring blue.
-  Popovers, menus, dialogs and the command palette are frosted (handled globally in index.css).
+  rounded 12px rows; hover = `bg-primary/6`; selected = `bg-primary/10 ring-1 ring-primary/25`
+  with ink text. Numbers mono.
+- **Contrast and depth (Arpan, Nov 8).** States must be unmistakable at a glance, and the UI keeps
+  a 3D feel without drop shadows on states:
+  - Active/selected controls (nav item, segmented control, active filter pill, selected tab):
+    solid blue pill `bg-gradient-to-b from-[#2b6fd3] to-[#1453ad] text-white` with inner
+    highlight `shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)]`;
+    icons white. Hover = `bg-primary/8`.
+  - Floating panels keep the soft glass drop shadow (depth). Inner tiles inside a panel are
+    frosted (`bg-white/55 ring-1 ring-white/80`), never plain white cards.
+  - Inputs and textareas: `bg-white/70 ring-1 ring-ink/12 backdrop-blur`, blue focus ring.
+  - Popovers, menus, dialogs and the command palette are frosted (handled globally in index.css).
+  - Text on glass: titles ink, labels ink-3 (AA), never lighter.
 - **Type.** Titles weight 400-500, never bold black. Buttons and numbers mono. Labels 11.5-12px
   ink-3. Body 13-13.5px.
 - **Colour.** Blue (`primary`) for data and selection; dark ink for the primary action; red,
