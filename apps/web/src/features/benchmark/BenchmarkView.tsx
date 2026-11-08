@@ -1,6 +1,21 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { ArrowClockwise, ChartScatter } from '@phosphor-icons/react';
+import {
+  ArrowClockwiseIcon,
+  ChartScatterIcon,
+  ClockCounterClockwiseIcon,
+  DiceFiveIcon,
+  EqualsIcon,
+  FingerprintIcon,
+  GaugeIcon,
+  HourglassIcon,
+  ScalesIcon,
+  ShieldCheckIcon,
+  ShuffleIcon,
+  StackIcon,
+  TargetIcon,
+  TestTubeIcon,
+} from '@phosphor-icons/react';
 import { useBenchmark, useMockStatus } from '@/api/hooks';
 import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
@@ -31,6 +46,9 @@ import { IntervalPlot, type IntervalRow } from './IntervalPlot';
 import type { BenchmarkAnalysis, BenchmarkData } from '@/api/types';
 
 type Scope = 'contested' | 'all';
+
+/** Empty and error states sit on glass, not in a dashed grey box. */
+const EMPTY = 'glass min-h-64 border-0 bg-transparent';
 type Policy = BenchmarkAnalysis['policies'][number];
 
 /** Documented permutation gate result (README, integrity log): 17 of 20 compounds, gate needs 20. */
@@ -99,16 +117,54 @@ function byAccuracy(policies: Policy[]): Policy[] {
   );
 }
 
+/** Solid blue gradient pill for the active segment; inactive hover is a blue tint, never the fill. */
+const SEGMENT =
+  'h-8 rounded-full px-3.5 text-[13px] font-medium text-ink-2 transition-colors hover:bg-primary/8 hover:text-ink aria-pressed:bg-gradient-to-b aria-pressed:from-[#2b6fd3] aria-pressed:to-[#1453ad] aria-pressed:text-white aria-pressed:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),inset_0_-1px_0_rgb(0_0_0/0.12)] aria-pressed:hover:from-[#3a7ddd] aria-pressed:hover:to-[#185cbc] aria-pressed:hover:text-white';
+/** Frosted inner tile inside a glass panel. */
+const TILE = 'rounded-xl bg-white/55 ring-1 ring-white/80';
+/** Rounded table rows with no hard lines. */
+const ROW = '[&>td]:border-0 [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl border-0 hover:bg-primary/6';
+const HEAD_ROW = 'border-0 hover:bg-transparent';
+const HEAD = 'h-8 text-[11.5px] font-medium text-ink-3';
+
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-1.5">
-      <dt className="text-[12px] text-ink-3">{label}</dt>
+    <div className="flex items-center justify-between gap-4 rounded-lg px-3 py-1.5 transition-colors hover:bg-white/60">
+      <dt className="text-[12.5px] text-ink-2">{label}</dt>
       <dd className="m-0 flex items-center gap-2">{children}</dd>
     </div>
   );
 }
 
-function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: string }) {
+function ScopeControl({ scope, onChange }: { scope: Scope; onChange: (s: Scope) => void }) {
+  return (
+    <ToggleGroup
+      aria-label="Benchmark scope"
+      spacing={1}
+      value={[scope]}
+      onValueChange={(v) => v[0] && onChange(v[0] as Scope)}
+      className="rounded-full bg-ink/[0.045] p-0.5 ring-1 ring-ink/[0.06]"
+    >
+      {(['contested', 'all'] as const).map((s) => (
+        <ToggleGroupItem key={s} value={s} className={SEGMENT}>
+          {s === 'contested' ? <Term term="undecided" focusable={false} className="decoration-current/40">Undecided</Term> : 'All candidates'}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
+  );
+}
+
+function Headline({
+  analysis,
+  prereg,
+  scopeControl,
+  meta,
+}: {
+  analysis: BenchmarkAnalysis;
+  prereg: string;
+  scopeControl: ReactNode;
+  meta: [string, string, ReactNode][];
+}) {
   const find = (id: string) => analysis.policies.find((p) => p.policy === id)?.decision_accuracy.estimate;
   const tau = find('tauchstone_hybrid');
   const random = find('random');
@@ -122,74 +178,105 @@ function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: s
   const confirmationMetric = pairMetric(analysis.tests, 'tauchstone_hybrid', 'greedy_strongest');
   const awareMetric = pairMetric(analysis.tests, 'decision_lookahead_hybrid', 'random');
   return (
-    <Panel aria-label="Headline result">
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10">
-        <div className="flex min-w-0 flex-col justify-center gap-5">
-          <p className="m-0 text-[13px] font-medium text-ink-2">
-            <Term term="decisionAccuracy">Correct verdict within {analysis.budget} tests</Term>
+    <section aria-label="Headline result" className="glass min-w-0 p-5 sm:p-8">
+      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+        <div className="min-w-0">
+          <p className="m-0 flex items-center gap-1.5 font-mono text-[12px] tracking-[0.02em] text-ink-3">
+            <ShieldCheckIcon aria-hidden className="size-4 text-primary" /> Validation
           </p>
-          <dl className="m-0 flex flex-wrap items-end gap-x-10 gap-y-4">
-            <div>
-              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-                <dd className="m-0 font-mono text-[64px] leading-[0.9] font-semibold tracking-[-0.04em] text-primary tabular-nums">
+          <h2 className="m-0 mt-2 font-heading text-[32px] leading-[1.08] font-normal tracking-[-0.035em] text-ink sm:text-[44px]">
+            <Term term="decisionAccuracy" className="decoration-ink/15 underline-offset-[7px]">
+              Correct verdict within {analysis.budget} tests
+            </Term>
+          </h2>
+        </div>
+        {scopeControl}
+      </div>
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-6 min-[1400px]:grid-cols-[minmax(0,1fr)_minmax(0,21rem)] min-[1400px]:gap-10">
+        <div className="flex min-w-0 flex-col gap-6">
+          <dl className="m-0 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[12.5px]">
+            {meta.map(([k, v, icon]) => (
+              <div key={k} className="flex items-center gap-1.5">
+                <span aria-hidden className="text-ink-3 [&>svg]:size-3.5">{icon}</span>
+                <dt className="text-ink-3">{k}</dt>
+                <dd className="m-0 font-mono text-ink tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+          <dl className="m-0 mt-auto flex flex-wrap items-end gap-x-10 gap-y-6">
+            <div className="min-w-0">
+              <dt className="mb-1 text-[12.5px] font-medium text-ink-2">Tauchstone</dt>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+                <dd className="m-0 font-mono text-[52px] leading-[0.95] font-light tracking-[-0.045em] text-primary tabular-nums sm:text-[58px]">
                   {finite(tau) ? <NumberTicker value={tau * 100} format={(v) => `${Math.round(v)}%`} /> : 'n/a'}
                 </dd>
-                <ul aria-label="Limits" className="m-0 flex list-none flex-col items-start gap-1 p-0 pb-0.5">
-                  <li><StatusBadge tone="gap">Retrospective benchmark</StatusBadge></li>
+                <ul aria-label="Limits" className="m-0 flex list-none flex-col items-start gap-1.5 p-0">
+                  <li>
+                    <StatusBadge tone="gap"><ClockCounterClockwiseIcon aria-hidden /> Retrospective benchmark</StatusBadge>
+                  </li>
                   {ties.length > 0 && (
-                    <li><StatusBadge>{`Ties ${ties.join(' and ')}`}</StatusBadge></li>
+                    <li><StatusBadge><EqualsIcon aria-hidden />{`Ties ${ties.join(' and ')}`}</StatusBadge></li>
                   )}
+                  <li>
+                    <TipBadge tone="bad" className="font-mono" tip={PERMUTATION_GATE_TIP}>
+                      <ShuffleIcon aria-hidden />
+                      <span className="font-sans">Permutation gate</span>{' '}
+                      {PERMUTATION_GATE} not met
+                    </TipBadge>
+                  </li>
                 </ul>
               </div>
-              <dt className="mt-2.5 text-[12px] font-medium text-ink">Tauchstone</dt>
             </div>
-            <div>
-              <dd className="m-0 font-mono text-[32px] leading-none font-medium tracking-tight text-ink-3 tabular-nums">
-                {pct(random)}
-              </dd>
-              <dt className="mt-2.5 text-[12px] text-ink-3">Random</dt>
-            </div>
-            <div>
-              <dd className="m-0 font-mono text-[32px] leading-none font-medium tracking-tight text-ink-2 tabular-nums">
-                {pct(aware)}
-              </dd>
-              <dt className="mt-2.5 text-[12px] text-ink-3">Decision-aware</dt>
+            <div className="flex items-end gap-7 pb-1">
+              <div>
+                <dd className="m-0 font-mono text-[30px] leading-none font-light tracking-[-0.03em] text-ink-3 tabular-nums">
+                  {pct(random)}
+                </dd>
+                <dt className="mt-2 text-[12px] text-ink-3">Random</dt>
+              </div>
+              <div>
+                <dd className="m-0 font-mono text-[30px] leading-none font-light tracking-[-0.03em] text-ink-2 tabular-nums">
+                  {pct(aware)}
+                </dd>
+                <dt className="mt-2 text-[12px] text-ink-3">Decision-aware</dt>
+              </div>
             </div>
           </dl>
         </div>
-        <dl className="m-0 min-w-0 divide-y divide-line border-line lg:border-l lg:pl-8">
+        <div className={cn(TILE, 'min-w-0 p-2')}>
           {metric && (
-            <div className="pb-1.5 text-[12px] font-medium text-ink-2">
-              <Term term="holmP">Holm p</Term> · {metricLabel(metric)}
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 text-[12px] font-medium text-ink-2">
+              <ScalesIcon aria-hidden className="size-4 text-primary" />
+              <span><Term term="holmP">Holm p</Term> · {metricLabel(metric)}</span>
             </div>
           )}
-          <Fact label="Tauchstone vs random">
-            <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'random', metric)}>
-              {formatP(vsRandom)}
-            </TipBadge>
-          </Fact>
-          <Fact label="Tauchstone vs confirmation">
-            <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'greedy_strongest', confirmationMetric)}>
-              {formatP(vsConfirmation)}
-            </TipBadge>
-          </Fact>
-          <Fact label="Decision-aware vs random">
-            {awareNotBetter && <span className="text-[12px] text-ink-2">not better</span>}
-            <TipBadge className="font-mono" tip={pairTip(analysis, 'decision_lookahead_hybrid', 'random', awareMetric)}>
-              {formatP(awareVsRandom)}
-            </TipBadge>
-          </Fact>
-          <Fact label="Permutation gate">
-            <TipBadge tone="bad" className="font-mono" tip={PERMUTATION_GATE_TIP}>
-              {PERMUTATION_GATE} not met
-            </TipBadge>
-          </Fact>
-          <Fact label="Preregistration">
-            <StatusBadge className="font-mono" title={prereg}>{prereg.slice(0, 8)}</StatusBadge>
-          </Fact>
-        </dl>
+          <dl className="m-0 grid min-w-0 grid-cols-[minmax(0,1fr)] md:max-[1399px]:grid-cols-2 md:max-[1399px]:gap-x-2">
+            <Fact label="Tauchstone vs random">
+              <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'random', metric)}>
+                {formatP(vsRandom)}
+              </TipBadge>
+            </Fact>
+            <Fact label="Tauchstone vs confirmation">
+              <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'greedy_strongest', confirmationMetric)}>
+                {formatP(vsConfirmation)}
+              </TipBadge>
+            </Fact>
+            <Fact label="Decision-aware vs random">
+              {awareNotBetter && <span className="text-[12px] text-ink-3">not better</span>}
+              <TipBadge className="font-mono" tip={pairTip(analysis, 'decision_lookahead_hybrid', 'random', awareMetric)}>
+                {formatP(awareVsRandom)}
+              </TipBadge>
+            </Fact>
+            <Fact label="Preregistration">
+              <TipBadge className="font-mono" tip={`SHA-256 ${prereg}`}>
+                <FingerprintIcon aria-hidden className="text-primary" />
+                {prereg.slice(0, 8)}
+              </TipBadge>
+            </Fact>
+          </dl>
+        </div>
       </div>
-    </Panel>
+    </section>
   );
 }
 
@@ -206,18 +293,19 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
   return (
     <Panel
       title="Pairwise tests"
-      flush
+      icon={<ScalesIcon />}
+      caption={primary ? metricLabel(primary) : undefined}
       aria-label="Holm-corrected comparisons"
-      actions={primary && <span className="text-[12px] text-ink-3">{metricLabel(primary)}</span>}
+      bodyClassName="px-3 pt-1 pb-3"
     >
       {tests.length === 0 ? (
-        <p className="m-0 p-4 text-[13px] text-ink-3">No paired tests in this scope</p>
+        <p className="m-0 px-2 py-4 text-[13px] text-ink-3">No paired tests in this scope</p>
       ) : (
-        <Table className="text-[13px]">
-          <TableHeader>
-            <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
-              <TableHead className="h-8 pl-4 text-[12px] font-medium text-ink-3">Comparison</TableHead>
-              <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">
+        <Table className="border-separate border-spacing-y-0.5 text-[13px]">
+          <TableHeader className="[&_tr]:border-0">
+            <TableRow className={HEAD_ROW}>
+              <TableHead className={cn(HEAD, 'pl-3')}>Comparison</TableHead>
+              <TableHead className={cn(HEAD, 'pr-3 text-right')}>
                 <Term term="holmP">Holm p</Term>
               </TableHead>
             </TableRow>
@@ -227,22 +315,21 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
               const sig = t.p_holm < 0.05;
               const badge = rowBadge(t.metric);
               return (
-                <TableRow key={i} className="border-line hover:bg-surface-2">
-                  <TableCell className="h-8 py-1 pl-4">
+                <TableRow key={i} className={ROW}>
+                  <TableCell className="h-9 py-1 pl-3">
                     <span className="flex items-center gap-1.5">
-                      <span className={cn(t.policy_a === 'tauchstone_hybrid' && 'font-medium')}>{policyName(t.policy_a)}</span>
-                      <span className="text-ink-3">vs</span>
-                      {policyName(t.policy_b)}
-                      {badge && <StatusBadge className="ml-1 h-5 px-1.5 text-[11px]">{badge}</StatusBadge>}
+                      <span className={cn(t.policy_a === 'tauchstone_hybrid' ? 'font-medium text-ink' : 'text-ink-2')}>{policyName(t.policy_a)}</span>
+                      <span className="text-[12px] text-ink-3">vs</span>
+                      <span className="text-ink-2">{policyName(t.policy_b)}</span>
+                      {badge && <StatusBadge size="sm" className="ml-1">{badge}</StatusBadge>}
                     </span>
                   </TableCell>
-                  <TableCell
-                    className={cn(
-                      'h-8 py-1 pr-4 text-right font-mono tabular-nums',
-                      sig ? 'font-medium text-accent-ink' : 'text-ink-3',
+                  <TableCell className="h-9 py-1 pr-3 text-right">
+                    {sig ? (
+                      <StatusBadge tone="accent" size="sm" className="font-mono tabular-nums">{formatP(t.p_holm)}</StatusBadge>
+                    ) : (
+                      <span className="pr-2 font-mono text-[12.5px] text-ink-3 tabular-nums">{formatP(t.p_holm)}</span>
                     )}
-                  >
-                    {formatP(t.p_holm)}
                   </TableCell>
                 </TableRow>
               );
@@ -256,26 +343,26 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
 
 function RecallTable({ policies }: { policies: Policy[] }) {
   return (
-    <Panel title="Fragile recall" flush>
-      <Table className="text-[13px]">
-        <TableHeader>
-          <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
-            <TableHead className="h-8 pl-4 text-[12px] font-medium text-ink-3">Policy</TableHead>
-            <TableHead className="h-8 text-right text-[12px] font-medium text-ink-3">@3</TableHead>
-            <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">@5</TableHead>
+    <Panel title="Fragile recall" icon={<TargetIcon />} bodyClassName="px-3 pt-1 pb-3">
+      <Table className="border-separate border-spacing-y-0.5 text-[13px]">
+        <TableHeader className="[&_tr]:border-0">
+          <TableRow className={HEAD_ROW}>
+            <TableHead className={cn(HEAD, 'pl-3')}>Policy</TableHead>
+            <TableHead className={cn(HEAD, 'text-right')}>@3</TableHead>
+            <TableHead className={cn(HEAD, 'pr-3 text-right')}>@5</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {policies.map((p) => (
-            <TableRow
-              key={p.policy}
-              className={cn('border-line hover:bg-surface-2', p.policy === 'tauchstone_hybrid' && 'bg-accent-soft/60 hover:bg-accent-soft')}
-            >
-              <TableCell className="py-1.5 pl-4">{policyName(p.policy)}</TableCell>
-              <TableCell className="py-1.5 text-right font-mono tabular-nums">{p.fragile_recall_at_3.estimate.toFixed(2)}</TableCell>
-              <TableCell className="py-1.5 pr-4 text-right font-mono tabular-nums">{p.fragile_recall_at_5.estimate.toFixed(2)}</TableCell>
-            </TableRow>
-          ))}
+          {policies.map((p) => {
+            const tau = p.policy === 'tauchstone_hybrid';
+            return (
+              <TableRow key={p.policy} className={cn(ROW, tau && 'bg-primary/[0.07] hover:bg-primary/10')}>
+                <TableCell className={cn('h-9 py-1 pl-3', tau ? 'font-medium text-ink' : 'text-ink-2')}>{policyName(p.policy)}</TableCell>
+                <TableCell className={cn('py-1 text-right font-mono tabular-nums', tau && 'text-primary')}>{p.fragile_recall_at_3.estimate.toFixed(2)}</TableCell>
+                <TableCell className={cn('py-1 pr-3 text-right font-mono tabular-nums', tau && 'text-primary')}>{p.fragile_recall_at_5.estimate.toFixed(2)}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </Panel>
@@ -285,10 +372,10 @@ function RecallTable({ policies }: { policies: Policy[] }) {
 function LoadingState() {
   return (
     <div className="space-y-4" aria-busy="true" aria-label="Loading benchmark">
-      <Skeleton className="h-[188px] w-full rounded-lg" />
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <Skeleton className="h-[360px] rounded-lg" />
-        <Skeleton className="h-[360px] rounded-lg" />
+      <Skeleton className="h-[260px] w-full rounded-[18px] bg-white/50" />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+        <Skeleton className="h-[360px] rounded-[18px] bg-white/50" />
+        <Skeleton className="h-[360px] rounded-[18px] bg-white/50" />
       </div>
     </div>
   );
@@ -356,61 +443,25 @@ export function BenchmarkView() {
     <div className="flex h-full flex-col">
       <BoundaryBanner />
       <MockRibbon show={mockData} />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
         <motion.div
           className="mx-auto max-w-[1360px] space-y-4"
           initial={reduce ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18 }}
         >
-          {data && analysis && (
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              {hasAll && (
-                <ToggleGroup
-                  aria-label="Benchmark scope"
-                  variant="outline"
-                  size="sm"
-                  spacing={0}
-                  value={[scope]}
-                  onValueChange={(v) => v[0] && setScope(v[0] as Scope)}
-                >
-                  {(['contested', 'all'] as const).map((s) => (
-                    <ToggleGroupItem
-                      key={s}
-                      value={s}
-                      className="h-8 border-line-strong px-3 text-[13px] text-ink-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
-                    >
-                      {s === 'contested' ? <Term term="undecided" focusable={false}>Undecided</Term> : 'All candidates'}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              )}
-              <dl className="m-0 flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px]">
-                {[
-                  ['Candidates', allN && scope === 'contested' && hasAll ? `${analysis.n_candidates} / ${allN}` : String(analysis.n_candidates)],
-                  ['Seeds', String(analysis.n_seeds)],
-                  ['Budget', String(analysis.budget)],
-                ].map(([k, v]) => (
-                  <div key={k} className="flex items-baseline gap-1.5">
-                    <dt className="text-ink-3">{k}</dt>
-                    <dd className="m-0 font-mono text-ink tabular-nums">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          )}
-
           {isLoading && <LoadingState />}
           {notRun && (
-            <EmptyState icon={<ChartScatter />} title="Benchmark not run" />
+            <EmptyState icon={<ChartScatterIcon />} title="Benchmark not run" className={EMPTY} />
           )}
           {isError && !notRun && (
             <EmptyState
-              icon={<ChartScatter />}
+              icon={<ChartScatterIcon />}
+              className={EMPTY}
               title={<span role="alert">Benchmark failed to load</span>}
               action={
                 <Button variant="outline" size="sm" onClick={() => void refetch()}>
-                  <ArrowClockwise /> Retry
+                  <ArrowClockwiseIcon /> Retry
                 </Button>
               }
             />
@@ -418,11 +469,22 @@ export function BenchmarkView() {
 
           {data && analysis && accuracy && experiments && (
             <>
-              <Headline analysis={analysis} prereg={data.preregistration_sha256} />
+              <Headline
+                analysis={analysis}
+                prereg={data.preregistration_sha256}
+                scopeControl={hasAll && <ScopeControl scope={scope} onChange={setScope} />}
+                meta={[
+                  ['Candidates', allN && scope === 'contested' && hasAll ? `${analysis.n_candidates} / ${allN}` : String(analysis.n_candidates), <StackIcon key="c" />],
+                  ['Seeds', String(analysis.n_seeds), <DiceFiveIcon key="s" />],
+                  ['Budget', String(analysis.budget), <TestTubeIcon key="b" />],
+                ]}
+              />
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
                 <Panel
                   title={<Term term="decisionAccuracy">{`Decision accuracy after ${analysis.budget} tests`}</Term>}
+                  icon={<ChartScatterIcon />}
+                  caption="dot = estimate · line = 95% CI"
                   aria-label="Decision accuracy after five tests"
                 >
                   <IntervalPlot
@@ -439,7 +501,10 @@ export function BenchmarkView() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <Panel
                   title={<Term term="experimentsToVerdict">Experiments to correct verdict</Term>}
-                  className="lg:col-span-2" actions={<span className="text-[12px] text-ink-3">median · fewer is better</span>}>
+                  icon={<HourglassIcon />}
+                  caption="median · fewer is better"
+                  className="lg:col-span-2"
+                >
                   <IntervalPlot
                     rows={experiments.rows}
                     domain={experiments.domain}
@@ -449,7 +514,7 @@ export function BenchmarkView() {
                   />
                 </Panel>
                 <RecallTable policies={byAccuracy(analysis.policies)} />
-                <Panel title="Calibration">
+                <Panel title="Calibration" icon={<GaugeIcon />} caption="predicted vs observed survival">
                   {calibOption && (
                     <div role="img" aria-label="Calibration plot of predicted versus observed survival rates.">
                       <InstrumentChart option={calibOption} style={{ height: 248 }} />

@@ -1,12 +1,19 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
-  ArrowClockwise,
-  ArrowSquareOut,
-  CheckCircle,
-  Crosshair,
-  Flask,
-  MagnifyingGlass,
+  ArrowClockwiseIcon,
+  ArrowSquareOutIcon,
+  CheckCircleIcon,
+  CrosshairIcon,
+  FlaskIcon,
+  ListChecksIcon,
+  ListMagnifyingGlassIcon,
+  MagnifyingGlassIcon,
+  MinusCircleIcon,
+  QuestionIcon,
+  SealWarningIcon,
+  XCircleIcon,
+  type Icon,
 } from "@phosphor-icons/react";
 import { useLookup } from "@/api/mvpHooks";
 import { useMockStatus } from "@/api/hooks";
@@ -30,12 +37,16 @@ import { cn } from "cn";
 
 type Result = Schema<"LookupResult">;
 
-const STATUS: Record<Result["status"], { label: string; tone: Tone }> = {
-  ranked: { label: "ranked", tone: "accent" },
-  not_rankable: { label: "not rankable", tone: "neutral" },
-  not_in_lincs: { label: "not in LINCS", tone: "gap" },
-  unrecognized: { label: "name not recognised", tone: "bad" },
+const STATUS: Record<Result["status"], { label: string; tone: Tone; icon: Icon }> = {
+  ranked: { label: "ranked", tone: "accent", icon: CheckCircleIcon },
+  not_rankable: { label: "not rankable", tone: "neutral", icon: MinusCircleIcon },
+  not_in_lincs: { label: "not in LINCS", tone: "gap", icon: XCircleIcon },
+  unrecognized: { label: "name not recognised", tone: "neutral", icon: QuestionIcon },
 };
+
+/** Rounded table rows with no hard lines (glass tables, Nov 8 direction). */
+const ROW =
+  "border-0 [&>td]:border-0 [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl";
 
 const COLUMNS = [
   "Query",
@@ -51,7 +62,7 @@ const COLUMNS = [
 const NUMERIC = new Set(["Pool rank", "Reversal", "Contexts"]);
 
 function Dash() {
-  return <span className="text-ink-3/60">n/a</span>;
+  return <span className="text-ink-3">n/a</span>;
 }
 
 export function CompoundsView({
@@ -100,17 +111,23 @@ export function CompoundsView({
     <div className="flex h-full flex-col">
       <BoundaryBanner />
       <MockRibbon show={mock} />
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
         <motion.div
-          className="mx-auto grid max-w-[1360px] items-start gap-4 lg:grid-cols-[272px_minmax(0,1fr)]"
+          className="mx-auto grid max-w-[1360px] items-start gap-4 min-[1400px]:grid-cols-[316px_minmax(0,1fr)]"
           initial={reduce ? false : { opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18 }}
         >
           <Panel
             title="Compounds"
-            actions={<StatusBadge tone="gap">not preregistered</StatusBadge>}
-            className="lg:sticky lg:top-0"
+            icon={<ListMagnifyingGlassIcon />}
+            actions={
+              <StatusBadge tone="gap" size="sm">
+                <SealWarningIcon aria-hidden />
+                not preregistered
+              </StatusBadge>
+            }
+            className="min-[1400px]:sticky min-[1400px]:top-0"
           >
             <form
               className="space-y-3"
@@ -121,7 +138,7 @@ export function CompoundsView({
             >
               <label
                 htmlFor="compound-names"
-                className="block text-[12px] font-medium text-ink-2"
+                className="block text-[12px] font-medium text-ink-3"
               >
                 Compound names
               </label>
@@ -134,7 +151,7 @@ export function CompoundsView({
                 }}
                 placeholder="Compound names · comma or newline"
                 spellCheck={false}
-                className="min-h-40 resize-y rounded-md border-line-strong bg-surface text-[13.5px] leading-relaxed"
+                className="min-h-24 min-[1400px]:min-h-40 resize-y rounded-xl border-0 bg-white/70 px-3 py-2.5 text-[13.5px] leading-relaxed text-ink ring-1 ring-ink/12 backdrop-blur placeholder:text-ink-3 focus-visible:ring-2 focus-visible:ring-primary/45"
               />
               <div className="flex items-center justify-between gap-3">
                 <span className="font-mono text-[12px] text-ink-3 tabular-nums">
@@ -144,18 +161,18 @@ export function CompoundsView({
                   type="submit"
                   disabled={!names.length || lookup.isPending}
                 >
-                  <MagnifyingGlass aria-hidden />
+                  <MagnifyingGlassIcon aria-hidden />
                   {lookup.isPending ? "Checking" : "Check"}
                 </Button>
               </div>
               {lookup.isError && (
                 <div
                   role="alert"
-                  className="flex items-center justify-between gap-2 rounded-md bg-bad-soft px-3 py-2 text-[13px] text-bad"
+                  className="flex items-center justify-between gap-2 rounded-xl bg-bad/10 px-3 py-2 text-[13px] text-bad"
                 >
                   Lookup unavailable
                   <Button type="button" variant="outline" size="sm" onClick={check}>
-                    <ArrowClockwise aria-hidden /> Retry
+                    <ArrowClockwiseIcon aria-hidden /> Retry
                   </Button>
                 </div>
               )}
@@ -164,39 +181,52 @@ export function CompoundsView({
 
           <Panel
             title="Results"
-            flush
+            icon={<ListChecksIcon />}
+            caption={results.length ? `${results.length} checked` : undefined}
+            bodyClassName="px-3 pt-1 pb-3"
             aria-live="polite"
             actions={
               results.length > 0 && (
-                <div className="flex items-center gap-1.5">
+                <div className="hidden flex-wrap items-center justify-end gap-1.5 sm:flex">
                   {(Object.keys(STATUS) as Result["status"][])
                     .filter((s) => counts[s])
-                    .map((s) => (
-                      <StatusBadge key={s} tone={STATUS[s].tone}>
-                        <span className="font-mono tabular-nums">{counts[s]}</span>
-                        {STATUS[s].label}
-                      </StatusBadge>
-                    ))}
+                    .map((s) => {
+                      const StatusIcon = STATUS[s].icon;
+                      return (
+                        <StatusBadge key={s} tone={STATUS[s].tone}>
+                          <StatusIcon aria-hidden />
+                          <span className="font-mono tabular-nums">{counts[s]}</span>
+                          {STATUS[s].label}
+                        </StatusBadge>
+                      );
+                    })}
                 </div>
               )
             }
           >
             {!results.length && !lookup.isPending ? (
               <EmptyState
-                icon={<Flask />}
+                icon={
+                  <span className="grid size-11 place-items-center rounded-full bg-accent-soft text-primary [&>svg]:size-5">
+                    <FlaskIcon />
+                  </span>
+                }
                 title="No compounds checked"
-                className="m-4 min-h-64 border-line"
+                className="m-0 min-h-64 rounded-xl border-0 bg-white/45 ring-1 ring-white/80"
               />
             ) : (
-              <Table aria-label="Compound results" className="text-[13px]">
-                <TableHeader>
-                  <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
+              <Table
+                aria-label="Compound results"
+                className="border-separate border-spacing-y-0.5 text-[13px]"
+              >
+                <TableHeader className="[&_tr]:border-0">
+                  <TableRow className="border-0 hover:bg-transparent">
                     {COLUMNS.map((h) => (
                       <TableHead
                         key={h}
                         scope="col"
                         className={cn(
-                          "h-8 px-1.5 text-[12px] font-medium text-ink-3 first:pl-4 last:pr-4",
+                          "h-8 px-2 text-[11.5px] font-medium text-ink-3 first:pl-3 last:pr-3",
                           NUMERIC.has(h) && "text-right",
                           h === "Action" && "text-right",
                         )}
@@ -209,11 +239,11 @@ export function CompoundsView({
                 <TableBody>
                   {lookup.isPending &&
                     names.map((n, i) => (
-                      <TableRow key={`${n}-${i}`} className="border-line">
-                        <TableCell className="px-1.5 py-2 pl-4 text-ink-2">{n}</TableCell>
+                      <TableRow key={`${n}-${i}`} className={cn(ROW, "hover:bg-transparent")}>
+                        <TableCell className="h-11 px-2 pl-3 text-ink-2">{n}</TableCell>
                         {COLUMNS.slice(1).map((c) => (
-                          <TableCell key={c} className="px-1.5 py-2 last:pr-4">
-                            <Skeleton className="h-4 w-full max-w-20" />
+                          <TableCell key={c} className="px-2 last:pr-3">
+                            <Skeleton className="h-4 w-full max-w-20 rounded-full bg-ink/[0.06]" />
                           </TableCell>
                         ))}
                       </TableRow>
@@ -222,19 +252,23 @@ export function CompoundsView({
                     results.map((result, i) => {
                       const ranked = result.status === "ranked";
                       const status = STATUS[result.status];
+                      const StatusIcon = status.icon;
                       return (
                         <TableRow
                           key={`${result.query}-${i}`}
-                          className="h-11 border-line hover:bg-surface-2"
+                          className={cn(ROW, "h-12 hover:bg-primary/6")}
                         >
-                          <TableCell className="px-1.5 pl-4 text-ink-2">{result.query}</TableCell>
-                          <TableCell className="px-1.5 font-medium text-ink">
+                          <TableCell className="px-2 pl-3 text-ink-2">{result.query}</TableCell>
+                          <TableCell className="px-2 font-medium text-ink">
                             {result.name ?? <Dash />}
                           </TableCell>
-                          <TableCell className="px-1.5">
-                            <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                          <TableCell className="px-2">
+                            <StatusBadge tone={status.tone}>
+                              <StatusIcon aria-hidden weight={result.status === "ranked" ? "fill" : "regular"} />
+                              {status.label}
+                            </StatusBadge>
                           </TableCell>
-                          <TableCell className="px-1.5 text-right font-mono tabular-nums">
+                          <TableCell className="px-2 text-right font-mono tabular-nums">
                             {ranked && result.pool_rank != null ? (
                               `${result.pool_rank.toLocaleString("en-US")} / ${(result.rank_total ?? 1816).toLocaleString("en-US")}`
                             ) : (
@@ -243,7 +277,7 @@ export function CompoundsView({
                           </TableCell>
                           <TableCell
                             className={cn(
-                              "px-1.5 text-right font-mono tabular-nums",
+                              "px-2 text-right font-mono tabular-nums",
                               result.consensus != null && result.consensus < 0
                                 ? "font-medium text-primary"
                                 : "text-ink-2",
@@ -255,14 +289,14 @@ export function CompoundsView({
                               `${result.consensus > 0 ? "+" : ""}${result.consensus.toFixed(2)}`
                             )}
                           </TableCell>
-                          <TableCell className="px-1.5 text-right font-mono tabular-nums">
+                          <TableCell className="px-2 text-right font-mono tabular-nums">
                             {result.n_contexts ?? <Dash />}
                           </TableCell>
-                          <TableCell className="px-1.5">
+                          <TableCell className="px-2">
                             {ranked ? (
                               result.attack_ready ? (
                                 <span className="inline-flex items-center gap-1 text-ok">
-                                  <CheckCircle weight="fill" aria-hidden className="size-4" />
+                                  <CheckCircleIcon weight="fill" aria-hidden className="size-4" />
                                   yes
                                 </span>
                               ) : (
@@ -272,7 +306,7 @@ export function CompoundsView({
                               <Dash />
                             )}
                           </TableCell>
-                          <TableCell className="px-1.5 pr-4">
+                          <TableCell className="px-2 pr-3">
                             {ranked && (
                               <div className="flex items-center justify-end gap-1.5">
                                 <Button
@@ -281,18 +315,23 @@ export function CompoundsView({
                                   disabled={!result.drug_id && !onBuildTests}
                                   onClick={() => attack(result)}
                                 >
-                                  {result.attack_ready && <Crosshair aria-hidden />}
+                                  {result.attack_ready ? (
+                                    <CrosshairIcon aria-hidden />
+                                  ) : (
+                                    <FlaskIcon aria-hidden />
+                                  )}
                                   {result.attack_ready ? "Attack" : "Build tests"}
                                 </Button>
                                 <Button
                                   size="icon-sm"
-                                  variant="ghost"
+                                  variant="outline"
+                                  className="rounded-full text-ink-2 hover:bg-primary/8 hover:text-primary"
                                   disabled={!result.drug_id}
                                   aria-label={`Open drug ${result.name ?? result.query}`}
                                   title="Open drug"
                                   onClick={() => openDrug(result)}
                                 >
-                                  <ArrowSquareOut aria-hidden />
+                                  <ArrowSquareOutIcon aria-hidden />
                                 </Button>
                               </div>
                             )}

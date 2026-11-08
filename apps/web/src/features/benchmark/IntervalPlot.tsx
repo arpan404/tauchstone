@@ -38,13 +38,13 @@ export function IntervalPlot({
   const grid = (
     <div aria-hidden className="pointer-events-none absolute inset-y-0 left-1.5 right-1.5">
       {ticks.map((t) => (
-        <span key={t} className="absolute inset-y-0 w-px bg-line" style={{ left: pos(t, domain) }} />
+        <span key={t} className="absolute inset-y-0 w-px bg-primary/[0.09]" style={{ left: pos(t, domain) }} />
       ))}
     </div>
   );
   return (
     <div className={cn('overflow-x-auto text-[13px]', className)}>
-      <div className="grid min-w-[32rem] items-end gap-x-4 pb-1.5 text-[12px] text-ink-3" style={cols}>
+      <div className="grid min-w-[32rem] items-end gap-x-4 px-3 pb-1.5 text-[11.5px] font-medium text-ink-3" style={cols}>
         <span>Policy</span>
         <span />
         <span className="text-right">{valueHeader}</span>
@@ -55,7 +55,15 @@ export function IntervalPlot({
           const tone =
             r.emphasis === 'accent' ? 'bg-primary' : r.emphasis === 'ink' ? 'bg-ink-2' : 'bg-ink-3/70';
           return (
-            <li key={r.key} aria-label={r.ariaLabel} className="grid h-10 items-center gap-x-4" style={cols}>
+            <li
+              key={r.key}
+              aria-label={r.ariaLabel}
+              className={cn(
+                'grid h-10 items-center gap-x-4 rounded-xl px-3 transition-colors',
+                r.emphasis === 'accent' ? 'bg-primary/[0.07] hover:bg-primary/10' : 'hover:bg-primary/6',
+              )}
+              style={cols}
+            >
               <span className="min-w-0 truncate">{r.label}</span>
               <span className="relative h-full">
                 {grid}
@@ -73,7 +81,7 @@ export function IntervalPlot({
                   ))}
                   <span
                     className={cn(
-                      'absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-surface',
+                      'absolute top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white',
                       tone,
                       r.emphasis === 'accent' ? 'size-3' : 'size-2.5',
                     )}
@@ -94,7 +102,7 @@ export function IntervalPlot({
           );
         })}
       </ul>
-      <div aria-hidden className="grid gap-x-4 pt-1" style={cols}>
+      <div aria-hidden className="grid min-w-[32rem] gap-x-4 px-3 pt-1" style={cols}>
         <span />
         <span className="relative mx-1.5 h-4">
           {ticks.map((t) => (
