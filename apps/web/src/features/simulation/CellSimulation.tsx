@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { cn } from 'cn';
 import { drawWorld } from './drawWorld';
 import { useCanvasLoop, useReducedMotion } from './useCanvasLoop';
 import { createWorld, resizeWorld, settle, stepWorld, type SimState, type World } from './world';
@@ -10,8 +11,8 @@ export type { SimState } from './world';
  * (molecules flow to cells and bind, intensity follows progress 0..1), done (calm,
  * several cells keep a green halo). Reduced motion renders one static frame.
  */
-export function CellSimulation(props: { state: 'idle' | 'scoring' | 'done'; progress?: number; height?: number }) {
-  const { state, progress = 0, height = 260 } = props;
+export function CellSimulation(props: { state: 'idle' | 'scoring' | 'done'; progress?: number; height?: number; className?: string }) {
+  const { state, progress = 0, height = 260, className } = props;
   const reduce = useReducedMotion();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const worldRef = useRef<World | null>(null);
@@ -47,8 +48,8 @@ export function CellSimulation(props: { state: 'idle' | 'scoring' | 'done'; prog
 
   return (
     <div
-      className="relative overflow-hidden rounded-[14px] border border-[#e6e2d8]"
-      style={{ height, background: 'radial-gradient(ellipse at 28% 18%, #ffffff 0%, #f6f5f1 38%, #efe9fb 100%)' }}
+      className={cn('relative overflow-hidden rounded-lg border border-line', className)}
+      style={{ height, background: 'radial-gradient(ellipse at 28% 18%, var(--surface) 0%, var(--surface-2) 40%, var(--accent-soft) 100%)' }}
       data-testid="cell-simulation"
       data-state={state}
     >

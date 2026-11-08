@@ -7,6 +7,7 @@ export function Panel({
   actions,
   flush = false,
   className,
+  bodyClassName,
   children,
   ...props
 }: Omit<ComponentProps<"section">, "title"> & {
@@ -14,6 +15,8 @@ export function Panel({
   actions?: ReactNode;
   /** No inner padding (tables, plots that bleed to the edge). */
   flush?: boolean;
+  /** Classes for the body wrapper, e.g. "flex-1" to fill a column. */
+  bodyClassName?: string;
 }) {
   return (
     <section
@@ -26,7 +29,7 @@ export function Panel({
           {actions && <div className="ml-auto flex items-center gap-2">{actions}</div>}
         </header>
       )}
-      <div className={flush ? "" : "p-4"}>{children}</div>
+      <div className={cn(flush ? "" : "p-4", bodyClassName)}>{children}</div>
     </section>
   );
 }

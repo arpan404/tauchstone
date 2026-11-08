@@ -55,7 +55,6 @@ const Simulation = loader
     })
   : null;
 
-type Hit = NonNullable<Screen["top"]>[number];
 const SLOTS = 10;
 const STATUS: Record<Screen["status"] | "idle", [string, Tone]> = {
   idle: ["Ready", "neutral"],
@@ -72,19 +71,6 @@ const METHOD = [
   ["Scores", "WTCS · KS · cosine"],
   ["Filter", "Clinical stage"],
 ] as const;
-
-/** Stable well for a hit: hash of the drug id, probing past collisions. */
-function hitWells(top: Hit[]) {
-  const taken = new Set<number>();
-  for (const h of top) {
-    let x = 0;
-    for (const ch of h.drug_id) x = (x * 31 + ch.charCodeAt(0)) >>> 0;
-    let i = x % PLATE_WELLS;
-    while (taken.has(i)) i = (i + 1) % PLATE_WELLS;
-    taken.add(i);
-  }
-  return taken;
-}
 
 export function ScreenView() {
   const { data: projects } = useProjects();
@@ -108,18 +94,17 @@ export function ScreenView() {
   const top = useMemo(() => (job?.top ?? []).slice(0, SLOTS), [job?.top]);
   const maxScore = Math.max(1e-6, ...top.map((h) => Math.abs(h.consensus)));
   const wells = useMemo<WellState[]>(() => {
+    // Wells show progress only (each ≈ 1/384 of the gold signatures, in scoring order).
+    // Hits are not placed on the plate: a well is not a drug.
     const filled = Math.round(progress * PLATE_WELLS);
-    const hits = hitWells(top);
     return Array.from({ length: PLATE_WELLS }, (_, i) =>
       i < filled
-        ? hits.has(i)
-          ? "hit"
-          : "scored"
+        ? "scored"
         : running && i === filled
           ? "next"
           : "empty",
     );
-  }, [progress, top, running]);
+  }, [progress, running]);
   const [statusLabel, statusTone] =
     STATUS[busy && !job ? "queued" : (job?.status ?? "idle")];
   useEffect(() => () => stop.current?.(), []);
@@ -395,9 +380,8 @@ export function ScreenView() {
               />
               <div className="flex w-full max-w-[720px] items-center gap-4 pl-[17px] text-[12px] text-ink-3">
                 <Legend className="bg-primary/35" label="Scored" />
-                <Legend className="bg-primary" label="Top hit" />
                 <Legend className="border border-line bg-surface-2" label="Pending" />
-                <span className="ml-auto font-mono text-[11px]">384 wells</span>
+                <span className="ml-auto font-mono text-[11px]">1 well ≈ {Math.round((job?.n_signatures ?? 113310) / PLATE_WELLS)} signatures</span>
               </div>
             </div>
             <section
