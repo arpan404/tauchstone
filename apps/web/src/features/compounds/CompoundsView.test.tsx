@@ -186,9 +186,11 @@ it("shows brand matches with their status and keeps unmatched free text as a chi
   const brand = await screen.findByRole("option", { name: /Donepezil/ });
   expect(within(brand).getByText("Aricept")).toBeTruthy();
   expect(within(brand).getByText("#684")).toBeTruthy();
-  // Donepezil is already a chip: picking it again removes it.
+  // Donepezil is already a chip (checked): picking it again keeps one chip.
+  expect(brand.getAttribute("data-checked")).toBe("true");
   fireEvent.click(brand);
-  expect(chips()).not.toContain("donepezil");
+  expect(chips().filter((c) => c.toLowerCase() === "donepezil")).toHaveLength(1);
+  expect(input.value).toBe("");
   fireEvent.change(input, { target: { value: "rivas" } });
   expect(await screen.findByText("not rankable")).toBeTruthy();
   fireEvent.change(input, { target: { value: "zzqx" } });
@@ -217,11 +219,10 @@ it("searches GET /compounds/search and checks the chip names with POST /lookup",
   setup();
   const input = field();
   fireEvent.focus(input);
+  fireEvent.click(screen.getByRole("button", { name: "Remove nepafenac" }));
   fireEvent.change(input, { target: { value: "Nepa" } });
-  fireEvent.click(await screen.findByRole("option", { name: /Nepafenac/ }));
+  await screen.findByRole("option", { name: /Nepafenac/ });
   expect(fetch).toHaveBeenCalledWith("/api/compounds/search?q=Nepa&limit=20", expect.anything());
-  // nepafenac was already a chip, so the pick toggled it off; add it back by search.
-  expect(chips()).not.toContain("nepafenac");
   fireEvent.change(input, { target: { value: "Ticrynafen" } });
   fireEvent.click(await screen.findByRole("option", { name: /Ticrynafen/ }));
   fireEvent.keyDown(input, { key: "Enter" });

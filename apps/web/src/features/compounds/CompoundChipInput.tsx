@@ -104,13 +104,6 @@ export function CompoundChipInput({
     onChange(merge(names, extra));
     setQuery("");
   }
-  function toggle(name: string) {
-    const key = normalizeName(name);
-    if (selected.has(key)) {
-      onChange(names.filter((n) => normalizeName(n) !== key));
-      setQuery("");
-    } else add([name]);
-  }
   function remove(index: number) {
     onChange(names.filter((_, i) => i !== index));
     input.current?.focus();
@@ -172,6 +165,7 @@ export function CompoundChipInput({
             <span className="min-w-0 truncate">{name}</span>
             <button
               type="button"
+              data-slot="chip-remove"
               aria-label={`Remove ${name}`}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => remove(i)}
@@ -183,6 +177,7 @@ export function CompoundChipInput({
         ))}
         <CommandPrimitive.Input
           ref={input}
+          data-slot="compound-search-input"
           value={query}
           onValueChange={onType}
           onKeyDown={onKeyDown}
@@ -215,7 +210,7 @@ export function CompoundChipInput({
                       key={m.id}
                       value={m.id}
                       data-checked={selected.has(normalizeName(m.name))}
-                      onSelect={() => toggle(m.name)}
+                      onSelect={() => add([m.name])}
                       className="gap-2 rounded-lg py-1.5 data-selected:bg-primary/8"
                     >
                       <span className="min-w-0 flex-1">
