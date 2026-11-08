@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Tauchstone. Two C-shaped folds facing opposite ways: a cut across a tau
-       filament from an Alzheimer's brain (PDB 5O3L), idealised. -->
-  <rect width="64" height="64" rx="16" fill="#1558b8"/>
-  <g transform="translate(32 32) scale(0.8) translate(-32 -32)" fill="none" stroke="#ffffff"
-     stroke-width="9" stroke-linecap="round">
-    <path d="M34 12a15 15 0 1 0 11 22"/>
-    <path d="M30 52a15 15 0 1 0-11-22"/>
+  <!-- Tauchstone. Two half rings facing opposite ways: a drug whose effect runs
+       opposite to the disease. -->
+  <rect width="64" height="64" rx="14" fill="#1558b8"/>
+  <g transform="translate(32 32) scale(0.74) translate(-32 -32)" fill="none" stroke="#ffffff"
+     stroke-width="10">
+    <path d="M32 11a16 16 0 0 1 0 32"/>
+    <path d="M32 53a16 16 0 0 1 0-32"/>
   </g>
 </svg>

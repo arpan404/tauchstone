@@ -1,13 +1,12 @@
 import { cn } from "cn";
 
 /**
- * The two hooks of the mark. A tau filament is two protofilaments wound around
- * each other, and a cut across one (PDB 5O3L, from an Alzheimer's brain) shows
- * two C-shaped folds facing opposite ways. These are those folds, idealised.
- * Facing opposite ways is also what the app looks for in a drug.
+ * Two half rings facing opposite ways, drawn on a 64 grid with flat ends:
+ * the upper ring opens one way, the lower ring the other. The app looks for a
+ * drug whose effect runs opposite to the disease, and that is the shape of it.
  */
-export const TAU_FOLD_A = "M34 12a15 15 0 1 0 11 22";
-export const TAU_FOLD_B = "M30 52a15 15 0 1 0-11-22";
+export const RING_UPPER = "M32 11a16 16 0 0 1 0 32";
+export const RING_LOWER = "M32 53a16 16 0 0 1 0-32";
 
 /** The app mark, drawn in currentColor so it follows the theme. */
 export function TauMark({ className, title }: { className?: string; title?: string }) {
@@ -20,12 +19,11 @@ export function TauMark({ className, title }: { className?: string; title?: stri
       aria-hidden={title ? undefined : true}
       fill="none"
       stroke="currentColor"
-      strokeWidth={9}
-      strokeLinecap="round"
+      strokeWidth={10}
     >
       {title && <title>{title}</title>}
-      <path d={TAU_FOLD_A} />
-      <path d={TAU_FOLD_B} />
+      <path d={RING_UPPER} />
+      <path d={RING_LOWER} />
     </svg>
   );
 }
