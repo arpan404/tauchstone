@@ -3,7 +3,7 @@ import { ArrowSquareOutIcon, BrainIcon, GridFourIcon } from "@phosphor-icons/rea
 import { cn } from "cn";
 import type { Screen } from "@/api/workspace";
 import { NumberTicker, Panel, StatusBadge } from "@/components/system";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { type CellLineCard, compositionSentence, useCellLineCards } from "./cellLineCards";
 
 type CellLine = NonNullable<Screen["cell_lines"]>[number];
@@ -120,9 +120,8 @@ const TILE =
 function Tile({ line, max, card }: { line: CellLine; max: number; card?: CellLineCard }) {
   if (!card) return <div className={cn(TILE, line.neural && "bg-primary/[0.07] ring-primary/25")}><TileBody line={line} max={max} /></div>;
   return (
-    <Popover>
-      <PopoverTrigger
-        aria-haspopup="dialog"
+    <Dialog>
+      <DialogTrigger
         className={cn(
           TILE,
           "cursor-pointer outline-none transition-colors hover:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary data-[popup-open]:bg-primary/10 data-[popup-open]:ring-primary/25",
@@ -130,15 +129,16 @@ function Tile({ line, max, card }: { line: CellLine; max: number; card?: CellLin
         )}
       >
         <TileBody line={line} max={max} hint={`Facts about ${card.display_name}`} />
-      </PopoverTrigger>
-      <PopoverContent
-        side="bottom"
-        align="start"
-        className="w-[min(380px,calc(100vw-24px))] max-h-[min(680px,var(--available-height))] gap-3 overflow-y-auto rounded-[18px] p-4"
+      </DialogTrigger>
+      <DialogContent
+        className={cn(
+          "max-h-[calc(100dvh-2rem)] gap-4 overflow-y-auto rounded-[18px] p-5 shadow-overlay",
+          card.image ? "sm:max-w-[780px]" : "sm:max-w-[460px]",
+        )}
       >
         <CardBody card={card} />
-      </PopoverContent>
-    </Popover>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -190,44 +190,13 @@ const ROWS: [keyof CellLineCard, string][] = [
 function CardBody({ card }: { card: CellLineCard }) {
   const hasCello = card.cellosaurus_id !== "unspecified";
   const image = card.image;
-  const rows = ROWS.filter(([k]) => !(k === "description" && card.description === "unspecified"));
-  return (
-    <>
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="m-0 font-heading text-[20px] leading-tight font-normal tracking-[-0.02em] text-ink">
-            {card.display_name}
-          </h3>
-          {card.display_name !== card.cell_id && (
-            <p className="m-0 font-mono text-[12px] text-ink-3">LINCS id {card.cell_id}</p>
-          )}
-        </div>
-        {card.neural && (
-          <StatusBadge tone="ok">
-            <BrainIcon aria-hidden />
-            Neural
-          </StatusBadge>
-        )}
-      </div>
-      <p className="m-0 text-[14px] leading-snug text-ink">{card.summary}</p>
-      {image && (
-        <figure className="m-0 flex flex-col gap-1.5">
-          <img
-            src={`/api${image.url}`}
-            alt={image.caption}
-            loading="lazy"
-            decoding="async"
-            className="aspect-square w-full rounded-xl bg-ink/[0.035] object-cover ring-1 ring-rim/60"
-          />
-          <figcaption className="text-[12px] leading-snug text-ink-3">
-            {image.caption}{" "}
-            <a href={image.page_url} target="_blank" rel="noreferrer" className="text-ink-2 underline decoration-ink/20 underline-offset-2 hover:text-primary">
-              Image: Human Protein Atlas, {image.licence}
-            </a>
-          </figcaption>
-        </figure>
-      )}
-      <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-xl bg-ink/[0.035] px-3 py-2.5 text-[13px]">
+  // The summary already says what stem-cell derived cells are; do not repeat it as a row.
+  const rows = ROWS.filter(
+    ([k]) => !(k === "description" && (card.description === "unspecified" || card.category === "stem-cell derived")),
+  );
+  const facts = (
+    <div className="flex min-w-0 flex-col gap-3">
+      <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-xl bg-frost/55 px-3 py-2.5 text-[13.5px] ring-1 ring-rim/80">
         {rows.map(([k, label]) => {
           const v = String(card[k]);
           return (
@@ -240,7 +209,7 @@ function CardBody({ card }: { card: CellLineCard }) {
           );
         })}
       </dl>
-      <p className="m-0 text-[12px] text-ink-3">
+      <p className="m-0 text-[12.5px] text-ink-3">
         {hasCello ? (
           <>
             Source:{" "}
@@ -254,6 +223,48 @@ function CardBody({ card }: { card: CellLineCard }) {
           "Source: LINCS cell metadata (GSE92742, GSE70138, LINCS 2020). No Cellosaurus record is linked."
         )}
       </p>
+    </div>
+  );
+  return (
+    <>
+      <div className="flex min-w-0 flex-col gap-1.5 pr-8">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <DialogTitle className="m-0 font-heading text-[22px] leading-tight font-normal tracking-[-0.02em] text-ink">
+            {card.display_name}
+          </DialogTitle>
+          {card.display_name !== card.cell_id && (
+            <span className="font-mono text-[12px] text-ink-3">LINCS id {card.cell_id}</span>
+          )}
+          {card.neural && (
+            <StatusBadge tone="ok">
+              <BrainIcon aria-hidden />
+              Neural
+            </StatusBadge>
+          )}
+        </div>
+        <DialogDescription className="m-0 text-[15px] leading-snug text-ink">{card.summary}</DialogDescription>
+      </div>
+      {image ? (
+        <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+          <figure className="m-0 flex min-w-0 flex-col gap-1.5">
+            <img
+              src={`/api${image.url}`}
+              alt={image.caption}
+              decoding="async"
+              className="aspect-square w-full rounded-xl bg-ink/[0.035] object-cover ring-1 ring-rim/60"
+            />
+            <figcaption className="text-[12px] leading-snug text-ink-3">
+              {image.caption}{" "}
+              <a href={image.page_url} target="_blank" rel="noreferrer" className="text-ink-2 underline decoration-ink/20 underline-offset-2 hover:text-primary">
+                Image: Human Protein Atlas, {image.licence}
+              </a>
+            </figcaption>
+          </figure>
+          {facts}
+        </div>
+      ) : (
+        facts
+      )}
     </>
   );
 }
