@@ -1,0 +1,138 @@
+[
+ {
+  "id": "BRD-K34098590",
+  "name": "Ticrynafen",
+  "status": "ranked",
+  "pool_rank": 1,
+  "rank_total": 1816,
+  "consensus": -2.3193
+ },
+ {
+  "id": "BRD-K04112579",
+  "name": "Nepafenac",
+  "status": "ranked",
+  "pool_rank": 2,
+  "rank_total": 1816,
+  "consensus": -2.0303
+ },
+ {
+  "id": "BRD-K43164539",
+  "name": "Cholic Acid",
+  "status": "ranked",
+  "pool_rank": 3,
+  "rank_total": 1816,
+  "consensus": -1.8175
+ },
+ {
+  "id": "BRD-K86873305",
+  "name": "Piperacillin",
+  "status": "ranked",
+  "pool_rank": 5,
+  "rank_total": 1816,
+  "consensus": -1.7946
+ },
+ {
+  "id": "BRD-K48722833",
+  "name": "Iloperidone",
+  "status": "ranked",
+  "pool_rank": 75,
+  "rank_total": 1816,
+  "consensus": -1.1096
+ },
+ {
+  "id": "BRD-K67261995",
+  "name": "Iodipamide",
+  "status": "ranked",
+  "pool_rank": 85,
+  "rank_total": 1816,
+  "consensus": -1.0606,
+  "aliases": [
+   "Adipiodone"
+  ]
+ },
+ {
+  "id": "BRD-K31111078",
+  "name": "Dimethyl Fumarate",
+  "status": "ranked",
+  "pool_rank": 95,
+  "rank_total": 1816,
+  "consensus": -1.0287,
+  "aliases": [
+   "Fumaric Acid Dimethyl Ester"
+  ]
+ },
+ {
+  "id": "BRD-K81418486",
+  "name": "Vorinostat",
+  "status": "ranked",
+  "pool_rank": 372,
+  "rank_total": 1816,
+  "consensus": -0.464
+ },
+ {
+  "id": "BRD-K64052750",
+  "name": "Gefitinib",
+  "status": "ranked",
+  "pool_rank": 469,
+  "rank_total": 1816,
+  "consensus": -0.3754
+ },
+ {
+  "id": "BRD-A79803969",
+  "name": "Memantine",
+  "status": "ranked",
+  "pool_rank": 502,
+  "rank_total": 1816,
+  "consensus": -0.3595
+ },
+ {
+  "id": "BRD-A49160188",
+  "name": "Donepezil",
+  "status": "ranked",
+  "pool_rank": 684,
+  "rank_total": 1816,
+  "consensus": -0.2444,
+  "aliases": [
+   "Aricept"
+  ]
+ },
+ {
+  "id": "BRD-K71103788",
+  "name": "Duloxetine",
+  "status": "ranked",
+  "pool_rank": 802,
+  "rank_total": 1816,
+  "consensus": -0.1658,
+  "aliases": [
+   "Ariclaim"
+  ]
+ },
+ {
+  "id": "BRD-A49148672",
+  "name": "Galantamine",
+  "status": "ranked",
+  "pool_rank": 1214,
+  "rank_total": 1816,
+  "consensus": 0.207
+ },
+ {
+  "id": "CHEMBL2104272",
+  "name": "Donetidine",
+  "status": "not_in_lincs"
+ },
+ {
+  "id": "CHEMBL1201333",
+  "name": "Lithium",
+  "status": "not_in_lincs"
+ },
+ {
+  "id": "BRD-M74254599",
+  "name": "Lithium-Chloride",
+  "status": "not_rankable"
+ },
+ {
+  "id": "BRD-K10706131",
+  "name": "Rivastigmine",
+  "status": "not_rankable"
+ }
+]
