@@ -37,7 +37,9 @@ function setup(
         Object.fromEntries(
           [...parsed.searchParams].map(([key, value]) => [
             key,
-            key === "min_contexts" ? Number(value) : value === "true",
+            key === "min_contexts" || key === "limit"
+              ? Number(value)
+              : value === "true",
           ]),
         ),
       );
@@ -58,7 +60,7 @@ function setup(
 }
 it("sends each filter to the project API and preserves Cholic acid neural evidence", async () => {
   const urls = setup();
-  expect(await screen.findByText("12 of 1,816")).toBeTruthy();
+  expect(await screen.findByText("Showing 12 of 12")).toBeTruthy();
   const cholic = screen.getByText("Cholic acid").closest("tr")!;
   expect(within(cholic).getByText("NEU -0.66")).toBeTruthy();
   for (const [label, parameter] of [
@@ -78,7 +80,7 @@ it("sends each filter to the project API and preserves Cholic acid neural eviden
     );
     expect(chip.getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(chip);
-    await screen.findByText("12 of 1,816");
+    await screen.findByText("Showing 12 of 12");
   }
 });
 it("opens the selected drug from a row and keeps comparison checkbox clicks in Candidates", async () => {
@@ -97,7 +99,8 @@ it("shows an empty state for combined filters without substituting unfiltered ro
   setup();
   await screen.findByText("Cholic acid");
   fireEvent.click(screen.getByRole("button", { name: "Brain-cell data" }));
-  await screen.findByText("1 of 1,816");
+  await screen.findByText("Showing 1 of 1");
+  expect(screen.getByText("1,816 ranked")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Brain-penetrant" }));
   expect(await screen.findByText("No candidates")).toBeTruthy();
   expect(screen.queryByText("Cholic acid")).toBeNull();
@@ -139,4 +142,57 @@ it("labels rows and tables that are not preregistered", async () => {
   expect(within(nepafenac).getByText("not preregistered")).toBeTruthy();
   expect(screen.getAllByText("not preregistered")).toHaveLength(2);
   expect(within(nepafenac).getByText("predicted penetrant")).toBeTruthy();
+});
+
+it("sorts loaded rows by column and marks the active sort", async () => {
+  setup();
+  await screen.findByText("Cholic acid");
+  const names = () =>
+    screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((r) => within(r).queryAllByRole("button")[0]?.textContent);
+  fireEvent.click(screen.getByRole("button", { name: /Contexts/ }));
+  expect(names()[0]).toBe("Cholic acid"); // 13 contexts, most first
+  expect(
+    screen.getByRole("columnheader", { name: /Contexts/ }).getAttribute("aria-sort"),
+  ).toBe("descending");
+  fireEvent.click(screen.getByRole("button", { name: /Drug/ }));
+  expect(names()[0]).toBe("Bavisant");
+  fireEvent.click(screen.getByRole("button", { name: /Reversal/ }));
+  expect(names()[0]).toBe("Ticrynafen"); // most negative first
+});
+it("shows Not screened with a Run screen action when the project has no ranking", async () => {
+  setup((body) => {
+    (body as { screen_id?: string | null }).screen_id = null;
+    body.n_ranked = 0;
+    body.candidates = [];
+  });
+  expect(await screen.findByText("Not screened")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /Run screen/ }));
+  expect(useUi.getState().step).toBe("screen");
+});
+it("loads more rows until every eligible drug is reachable", async () => {
+  const urls = setup((body) => {
+    body.n_total_eligible = 250;
+    body.n_ranked = 250;
+  });
+  await screen.findByText("Showing 12 of 250");
+  fireEvent.click(screen.getByRole("button", { name: "Show all 250" }));
+  await waitFor(() => expect(urls.some((u) => u.includes("limit=250"))).toBe(true));
+});
+it("flags a withdrawn drug next to its approval status", async () => {
+  setup((body) => {
+    body.candidates[0].approval_status = {
+      status: "approved",
+      withdrawn: true,
+      withdrawn_year: 1980,
+      withdrawn_class: "hepatotoxicity",
+      withdrawn_country: "France; United States",
+      withdrawn_source: "ChEMBL 37",
+    };
+  });
+  const row = (await screen.findByText("Ticrynafen")).closest("tr")!;
+  expect(within(row).getByText("withdrawn 1980")).toBeTruthy();
+  expect(within(row).getByText("Approved")).toBeTruthy();
 });

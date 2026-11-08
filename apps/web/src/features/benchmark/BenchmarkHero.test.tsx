@@ -46,6 +46,9 @@ describe('benchmark hero', () => {
     expect(hero.textContent).toMatch(/Tauchstone vs confirmation\s*0\.00200/);
     expect(hero.textContent).toContain('Permutation gate');
     expect(hero.textContent).toContain('17/20 not met');
+    expect(hero.textContent).toContain('Retrospective benchmark');
+    expect(hero.textContent).toContain('Ties max failure and max uncertainty');
+    expect(within(hero).getByText('17/20 not met').className).toContain('text-bad');
     expect(hero.textContent).toContain('21f7460e');
     // The decision-aware co-primary result stays visible: 87%, not better than random.
     expect(hero.textContent).toMatch(/87%\s*Decision-aware/);

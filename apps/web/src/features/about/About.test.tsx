@@ -33,6 +33,12 @@ describe('About integrity and API boundary', () => {
     expect(screen.getByRole('columnheader', { name: 'Decision accuracy after 3 tests' })).toBeTruthy();
     expect(screen.getByText(/Synthetic API\/fixture hash/)).toBeTruthy();
     expect(screen.getByText(/Mock data: not real results/)).toBeTruthy();
+    const record = screen.getByText('Full record').closest('details')!;
+    expect(record.open).toBe(false);
+    expect(record.textContent).toContain('Integrity log');
+    expect(record.textContent).toContain('Decided by');
+    const limits = screen.getByRole('heading', { name: 'What did not hold up' });
+    expect(record.contains(limits)).toBe(false);
   });
   it('flags a serving hash that differs from the frozen record', () => {
     const data = structuredClone(getMockBenchmark());

@@ -18,15 +18,13 @@ import {
   Panel,
   Readout,
   StatusBadge,
+  Term,
+  WithdrawnBadge,
+  GLOSSARY,
   type Tone,
 } from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { cn } from "cn";
 import { STEPS, useUi, type StepId } from "@/store/ui";
 import { ContextMap } from "./ContextMap";
@@ -159,6 +157,7 @@ function DrugHeader({
           </h2>
           <div className="flex flex-wrap items-center gap-1.5">
             <ApprovalBadge approval={approval} />
+            <WithdrawnBadge approval={approval} />
             {!drug.preregistered && (
               <StatusBadge tone="gap">not preregistered</StatusBadge>
             )}
@@ -171,7 +170,7 @@ function DrugHeader({
         </div>
         <dl className="m-0 flex flex-wrap items-end gap-x-8 gap-y-3">
           <Readout
-            label="Pool rank"
+            label={<Term term="poolRank">Pool rank</Term>}
             value={
               <>
                 {drug.pool_rank ?? "unspecified"}
@@ -182,8 +181,11 @@ function DrugHeader({
               </>
             }
           />
-          <Readout label="Contexts" value={drug.n_contexts} />
-          <Readout label="Hidden tests" value={drug.n_hidden_tests ?? "unspecified"} />
+          <Readout label={<Term term="contexts">Contexts</Term>} value={drug.n_contexts} />
+          <Readout
+            label={<Term term="hiddenTests">Hidden tests</Term>}
+            value={drug.n_hidden_tests ?? "unspecified"}
+          />
           <ReversalReadout drug={drug} />
         </dl>
       </div>
@@ -218,20 +220,20 @@ function ReversalReadout({ drug }: { drug: Drug }) {
         size="xl"
         tone="accent"
         label={
-          s ? (
-            <Tooltip>
-              <TooltipTrigger className="cursor-help rounded-sm underline decoration-line-strong decoration-dotted underline-offset-2 focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none">
-                Reversal
-              </TooltipTrigger>
-              <TooltipContent>
-                <span className="font-mono">
-                  WTCS {signed(s.wtcs)} KS {signed(s.ks)} Cosine {signed(s.cosine)}
-                </span>
-              </TooltipContent>
-            </Tooltip>
-          ) : (
-            "Reversal"
-          )
+          <Term
+            tip={
+              <span className="flex flex-col gap-1">
+                <span>{GLOSSARY.reversal}</span>
+                {s && (
+                  <span className="font-mono">
+                    WTCS {signed(s.wtcs)} KS {signed(s.ks)} Cosine {signed(s.cosine)}
+                  </span>
+                )}
+              </span>
+            }
+          >
+            Reversal
+          </Term>
         }
         value={signed(drug.consensus)}
       />

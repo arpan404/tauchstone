@@ -64,6 +64,46 @@ def display_name(name: object) -> str:
     s = str(name)
     return s if any(ch.isdigit() for ch in s) else s.title()
 
+WITHDRAWN_SOURCE = "ChEMBL 37"
+
+
+@lru_cache(maxsize=4)
+def _withdrawn_cached(path: str, mtime: float) -> dict[str, dict]:
+    frame = pd.read_parquet(path)
+    out: dict[str, dict] = {}
+    for r in frame.to_dict("records"):
+        if not bool(r.get("withdrawn")):
+            continue
+        info: dict = {"withdrawn": True, "withdrawn_source": WITHDRAWN_SOURCE}
+        year = r.get("withdrawn_year")
+        if year is not None and pd.notna(year):
+            info["withdrawn_year"] = int(year)
+        for key in ("withdrawn_class", "withdrawn_country"):
+            val = r.get(key)
+            if isinstance(val, str) and val:
+                info[key] = val
+        out[str(r["pert_id"])] = info
+    return out
+
+
+def withdrawn_index(processed_dir: Path) -> dict[str, dict] | None:
+    """pert_id -> withdrawn fields for withdrawn drugs (evidence/withdrawn.parquet, ChEMBL 37).
+    None when the table is missing, so callers leave approval_status untouched."""
+    path = Path(processed_dir) / "evidence" / "withdrawn.parquet"
+    if not path.exists():
+        return None
+    return _withdrawn_cached(str(path), path.stat().st_mtime)
+
+
+def with_withdrawn(approval: dict | None, pert_id: str, index: dict[str, dict] | None) -> dict | None:
+    """Add {withdrawn, withdrawn_year?, withdrawn_class?, withdrawn_country?, withdrawn_source}
+    to an approval_status dict. Display only: never feeds ranking or the pool."""
+    if approval is None or index is None:
+        return approval
+    info = index.get(str(pert_id))
+    return {**approval, **(info or {"withdrawn": False, "withdrawn_source": WITHDRAWN_SOURCE})}
+
+
 class NotFoundError(Exception):
     pass
 
@@ -478,6 +518,7 @@ class ParquetRepository:
             .agg(["median", "count"])
         )
         approvals = {str(a["pert_id"]): a for a in self._maybe_rows("evidence/approval.parquet")}
+        withdrawn = withdrawn_index(self.base)
         candidates = []
         for r in rows.itertuples():
             pid = str(r.pert_id)
@@ -529,7 +570,7 @@ class ParquetRepository:
                     "cosine": float(r.z_cosine_median),
                 },
                 "by_cell_line": cells,
-                "approval_status": approval_status,
+                "approval_status": with_withdrawn(approval_status, pid, withdrawn),
                 "flags": (["few_contexts"] if int(r.n_ranking_contexts) < 5 else []),
                 "is_demo_candidate": bool(r.is_demo),
             })
@@ -631,13 +672,13 @@ class ParquetRepository:
             "chembl_id": (None if chembl is None or pd.isna(chembl) else str(chembl)),
             "mechanism": (None if mech is None or pd.isna(mech) else str(mech)),
             "targets": out_targets,
-            "approval_status": {
+            "approval_status": with_withdrawn({
                 "status": str(appr.get("status") or "unknown"),
                 "max_phase": (None if appr.get("max_phase") is None or pd.isna(appr.get("max_phase"))
                               else float(appr["max_phase"])),
                 "source": ({"label": "ChEMBL", "url": str(appr["source_url"])}
                            if appr.get("source_url") and pd.notna(appr.get("source_url")) else None),
-            },
+            }, candidate_id, withdrawn_index(self.base)),
             "brain_exposure": (
                 {"level": "predicted", "summary": str(e0.get("summary") or ""),
                  "sources": ([{"label": "exposure", "url": str(e0["source_url"])}]
@@ -660,7 +701,8 @@ class ParquetRepository:
         except NotFoundError:
             # Ranked but outside the candidate pool: no approval/targets rows.
             evidence = {
-                "approval_status": {"status": "unknown"},
+                "approval_status": with_withdrawn(
+                    {"status": "unknown"}, drug_id, withdrawn_index(self.base)),
                 "mechanism": None,
                 "targets": [],
                 "structure": None,

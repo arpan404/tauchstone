@@ -6,7 +6,8 @@ import { BoundaryBanner } from '@/components/BoundaryBanner';
 import { MockRibbon } from '@/components/MockRibbon';
 import { ProvenanceStrip } from '@/components/ProvenanceStrip';
 import { InstrumentChart } from '@/components/InstrumentChart';
-import { EmptyState, NumberTicker, Panel, StatusBadge } from '@/components/system';
+import { EmptyState, NumberTicker, Panel, StatusBadge, Term } from '@/components/system';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,7 +22,9 @@ import {
   niceDomain,
   pairHolmP,
   pairMetric,
+  pairTip,
   policyName,
+  tiedWith,
 } from './benchmarkOptions';
 import { IntervalPlot, type IntervalRow } from './IntervalPlot';
 
@@ -32,6 +35,16 @@ type Policy = BenchmarkAnalysis['policies'][number];
 
 /** Documented permutation gate result (README, integrity log): 17 of 20 compounds, gate needs 20. */
 const PERMUTATION_GATE = '17/20';
+const PERMUTATION_GATE_TIP = '17/20 top compounds at p_perm < 0.05; gate required 20/20.';
+
+function TipBadge({ tip, children, ...props }: { tip: string; children: ReactNode } & Parameters<typeof StatusBadge>[0]) {
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<StatusBadge tabIndex={0} {...props} />}>{children}</TooltipTrigger>
+      <TooltipContent className="max-w-72 text-left leading-snug">{tip}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 function activeAnalysis(data: BenchmarkData, scope: Scope): BenchmarkAnalysis {
   const all = data.all_candidates;
@@ -69,7 +82,7 @@ function PolicyLabel({ id }: { id: string }) {
         {policyName(id)}
       </span>
       {isCoPrimary(id) ? (
-        <span className="shrink-0 text-[11px] font-medium text-accent-ink">co-primary</span>
+        <Term term="coPrimary" className="shrink-0 text-[11px] font-medium text-accent-ink">co-primary</Term>
       ) : (
         p?.detail && <span className="truncate text-[12px] text-ink-3">{p.detail}</span>
       )}
@@ -105,16 +118,29 @@ function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: s
   const awareVsRandom = pairHolmP(analysis.tests, 'decision_lookahead_hybrid', 'random');
   const metric = pairMetric(analysis.tests, 'tauchstone_hybrid', 'random');
   const awareNotBetter = finite(awareVsRandom) && awareVsRandom >= 0.05;
+  const ties = tiedWith(analysis.policies);
+  const confirmationMetric = pairMetric(analysis.tests, 'tauchstone_hybrid', 'greedy_strongest');
+  const awareMetric = pairMetric(analysis.tests, 'decision_lookahead_hybrid', 'random');
   return (
     <Panel aria-label="Headline result">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10">
         <div className="flex flex-col justify-center gap-5">
-          <p className="m-0 text-[13px] font-medium text-ink-2">Correct verdict within {analysis.budget} tests</p>
+          <p className="m-0 text-[13px] font-medium text-ink-2">
+            <Term term="decisionAccuracy">Correct verdict within {analysis.budget} tests</Term>
+          </p>
           <dl className="m-0 flex flex-wrap items-end gap-x-10 gap-y-4">
             <div>
-              <dd className="m-0 font-mono text-[64px] leading-[0.9] font-semibold tracking-[-0.04em] text-primary tabular-nums">
-                {finite(tau) ? <NumberTicker value={tau * 100} format={(v) => `${Math.round(v)}%`} /> : 'n/a'}
-              </dd>
+              <div className="flex items-end gap-4">
+                <dd className="m-0 font-mono text-[64px] leading-[0.9] font-semibold tracking-[-0.04em] text-primary tabular-nums">
+                  {finite(tau) ? <NumberTicker value={tau * 100} format={(v) => `${Math.round(v)}%`} /> : 'n/a'}
+                </dd>
+                <ul aria-label="Limits" className="m-0 flex list-none flex-col items-start gap-1 p-0 pb-0.5">
+                  <li><StatusBadge tone="gap">Retrospective benchmark</StatusBadge></li>
+                  {ties.length > 0 && (
+                    <li><StatusBadge>{`Ties ${ties.join(' and ')}`}</StatusBadge></li>
+                  )}
+                </ul>
+              </div>
               <dt className="mt-2.5 text-[12px] font-medium text-ink">Tauchstone</dt>
             </div>
             <div>
@@ -133,22 +159,30 @@ function Headline({ analysis, prereg }: { analysis: BenchmarkAnalysis; prereg: s
         </div>
         <dl className="m-0 divide-y divide-line border-line lg:border-l lg:pl-8">
           {metric && (
-            <div className="pb-1.5 text-[12px] font-medium text-ink-2">Holm p · {metricLabel(metric)}</div>
+            <div className="pb-1.5 text-[12px] font-medium text-ink-2">
+              <Term term="holmP">Holm p</Term> · {metricLabel(metric)}
+            </div>
           )}
           <Fact label="Tauchstone vs random">
-            <StatusBadge tone="accent" className="font-mono">{formatP(vsRandom)}</StatusBadge>
+            <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'random', metric)}>
+              {formatP(vsRandom)}
+            </TipBadge>
           </Fact>
           <Fact label="Tauchstone vs confirmation">
-            <StatusBadge tone="accent" className="font-mono">{formatP(vsConfirmation)}</StatusBadge>
+            <TipBadge tone="accent" className="font-mono" tip={pairTip(analysis, 'tauchstone_hybrid', 'greedy_strongest', confirmationMetric)}>
+              {formatP(vsConfirmation)}
+            </TipBadge>
           </Fact>
           <Fact label="Decision-aware vs random">
             {awareNotBetter && <span className="text-[12px] text-ink-2">not better</span>}
-            <StatusBadge className="font-mono">{formatP(awareVsRandom)}</StatusBadge>
+            <TipBadge className="font-mono" tip={pairTip(analysis, 'decision_lookahead_hybrid', 'random', awareMetric)}>
+              {formatP(awareVsRandom)}
+            </TipBadge>
           </Fact>
           <Fact label="Permutation gate">
-            <StatusBadge tone="gap" className="font-mono" title="Gate requires 20/20">
+            <TipBadge tone="bad" className="font-mono" tip={PERMUTATION_GATE_TIP}>
               {PERMUTATION_GATE} not met
-            </StatusBadge>
+            </TipBadge>
           </Fact>
           <Fact label="Preregistration">
             <StatusBadge className="font-mono" title={prereg}>{prereg.slice(0, 8)}</StatusBadge>
@@ -183,7 +217,9 @@ function PairwiseTable({ tests }: { tests: BenchmarkAnalysis['tests'] }) {
           <TableHeader>
             <TableRow className="border-line bg-surface-2 hover:bg-surface-2">
               <TableHead className="h-8 pl-4 text-[12px] font-medium text-ink-3">Comparison</TableHead>
-              <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">Holm p</TableHead>
+              <TableHead className="h-8 pr-4 text-right text-[12px] font-medium text-ink-3">
+                <Term term="holmP">Holm p</Term>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -344,7 +380,7 @@ export function BenchmarkView() {
                       value={s}
                       className="h-8 border-line-strong px-3 text-[13px] text-ink-2 aria-pressed:bg-accent-soft aria-pressed:text-accent-ink"
                     >
-                      {s === 'contested' ? 'Undecided' : 'All candidates'}
+                      {s === 'contested' ? <Term term="undecided" focusable={false}>Undecided</Term> : 'All candidates'}
                     </ToggleGroupItem>
                   ))}
                 </ToggleGroup>
@@ -386,7 +422,7 @@ export function BenchmarkView() {
 
               <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
                 <Panel
-                  title={`Decision accuracy after ${analysis.budget} tests`}
+                  title={<Term term="decisionAccuracy">{`Decision accuracy after ${analysis.budget} tests`}</Term>}
                   aria-label="Decision accuracy after five tests"
                 >
                   <IntervalPlot
@@ -402,7 +438,7 @@ export function BenchmarkView() {
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <Panel
-                  title="Experiments to correct verdict"
+                  title={<Term term="experimentsToVerdict">Experiments to correct verdict</Term>}
                   className="lg:col-span-2" actions={<span className="text-[12px] text-ink-3">median · fewer is better</span>}>
                   <IntervalPlot
                     rows={experiments.rows}

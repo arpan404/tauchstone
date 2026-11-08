@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from fastapi import HTTPException
 
-from app.services.repository import MOCK_WORLD_PATH, display_name
+from app.services.repository import MOCK_WORLD_PATH, display_name, with_withdrawn, withdrawn_index
 from app.settings import settings
 from pipelines.common.provenance import Provenance
 
@@ -164,7 +164,9 @@ def candidates(project_id, approved=None, brain_cells=None, penetrant=None, min_
         log.warning('Evidence gaps unavailable; gap fields default to false/unknown')
         _warned = True
     ready = attack_ids()
+    withdrawn = None if settings.mock else withdrawn_index(base())
     for c in rows:
+        c['approval_status'] = with_withdrawn(c.get('approval_status'), c['id'], withdrawn)
         g = gaps.get(c['id'], {})
         exp = g.get('exposure', {})
         if isinstance(exp, str):

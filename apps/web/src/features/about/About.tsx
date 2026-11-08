@@ -36,11 +36,11 @@ export function IntegrityLog() {
 }
 
 const pipeline = [
-  ['Construct', 'GSE132903: AD minus control. Keep each cohort separate.'],
-  ['Rank', 'Gold LINCS L1000 signatures. Negative scores indicate reversal.'],
-  ['Seal', 'Freeze rules, keep development and benchmark pools disjoint.'],
-  ['Attack', 'Choose a held-out test; commit before revealing one outcome.'],
-  ['Replay', 'Compare policies under the same fixed experiment budget.'],
+  ['Construct', 'Find the genes that change in Alzheimer brain tissue.'],
+  ['Rank', 'Score drugs whose cell response pushes those genes back.'],
+  ['Seal', 'Freeze the rules and hide the test outcomes first.'],
+  ['Attack', 'Pick a hidden test, commit, then reveal one outcome.'],
+  ['Replay', 'Compare test-picking strategies on the same budget.'],
 ];
 
 export function About() {
@@ -61,7 +61,6 @@ export function About() {
           <h4>{title}</h4><p>{detail}</p>
           {i < pipeline.length - 1 && <span className="about-arrow" aria-hidden="true">→</span>}
         </li>)}</ol>
-        <p className="text-sm text-muted-foreground">Held-out cohorts, composition sensitivity, unseen LINCS contexts and exposure lookups never feed ranking, threshold selection, tuning or demo-candidate choice. The truth table stays on the server.</p>
       </section>
       <section aria-labelledby="about-benchmark">
         <h3 id="about-benchmark">Benchmark</h3>
@@ -87,7 +86,7 @@ export function About() {
           <ul className="mt-3 flex list-none flex-wrap gap-2 p-0">{data.tests.filter((t) => t.policy_b === 'random' && ['tauchstone_hybrid', 'decision_lookahead_hybrid'].includes(t.policy_a)).map((t, i) => <li key={i} className="rounded-md border border-line bg-surface px-2.5 py-1 text-[12px] text-ink-2">
             {t.policy_a === 'tauchstone_hybrid' ? 'Tauchstone' : 'Decision-aware co-primary'} vs random: Holm p = <span className="font-mono text-primary">{t.p_holm.toPrecision(3)}</span> for {t.metric.replaceAll('_', ' ')}.
           </li>)}</ul>
-          <p className="text-sm text-muted-foreground">{mock ? 'Synthetic API/fixture hash' : 'API preregistration SHA-256'}: <code className="break-all">{data.preregistration_sha256}</code></p>
+          {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert">The API hash differs from the frozen record. Verify the serving bundle before citing results.</p>}
         </>}
       </section>
       <section className="about-limitations" aria-labelledby="about-limitations">
@@ -99,13 +98,20 @@ export function About() {
         </ul>
         <p>These are retrospective tests of expression-reversal hypotheses. LINCS cell contexts and bulk brain composition limit interpretation. Brain exposure is labelled measured, curated or predicted. A PDB structure supplies target context, never binding evidence.</p>
       </section>
-      <section aria-labelledby="about-freeze">
-        <h3 id="about-freeze">The frozen record</h3>
-        <p>Preregistration committed at <code>8ed0885</code>. SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
-        <code className="about-hash">{frozenPreregistrationSha256}</code>
-        {data && !mock && data.preregistration_sha256 !== frozenPreregistrationSha256 && <p role="alert">The API hash differs from the frozen record. Verify the serving bundle before citing results.</p>}
-      </section>
-      <section aria-labelledby="about-integrity"><h3 id="about-integrity">Integrity log</h3><IntegrityLog /></section>
+      <details className="about-record" aria-label="Full record">
+        <summary>Full record</summary>
+        <section aria-labelledby="about-boundary">
+          <h3 id="about-boundary">What never feeds the ranking</h3>
+          <p>Held-out cohorts, composition sensitivity, unseen LINCS contexts and exposure lookups never feed ranking, threshold selection, tuning or demo-candidate choice. The truth table stays on the server. Signatures are AD minus control (GSE132903); each cohort stays separate. Rankings use gold LINCS L1000 signatures.</p>
+        </section>
+        <section aria-labelledby="about-freeze">
+          <h3 id="about-freeze">The frozen record</h3>
+          <p>Preregistration committed at <code>8ed0885</code>. SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
+          <code className="about-hash">{frozenPreregistrationSha256}</code>
+          {data && <p className="text-sm text-muted-foreground">{mock ? 'Synthetic API/fixture hash' : 'API preregistration SHA-256'}: <code className="break-all">{data.preregistration_sha256}</code></p>}
+        </section>
+        <section aria-labelledby="about-integrity"><h3 id="about-integrity">Integrity log</h3><IntegrityLog /></section>
+      </details>
     </div>
     <ProvenanceStrip provenance={data?.provenance} />
   </div>;

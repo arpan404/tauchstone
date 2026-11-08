@@ -25,7 +25,7 @@ REPO = Path(__file__).resolve().parents[1]
 #                    signatures/{cohort}__samples.parquet, lincs/landmark_order.parquet
 #  list_candidates -> scores/GSE132903__main__candidate_pool.parquet,
 #                    scores/GSE132903__main__context_scores.parquet (split in ranking/held_out),
-#                    evidence/approval.parquet,
+#                    evidence/approval.parquet, evidence/withdrawn.parquet,
 #                    scores/GSE132903__gold_permctl__permutation_null.parquet.provenance.json (theta)
 #  get_evidence   -> scores/...candidate_pool.parquet, evidence/{targets,brain_expression,
 #                    ad_association,exposure,structures,approval}.parquet,
@@ -76,6 +76,7 @@ EVIDENCE_FILES = [
     "exposure.parquet",
     "structures.parquet",
     "approval.parquet",
+    "withdrawn.parquet",  # ChEMBL 37 withdrawn flag, display only
     "drug_map.parquet",  # candidate pool for live screens + lookup
     "gaps.parquet",
 ]

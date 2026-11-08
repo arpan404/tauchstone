@@ -460,6 +460,23 @@ export interface components {
             /** @description ChEMBL max_phase */
             max_phase?: number | null;
             source?: components["schemas"]["SourceLink"];
+            /**
+             * @description ChEMBL 37 withdrawn flag or a 'Withdrawn' drug warning on the parent or any salt
+             *     form (evidence/withdrawn.parquet). Display only; never feeds ranking or the pool.
+             *     Absent when the table is not built.
+             */
+            withdrawn?: boolean;
+            /** @description earliest withdrawal year (ChEMBL drug_warning) */
+            withdrawn_year?: number;
+            /**
+             * @description warning classes, '; '-joined, earliest first
+             * @example hepatotoxicity
+             */
+            withdrawn_class?: string;
+            /** @description countries, '; '-joined, earliest first */
+            withdrawn_country?: string;
+            /** @example ChEMBL 37 */
+            withdrawn_source?: string;
         };
         /**
          * @description Hierarchy, strongest first: measured human CNS PK > measured preclinical brain/plasma or

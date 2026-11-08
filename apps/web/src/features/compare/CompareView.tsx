@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ColumnsIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
 import { cn } from "cn";
 import type { Schema } from "@/api/types";
-import { EmptyState, StatusBadge, Toolbar } from "@/components/system";
+import { EmptyState, StatusBadge, Term, Toolbar, WithdrawnBadge, type GlossaryKey } from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUi } from "@/store/ui";
@@ -20,6 +20,7 @@ const uniq = <T,>(xs: T[]) => [...new Set(xs)];
 
 type Row = {
   label: string;
+  term?: GlossaryKey;
   /** Higher is better; omit for rows that are not ranked. */
   metric?: (d: Detail) => number;
   value: (d: Detail, best: boolean) => ReactNode;
@@ -58,6 +59,7 @@ const exposureText = (d: Detail) => {
 const ROWS: Row[] = [
   {
     label: "Reversal",
+    term: "reversal",
     value: (d) => (
       <span className="flex flex-col gap-1.5">
         <ReversalBar score={d.consensus} className="w-full max-w-40" />
@@ -73,6 +75,7 @@ const ROWS: Row[] = [
   },
   {
     label: "Contexts",
+    term: "contexts",
     metric: (d) => d.n_contexts,
     value: (d, best) => <span className={num(best)}>{d.n_contexts}</span>,
   },
@@ -90,6 +93,7 @@ const ROWS: Row[] = [
   { label: "Times", value: (d) => <Values values={d.gaps.times_h} unit="h" /> },
   {
     label: "Brain-cell data",
+    term: "brainCells",
     metric: (d) => brainCells(d).length,
     value: (d) => {
       const cells = brainCells(d);
@@ -108,6 +112,7 @@ const ROWS: Row[] = [
   },
   {
     label: "Brain exposure",
+    term: "exposure",
     value: (d) => (
       <span className="inline-flex items-center gap-1.5 text-[13px] text-ink-2">
         <span className={cn("size-1.5 shrink-0 rounded-full", exposureTone(d.gaps.exposure.label))} />
@@ -121,16 +126,29 @@ const ROWS: Row[] = [
   },
   {
     label: "Hidden tests",
+    term: "hiddenTests",
     value: (d) => (
       <span className="flex items-center gap-2">
         <span className="font-mono text-ink tabular-nums">{d.n_hidden_tests ?? unspecified}</span>
-        {!d.attack_ready && <StatusBadge className="h-5 px-1.5 text-[11px]">Not ready</StatusBadge>}
+        {d.attack_ready ? (
+          <Term term="attackReady" className="text-[12px] text-ink-3">Attack-ready</Term>
+        ) : (
+          <Term term="attackReady" className="no-underline">
+            <StatusBadge className="h-5 px-1.5 text-[11px]">Not attack-ready</StatusBadge>
+          </Term>
+        )}
       </span>
     ),
   },
   {
     label: "Approval",
-    value: (d) => <span className="text-[13px] text-ink-2">{sentence(d.approval_status?.status ?? unspecified)}</span>,
+    term: "approval",
+    value: (d) => (
+      <span className="flex flex-wrap items-center gap-1.5">
+        <span className="text-[13px] text-ink-2">{sentence(d.approval_status?.status ?? unspecified)}</span>
+        <WithdrawnBadge approval={d.approval_status} size="sm" />
+      </span>
+    ),
   },
 ];
 
@@ -276,8 +294,10 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
                             {d.consensus.toFixed(2)}
                           </div>
                           <div className="mt-1.5 font-mono text-[11.5px] text-ink-3 tabular-nums">
-                            #{d.pool_rank ?? unspecified}
-                            {total ? ` of ${total.toLocaleString("en-US")}` : ""}
+                            <Term term="poolRank">
+                              #{d.pool_rank ?? unspecified}
+                              {total ? ` of ${total.toLocaleString("en-US")}` : ""}
+                            </Term>
                           </div>
                         </div>
                         {!d.preregistered && (
@@ -311,7 +331,7 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
                     r < ROWS.length - 1 && "border-b border-line",
                   )}
                 >
-                  {row.label}
+                  {row.term ? <Term term={row.term}>{row.label}</Term> : row.label}
                 </th>
                 {visible.map((entry, i) => (
                   <td

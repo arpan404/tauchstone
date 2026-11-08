@@ -1,13 +1,29 @@
-import { useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { ArrowRightIcon, BrainIcon, FunnelSimpleXIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ArrowDownIcon,
+  ArrowRightIcon,
+  ArrowUpIcon,
+  BrainIcon,
+  FlaskIcon,
+  FunnelSimpleXIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import { cn } from "cn";
 import { useProjectCandidates, type CandidateFilters } from "@/api/mvpHooks";
 import { useMockStatus } from "@/api/hooks";
 import type { Schema } from "@/api/types";
 import { BoundaryBanner } from "@/components/BoundaryBanner";
 import { MockRibbon } from "@/components/MockRibbon";
-import { StatusBadge, Toolbar } from "@/components/system";
+import {
+  EmptyState,
+  GLOSSARY,
+  StatusBadge,
+  Term,
+  Toolbar,
+  WithdrawnBadge,
+  type GlossaryKey,
+} from "@/components/system";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,8 +35,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useUi } from "@/store/ui";
 import { ReversalBar } from "./ReversalBar";
+import {
+  API_MAX,
+  DEFAULT_SORT,
+  FIRST_DIR,
+  PAGE,
+  isNotScreened,
+  sortCandidates,
+  type Sort,
+  type SortKey,
+} from "./sorting";
 import { exposureTone, isNeural, sentence } from "./format";
 
 type Candidate = Schema<"ProjectCandidate">;
@@ -34,7 +61,6 @@ const FILTERS: [FilterKey, string][] = [
 ];
 const MAX_COMPARE = 4;
 const COLUMNS = 8;
-
 function toFilters(keys: FilterKey[]): CandidateFilters {
   const next: CandidateFilters = {};
   for (const key of keys) {
@@ -51,11 +77,37 @@ export function RepurposingView({
   projectId = "GSE132903",
 }: { projectId?: string } = {}) {
   const [keys, setKeys] = useState<FilterKey[]>([]);
-  const filters = toFilters(keys);
-  const { data, isPending, isError, refetch } = useProjectCandidates(
-    projectId,
-    filters,
+  const [limit, setLimit] = useState(PAGE);
+  const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
+  const filters = { ...toFilters(keys), limit };
+  const query = useProjectCandidates(projectId, filters);
+  const { error, refetch, isFetching } = query;
+  // Keep the previous page on screen while a larger page for the same filters loads.
+  const base = `${projectId}|${keys.join(",")}`;
+  const [kept, setKept] = useState<{ base: string; data: NonNullable<typeof query.data> } | null>(null);
+  if (query.data && kept?.data !== query.data) setKept({ base, data: query.data });
+  const data =
+    query.data ?? (kept?.base === base && query.isPending ? kept.data : undefined);
+  const isPending = query.isPending && !data;
+  const isError = query.isError;
+  const notScreened = isNotScreened(data, error);
+  const rows = useMemo(
+    () => (data ? sortCandidates(data.candidates, sort) : []),
+    [data, sort],
   );
+  const eligible = data ? (data.n_total_eligible ?? data.n_ranked) : 0;
+  const hasMore = !!data && data.candidates.length < eligible && limit < API_MAX;
+  function onSort(key: SortKey) {
+    setSort((cur) =>
+      cur.key === key
+        ? { key, dir: cur.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: FIRST_DIR[key] },
+    );
+  }
+  function setFilterKeys(next: FilterKey[]) {
+    setKeys(next);
+    setLimit(PAGE);
+  }
   const mock = useMockStatus();
   const {
     selectCandidate,
@@ -90,7 +142,7 @@ export function RepurposingView({
           <ToggleGroup
             multiple
             value={keys}
-            onValueChange={(v) => setKeys(v as FilterKey[])}
+            onValueChange={(v) => setFilterKeys(v as FilterKey[])}
             variant="outline"
             size="sm"
             spacing={0}
@@ -112,17 +164,35 @@ export function RepurposingView({
           )}
           <span
             role="status"
-            className="ml-auto font-mono text-[12.5px] text-ink-3 tabular-nums"
+            className="ml-auto font-mono text-[12.5px] whitespace-nowrap text-ink-3 tabular-nums"
           >
-            {data
-              ? `${data.candidates.length} of ${data.n_ranked.toLocaleString("en-US")}`
-              : isError
-                ? ""
-                : "Loading"}
+            {notScreened
+              ? ""
+              : data
+                ? `Showing ${data.candidates.length.toLocaleString("en-US")} of ${eligible.toLocaleString("en-US")}`
+                : isError
+                  ? ""
+                  : "Loading"}
           </span>
+          {data && !notScreened && keys.length > 0 && (
+            <span className="font-mono text-[12px] whitespace-nowrap text-ink-3 tabular-nums">
+              {`${(data.n_ranked ?? 0).toLocaleString("en-US")} ranked`}
+            </span>
+          )}
         </Toolbar>
 
-        {isError ? (
+        {notScreened ? (
+          <EmptyState
+            icon={<FlaskIcon />}
+            title="Not screened"
+            action={
+              <Button size="lg" onClick={() => setStep("screen")}>
+                Run screen
+                <ArrowRightIcon data-icon="inline-end" />
+              </Button>
+            }
+          />
+        ) : isError ? (
           <div
             role="alert"
             className="flex h-40 items-center justify-center gap-3 rounded-lg border border-line bg-surface text-[13.5px] text-ink-2"
@@ -146,13 +216,13 @@ export function RepurposingView({
                   <TableHead className={cn(head, "w-11 rounded-tl-lg pl-4")}>
                     <span className="sr-only">Compare</span>
                   </TableHead>
-                  <TableHead className={cn(head, "w-12 text-right")}>#</TableHead>
-                  <TableHead className={head}>Drug</TableHead>
-                  <TableHead className={cn(head, "w-44")}>Reversal</TableHead>
-                  <TableHead className={cn(head, "w-20 text-right")}>Contexts</TableHead>
-                  <TableHead className={cn(head, "w-40")}>Brain cells</TableHead>
-                  <TableHead className={cn(head, "w-44")}>Exposure</TableHead>
-                  <TableHead className={cn(head, "w-32 rounded-tr-lg pr-4")}>Approval</TableHead>
+                  <SortHead k="rank" sort={sort} onSort={onSort} className="w-14 text-right" align="right" tip="poolRank">#</SortHead>
+                  <SortHead k="name" sort={sort} onSort={onSort}>Drug</SortHead>
+                  <SortHead k="reversal" sort={sort} onSort={onSort} className="w-44" tip="reversal">Reversal</SortHead>
+                  <SortHead k="contexts" sort={sort} onSort={onSort} className="w-24 text-right" align="right" tip="contexts">Contexts</SortHead>
+                  <TableHead className={cn(head, "w-40")}><Term term="brainCells">Brain cells</Term></TableHead>
+                  <TableHead className={cn(head, "w-44")}><Term term="exposure">Exposure</Term></TableHead>
+                  <TableHead className={cn(head, "w-44 rounded-tr-lg pr-4")}><Term term="approval">Approval</Term></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="[&_td]:border-b [&_td]:border-line [&_tr:last-child_td]:border-0">
@@ -169,7 +239,7 @@ export function RepurposingView({
                       <TableCell className={cn(cell, "pr-4")}><Skeleton className="h-5 w-16 bg-line/70" /></TableCell>
                     </TableRow>
                   ))}
-                {data?.candidates.map((c) => (
+                {rows.map((c) => (
                   <CandidateRow
                     key={c.id}
                     c={c}
@@ -187,7 +257,7 @@ export function RepurposingView({
                         <span className="text-[14px] font-medium text-ink-2">
                           No candidates
                         </span>
-                        <Button variant="outline" size="lg" onClick={() => setKeys([])}>
+                        <Button variant="outline" size="lg" onClick={() => setFilterKeys([])}>
                           <FunnelSimpleXIcon /> Clear filters
                         </Button>
                       </div>
@@ -196,6 +266,26 @@ export function RepurposingView({
                 )}
               </TableBody>
             </table>
+            {hasMore && (
+              <div className="flex items-center justify-center gap-2 border-t border-line px-4 py-3">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  disabled={isFetching}
+                  onClick={() => setLimit((l) => Math.min(API_MAX, l + PAGE * 4))}
+                >
+                  Load {Math.min(PAGE * 4, eligible - data!.candidates.length).toLocaleString("en-US")} more
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  disabled={isFetching}
+                  onClick={() => setLimit(Math.min(API_MAX, eligible))}
+                >
+                  Show all {eligible.toLocaleString("en-US")}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -234,6 +324,60 @@ export function RepurposingView({
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function SortHead({
+  k,
+  sort,
+  onSort,
+  tip,
+  align = "left",
+  className,
+  children,
+}: {
+  k: SortKey;
+  sort: Sort;
+  onSort: (k: SortKey) => void;
+  tip?: GlossaryKey;
+  align?: "left" | "right";
+  className?: string;
+  children: ReactNode;
+}) {
+  const active = sort.key === k;
+  const Arrow = sort.dir === "asc" ? ArrowUpIcon : ArrowDownIcon;
+  const button = (
+    <button
+      type="button"
+      onClick={() => onSort(k)}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-sm outline-none hover:text-ink focus-visible:ring-2 focus-visible:ring-ring/40",
+        align === "right" && "flex-row-reverse",
+        active && "text-ink",
+        tip && "underline decoration-line-strong decoration-dotted underline-offset-2",
+      )}
+    />
+  );
+  const inner = (
+    <>
+      {children}
+      <Arrow className={cn("size-3", !active && "invisible")} aria-hidden />
+    </>
+  );
+  return (
+    <TableHead
+      aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+      className={cn(head, className)}
+    >
+      {tip ? (
+        <Tooltip>
+          <TooltipTrigger render={button}>{inner}</TooltipTrigger>
+          <TooltipContent className="max-w-72 text-left leading-snug">{GLOSSARY[tip]}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <button {...button.props}>{inner}</button>
+      )}
+    </TableHead>
   );
 }
 
@@ -348,14 +492,17 @@ function CandidateRow({
         </StatusBadge>
       </TableCell>
       <TableCell className={cn(cell, "pr-4")}>
-        <StatusBadge
-          className={cn(
-            "h-5 px-1.5 text-[11.5px]",
-            approval !== "approved" && "border-transparent bg-transparent px-0 text-ink-3",
-          )}
-        >
-          {sentence(approval ?? "unspecified")}
-        </StatusBadge>
+        <div className="flex items-center gap-1.5">
+          <StatusBadge
+            className={cn(
+              "h-5 px-1.5 text-[11.5px]",
+              approval !== "approved" && "border-transparent bg-transparent px-0 text-ink-3",
+            )}
+          >
+            {sentence(approval ?? "unspecified")}
+          </StatusBadge>
+          <WithdrawnBadge approval={c.approval_status} size="sm" />
+        </div>
       </TableCell>
     </TableRow>
   );

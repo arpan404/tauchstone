@@ -95,6 +95,11 @@ class ApprovalStatus(BaseModel):
     status: Literal["approved", "investigational", "preclinical", "unknown"]
     max_phase: float | None = None
     source: SourceLink | None = None
+    withdrawn: bool | None = None
+    withdrawn_year: int | None = None
+    withdrawn_class: str | None = None
+    withdrawn_country: str | None = None
+    withdrawn_source: str | None = None
 
 
 class HeatmapCell(BaseModel):
