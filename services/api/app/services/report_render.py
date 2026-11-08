@@ -4,10 +4,10 @@ from __future__ import annotations
 import base64
 import importlib
 import json
-from functools import lru_cache
 import re
 import unicodedata
 from datetime import date
+from functools import lru_cache
 from hashlib import sha256
 from pathlib import Path
 from typing import Protocol
