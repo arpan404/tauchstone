@@ -133,15 +133,25 @@ it("caps compare at four and clears the selection", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Clear compare" }));
   expect(useUi.getState().compareIds).toEqual([]);
 });
-it("labels rows and tables that are not preregistered", async () => {
+it("labels a not-preregistered table once, in the filter bar", async () => {
   setup((body) => {
     body.preregistered = false;
+    for (const c of body.candidates) c.preregistered = false;
+  });
+  const nepafenac = (await screen.findByText("Nepafenac")).closest("tr")!;
+  expect(within(nepafenac).queryByText("not preregistered")).toBeNull();
+  expect(screen.getAllByText("not preregistered")).toHaveLength(1);
+  expect(within(nepafenac).getByText("predicted penetrant")).toBeTruthy();
+});
+it("still labels a single not-preregistered row in a preregistered table", async () => {
+  setup((body) => {
+    body.preregistered = true;
+    for (const c of body.candidates) c.preregistered = true;
     body.candidates[1].preregistered = false;
   });
   const nepafenac = (await screen.findByText("Nepafenac")).closest("tr")!;
   expect(within(nepafenac).getByText("not preregistered")).toBeTruthy();
-  expect(screen.getAllByText("not preregistered")).toHaveLength(2);
-  expect(within(nepafenac).getByText("predicted penetrant")).toBeTruthy();
+  expect(screen.getAllByText("not preregistered")).toHaveLength(1);
 });
 
 it("sorts loaded rows by column and marks the active sort", async () => {

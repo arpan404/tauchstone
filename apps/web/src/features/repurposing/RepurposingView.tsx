@@ -284,6 +284,7 @@ export function RepurposingView({
                     compareFull={compareIds.length >= MAX_COMPARE}
                     onOpen={() => open(c.id)}
                     onToggle={() => toggle(c)}
+                    tableUnregistered={data?.preregistered === false}
                   />
                 ))}
                 {data && data.candidates.length === 0 && (
@@ -435,8 +436,11 @@ function CandidateRow({
   compareFull,
   onOpen,
   onToggle,
+  tableUnregistered,
 }: {
   c: Candidate;
+  /** The whole table already carries "not preregistered" in the filter bar. */
+  tableUnregistered: boolean;
   selected: boolean;
   compared: boolean;
   compareFull: boolean;
@@ -487,7 +491,7 @@ function CandidateRow({
           >
             {c.name}
           </button>
-          {c.preregistered === false && (
+          {c.preregistered === false && !tableUnregistered && (
             <StatusBadge tone="gap" size="sm">
               <WarningCircleIcon aria-hidden />
               not preregistered
