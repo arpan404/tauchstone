@@ -83,7 +83,7 @@ function QueryFact({ data, sig }: { data: Data; sig: Signature }) {
         <StatusBadge
           tone="gap"
           size="sm"
-          tip="Too few genes passed FDR < 0.05, so the query used the top-ranked genes regardless of significance. Treat this score as weak evidence."
+          tip="Too few genes passed FDR < 0.05, so the query used the top-ranked genes regardless of significance. Read this score as weak evidence."
         >
           top-ranked genes
         </StatusBadge>
