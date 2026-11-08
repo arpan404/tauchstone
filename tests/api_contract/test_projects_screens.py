@@ -43,6 +43,11 @@ def test_endpoints_and_sse(client):
     assert 'scoring' in states and 'aggregating' in states
     assert all(a['n_scored'] <= b['n_scored'] for a, b in zip(events, events[1:], strict=False))
     assert events[-1]['n_scored'] == events[-1]['n_signatures']
+    cells = events[-1]['cell_lines']
+    assert 0 < len(cells) <= 24 and events[-1]['n_cell_lines'] >= len(cells)
+    assert [c['n_scored'] for c in cells] == sorted((c['n_scored'] for c in cells), reverse=True)
+    assert sum(c['n_scored'] for c in cells) <= events[-1]['n_scored']
+    assert {c['cell_id'] for c in cells if c['neural']} == {'NPC', 'NEU'}
     result = client.get(f"/projects/{p['id']}/candidates").json()
     check(result, 'ProjectCandidates')
     assert result['candidates'] and not result['preregistered']

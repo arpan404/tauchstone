@@ -907,6 +907,19 @@ components:
         name: { type: string }
         consensus: { type: number }
 
+    ScreenCellLine:
+      type: object
+      required: [cell_id, n_scored, best_consensus, neural]
+      properties:
+        cell_id: { type: string, examples: ["MCF7"] }
+        n_scored: { type: integer, description: "signatures from this cell line scored so far" }
+        best_consensus:
+          type: [number, "null"]
+          description: >-
+            Most negative signature-level consensus so far (strongest reversal), on the same
+            provisional scale as the live ranking. Ranking contexts only; null when none yet.
+        neural: { type: boolean, description: "SHSY5Y, NEU, NEU.KCL, MNEU.E, NPC, NPC.CAS9, NPC.TAK, FIBRNPC" }
+
     Screen:
       type: object
       required: [id, project_id, status, n_signatures, n_scored, elapsed_s, preregistered]
@@ -921,6 +934,14 @@ components:
         n_genes_mapped: { type: [integer, "null"] }
         n_ranked: { type: [integer, "null"] }
         top: { type: array, items: { $ref: "#/components/schemas/ScreenHit" } }
+        cell_lines:
+          type: array
+          maxItems: 24
+          description: >-
+            Live per-cell-line progress: the (at most 24) LINCS cell lines with the most
+            signatures scored so far, most signatures first. Absent on frozen screens.
+          items: { $ref: "#/components/schemas/ScreenCellLine" }
+        n_cell_lines: { type: [integer, "null"], description: "cell lines seen so far (cell_lines is the top 24 of these)" }
         error: { type: [string, "null"] }
         preregistered: { type: boolean }
 
