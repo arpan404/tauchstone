@@ -280,7 +280,6 @@ export function SingleCellPanel() {
                     <StatusBadge tone="accent" tip={data.label}>
                       <FlaskIcon aria-hidden /> Exploratory
                     </StatusBadge>
-                    <StatusBadge tone="gap">not preregistered</StatusBadge>
                     {(mock || synthetic) && <StatusBadge tone="gap">Synthetic data</StatusBadge>}
                   </div>
                   <dl className="m-0 mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[11.5px] text-ink-2">

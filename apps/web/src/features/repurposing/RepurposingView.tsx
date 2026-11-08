@@ -189,7 +189,7 @@ export function RepurposingView({
           {data && !data.preregistered && (
             <StatusBadge tone="gap">
               <WarningCircleIcon aria-hidden />
-              not preregistered
+              Exploratory
             </StatusBadge>
           )}
           <span
@@ -494,7 +494,7 @@ function CandidateRow({
           {c.preregistered === false && !tableUnregistered && (
             <StatusBadge tone="gap" size="sm">
               <WarningCircleIcon aria-hidden />
-              not preregistered
+              Exploratory
             </StatusBadge>
           )}
         </div>

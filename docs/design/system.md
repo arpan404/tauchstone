@@ -2,7 +2,7 @@
 
 Binding for every view. The goal: the app reads as one precise lab instrument, not a website.
 AGENTS.md rules still win (no clinical language, measured/curated/predicted labels,
-"not preregistered" labels, no hidden outcomes before a committed experiment).
+"Exploratory" labels on anything outside the preregistration, no hidden outcomes before a committed experiment).
 
 ## Design read
 
@@ -23,7 +23,7 @@ Calm chrome, dense and exact data, one accent. Dials: variance 4, motion 4, dens
 | `--accent-soft` / `--accent-ink` | #E6EEFA / #0F4593 | selected rows, accent badges |
 | `--ok` / `--ok-soft` | #0E8F6A / #E5F5EF | survived, measured, brain-cell data |
 | `--bad` / `--bad-soft` | #D23B3B / #FCEBEB | failed, up in AD, low exposure |
-| `--gap` / `--gap-soft` | #A15C07 / #FDF1DE | evidence gaps, not preregistered |
+| `--gap` / `--gap-soft` | #A15C07 / #FDF1DE | evidence gaps, Exploratory label |
 
 Tailwind names: `bg-canvas bg-surface bg-surface-2 border-line border-line-strong text-ink
 text-ink-2 text-ink-3 text-primary bg-accent-soft text-accent-ink text-ok bg-ok-soft text-bad
@@ -91,7 +91,7 @@ The page title lives in the top bar. Views never render their own page title.
 
 - Labels, not sentences. If a string explains how the system works, delete it. If a user needs
   it to act, make it a label, tooltip or empty state.
-- Keep, verbatim where they exist: the boundary text in the PDF report, `not preregistered`,
+- Keep, verbatim where they exist: the boundary text in the PDF report, the `Exploratory` label (renamed from "not preregistered" on Nov 8; same meaning, same tooltip),
   `measured / curated / predicted` exposure labels, verdict names (SUPPORTED SO FAR,
   FRAGILE / CONTEXT-DEPENDENT, INSUFFICIENT EVIDENCE), `Report only` on resource agreement.
 - No em dashes or en dashes in visible text. Use `·` at most once per line; prefer columns.
@@ -125,7 +125,7 @@ section conflicts with the sections above, this section wins.
   it sits in the hero; a soft blurred copy behind it is allowed only if it stays subtle (no coloured blobs).
 - **Icons.** Phosphor everywhere it helps scanning: a soft icon chip before every panel title
   (`Panel icon`), a leading icon on every button, small icons on stat labels and on meaningful
-  tags (exposure, brain cells, withdrawn, not preregistered), icons in empty states. Weight
+  tags (exposure, brain cells, withdrawn, Exploratory), icons in empty states. Weight
   `regular` (16-18px); `fill` only for the active state; `duotone` allowed in hero chips.
 - **Tables.** Inside `glass`, flush. Header row is quiet 11.5px ink-3. Rows have no hard lines:
   rounded 12px rows; hover = `bg-primary/6`; selected = `bg-primary/10 ring-1 ring-primary/25`

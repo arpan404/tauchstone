@@ -11,6 +11,8 @@ const ESTIMATE_KEY =
   "A machine-learning guess (a random forest model) at this drug's reversal score from its chemical structure alone. It is barely better than guessing the average: on structures it had not seen it is typically off by 0.47, versus 0.48 for always guessing the mean (rank correlation 0.18). Never used for ranking or for any hidden test, and says nothing about Alzheimer's on its own.";
 
 const EXACT: Record<string, string> = {
+  exploratory:
+    "Exploratory. Our main analysis was written down and locked before we saw any results, so it could not be tuned to look good. This part was not in that locked plan, so read it as a lead to follow up, not a finding.",
   "not preregistered":
     "Exploratory. Our main analysis was written down and locked before we saw any results, so it could not be tuned to look good. This part was not in that locked plan, so read it as a lead to follow up, not a finding.",
   preregistered:

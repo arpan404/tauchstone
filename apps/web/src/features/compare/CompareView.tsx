@@ -346,7 +346,7 @@ export function CompareView({ drugIds, projectId }: CompareViewProps) {
                           {!d.preregistered && (
                             <StatusBadge tone="gap" size="sm">
                               <WarningCircleIcon aria-hidden />
-                              not preregistered
+                              Exploratory
                             </StatusBadge>
                           )}
                         </div>

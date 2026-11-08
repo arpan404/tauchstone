@@ -81,7 +81,7 @@ it("labels non-preregistered drugs and calls shell actions with the selected dru
     onReport = vi.fn();
   setup({ onCompare, onReport });
   await screen.findByRole("heading", { name: "Piperacillin" });
-  expect(screen.getByText("not preregistered")).toBeTruthy();
+  expect(screen.getByText("Exploratory")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Compare" }));
   fireEvent.click(screen.getByRole("button", { name: "Report" }));
   expect(onCompare).toHaveBeenCalledWith("MOCK-0005");

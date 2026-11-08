@@ -13,6 +13,7 @@ it("explains every recurring badge label", () => {
     expect(badgeTip(label), label).toBeTruthy();
 });
 it("states what preregistered means and what QC counts", () => {
+  expect(badgeTip("Exploratory")).toMatch(/not in that locked plan/);
   expect(badgeTip("not preregistered")).toMatch(/locked before we saw any results.*not in that locked plan/);
   expect(badgeTip("preregistered")).toMatch(/locked before we saw any results/);
   expect(badgeTip("QC 7/7")).toMatch(/7 of 7 known Alzheimer's marker genes/);

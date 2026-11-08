@@ -30,7 +30,7 @@ describe('CompareView', () => {
     expect(screen.getByText('-1.79')).toBeTruthy();
     expect(screen.getByText('#5')).toBeTruthy();
     expect(screen.getByText('CA2')).toBeTruthy();
-    expect(screen.getAllByText('not preregistered')).toHaveLength(2);
+    expect(screen.getAllByText('Exploratory')).toHaveLength(2);
     expect(screen.getAllByText('predicted low')).toHaveLength(2);
     expect(screen.queryByText('SECRET_OUTCOME')).toBeNull();
     expect(screen.getAllByText('withdrawn 1980')).toHaveLength(1);

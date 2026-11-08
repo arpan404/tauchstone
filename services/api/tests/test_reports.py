@@ -26,7 +26,7 @@ def test_html_contract_and_hash(client):
     assert response.headers['content-type'].startswith('text/html')
     html = response.text
     for value in ['Brinzolamide', 'Clinical-stage rank 12', '-1.67', 'HA1E, MCF7, PHH', '6 h, 24 h',
-                  'predicted low', 'CA2 P00918', '0.037', '3 hidden tests', 'not preregistered',
+                  'predicted low', 'CA2 P00918', '0.037', '3 hidden tests', 'Exploratory',
                   'Synthetic data', 'GSE132903', 'LINCS GSE92742/GSE70138', 'commit mock', render.BOUNDARY]:
         assert value in html
     assert sha256((render.ROOT / 'data/manifests/preregistration.yaml').read_bytes()).hexdigest()[:8] in html
@@ -102,7 +102,7 @@ def test_pdf_contract_offline(client, monkeypatch):
     assert len(document.pages) == 1
     text = document.pages[0].extract_text()
     # Section headings are set in capitals by CSS, so compare case-insensitively.
-    for value in ['Brinzolamide', 'CA2', 'P00918', 'Data source', '3 hidden tests', 'not preregistered']:
+    for value in ['Brinzolamide', 'CA2', 'P00918', 'Data source', '3 hidden tests', 'Exploratory']:
         assert value.lower() in text.lower(), value
     assert 'attachment' in response.headers['content-disposition']
 
@@ -177,7 +177,7 @@ def test_session_snapshot_shows_revealed_and_never_hidden(client):
         app.dependency_overrides.pop(get_session_store, None)
     assert '<h2>Attack session</h2>' in html and '<h2>Attack</h2>' not in html
     for value in ['LABEL_0 10 µM', 'Held-back LINCS condition', 'Failed', '0.43', '-0.50', 'Tests run',
-                  '1 of 2', '2 hidden tests not run', 'not preregistered', 'Chance claim holds, start']:
+                  '1 of 2', '2 hidden tests not run', 'Exploratory', 'Chance claim holds, start']:
         assert value in html, value
     assert any(v in html for v in ('INSUFFICIENT EVIDENCE', 'FRAGILE / CONTEXT-DEPENDENT', 'SUPPORTED SO FAR'))
     # Unrevealed tests: no label, value, outcome, detail or cohort; revealed detail/cohort stay out too.

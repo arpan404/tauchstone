@@ -58,7 +58,7 @@ function PreregBadge({ on }: { on: boolean }) {
   ) : (
     <StatusBadge tone="gap">
       <WarningCircleIcon aria-hidden />
-      not preregistered
+      Exploratory
     </StatusBadge>
   );
 }

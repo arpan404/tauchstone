@@ -94,7 +94,7 @@ it("renders the supplied pool ranks, positive score, unavailable statuses and At
 it("shows an empty state before the first check and opens a ranked drug", async () => {
   setup();
   expect(screen.getByText("No compounds checked")).toBeTruthy();
-  expect(screen.getByText("not preregistered")).toBeTruthy();
+  expect(screen.getByText("Exploratory")).toBeTruthy();
   expect(chips()).toEqual(["donepezil", "memantine", "galantamine", "rivastigmine", "nepafenac"]);
   expect(screen.getByText("5 names")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Check" }));

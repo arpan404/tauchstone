@@ -141,7 +141,7 @@ export function AppShell({
                     }}
                   >
                     <span className="min-w-0 flex-1 truncate">{p.name}</span>
-                    {!p.preregistered && <StatusBadge tone="gap">not preregistered</StatusBadge>}
+                    {!p.preregistered && <StatusBadge tone="gap">Exploratory</StatusBadge>}
                   </DropdownMenuItem>
                 ))}
                 </DropdownMenuGroup>

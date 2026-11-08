@@ -50,8 +50,8 @@ it("lists projects with ranked counts and preregistration labels", () => {
   expect(rows).toHaveLength(3);
   expect(within(rows[1]).getByText("1,816")).toBeTruthy();
   expect(within(rows[1]).getByText("preregistered")).toBeTruthy();
-  expect(within(rows[1]).queryByText("not preregistered")).toBeNull();
-  expect(within(rows[2]).getByText("not preregistered")).toBeTruthy();
+  expect(within(rows[1]).queryByText("Exploratory")).toBeNull();
+  expect(within(rows[2]).getByText("Exploratory")).toBeTruthy();
   expect(within(rows[2]).getByText("not screened")).toBeTruthy();
 });
 
@@ -68,7 +68,7 @@ it("creates a new project, labelled not preregistered", () => {
   render(<ProjectsView />);
   fireEvent.click(screen.getByRole("button", { name: "New project" }));
   const dialog = screen.getByRole("dialog");
-  expect(within(dialog).getByText("not preregistered")).toBeTruthy();
+  expect(within(dialog).getByText("Exploratory")).toBeTruthy();
   fireEvent.change(within(dialog).getByRole("textbox"), {
     target: { value: "My cohort" },
   });

@@ -355,7 +355,7 @@ export function ScreenView() {
               notPreregistered && (
                 <StatusBadge tone="gap">
                   <WarningCircleIcon aria-hidden />
-                  not preregistered
+                  Exploratory
                 </StatusBadge>
               )
             }

@@ -69,7 +69,7 @@ it("shows the AI estimate column with basis tags and the measured score beside i
   expect(within(rowFor("nepafenac")).getByText("held out")).toBeTruthy();
   expect(within(rowFor("lithium")).queryByText(/AI /)).toBeNull();
   expect(screen.getByText("Estimated from structure. Exploratory, not part of the ranking.")).toBeTruthy();
-  expect(screen.getByText("not preregistered")).toBeTruthy();
+  expect(screen.getByText("Exploratory")).toBeTruthy();
 });
 
 it("tags a fresh estimate as a new structure with no measured score", async () => {

@@ -128,7 +128,7 @@ export function CompoundsView({
             actions={
               <StatusBadge tone="gap" size="sm">
                 <SealWarningIcon aria-hidden />
-                not preregistered
+                Exploratory
               </StatusBadge>
             }
             className="min-[1700px]:sticky min-[1700px]:top-0"

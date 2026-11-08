@@ -139,8 +139,8 @@ it("labels a not-preregistered table once, in the filter bar", async () => {
     for (const c of body.candidates) c.preregistered = false;
   });
   const nepafenac = (await screen.findByText("Nepafenac")).closest("tr")!;
-  expect(within(nepafenac).queryByText("not preregistered")).toBeNull();
-  expect(screen.getAllByText("not preregistered")).toHaveLength(1);
+  expect(within(nepafenac).queryByText("Exploratory")).toBeNull();
+  expect(screen.getAllByText("Exploratory")).toHaveLength(1);
   expect(within(nepafenac).getByText("predicted penetrant")).toBeTruthy();
 });
 it("still labels a single not-preregistered row in a preregistered table", async () => {
@@ -150,8 +150,8 @@ it("still labels a single not-preregistered row in a preregistered table", async
     body.candidates[1].preregistered = false;
   });
   const nepafenac = (await screen.findByText("Nepafenac")).closest("tr")!;
-  expect(within(nepafenac).getByText("not preregistered")).toBeTruthy();
-  expect(screen.getAllByText("not preregistered")).toHaveLength(1);
+  expect(within(nepafenac).getByText("Exploratory")).toBeTruthy();
+  expect(screen.getAllByText("Exploratory")).toHaveLength(1);
 });
 
 it("sorts loaded rows by column and marks the active sort", async () => {

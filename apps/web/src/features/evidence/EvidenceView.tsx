@@ -202,7 +202,7 @@ function DrugHero({
           {!drug.preregistered && (
             <StatusBadge tone="gap">
               <WarningIcon />
-              not preregistered
+              Exploratory
             </StatusBadge>
           )}
         </div>

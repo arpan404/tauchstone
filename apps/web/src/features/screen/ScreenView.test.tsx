@@ -128,11 +128,11 @@ it("keeps the ranked count provisional until the screen is done", async () => {
 });
 it("labels anything but the frozen signature not preregistered", () => {
   open();
-  expect(screen.queryByText("not preregistered")).toBeNull();
+  expect(screen.queryByText("Exploratory")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: /GSE173955/ }));
-  expect(screen.getByText("not preregistered")).toBeTruthy();
+  expect(screen.getByText("Exploratory")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: /^GSE132903/ }));
-  expect(screen.queryByText("not preregistered")).toBeNull();
+  expect(screen.queryByText("Exploratory")).toBeNull();
 });
 it("streams hits and opens the drug view from a hit", async () => {
   watch.mockImplementation((job, onEvent) => {
