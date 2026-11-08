@@ -18,7 +18,7 @@ export interface ElementStyle {
 const HALOGEN: Record<string, string> = { F: '#7ccf6a', Cl: '#2fb36a', Br: '#2a8a5a', I: '#1f6b4f' };
 const ELEMENTS: Record<string, ElementStyle> = {
   C: { color: '#3a3846', radius: 0.34 },
-  N: { color: '#5b3df5', radius: 0.33 },
+  N: { color: '#3d59ab', radius: 0.33 } /* nitrogen: conventional blue (CPK) */,
   O: { color: '#ef4b3f', radius: 0.32 },
   S: { color: '#f2b138', radius: 0.42 },
   P: { color: '#f29b38', radius: 0.42 },

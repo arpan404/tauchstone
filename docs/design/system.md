@@ -19,8 +19,8 @@ Calm chrome, dense and exact data, one accent. Dials: variance 4, motion 4, dens
 | `--surface-2` | #F6F7F9 | inset areas, table header, hover |
 | `--line` / `--line-strong` | #E2E4E9 / #CDD1D9 | hairlines / control borders |
 | `--ink` / `--ink-2` / `--ink-3` | #14151A / #464A55 / #6B7080 | text levels (all AA on surface) |
-| `--accent` (`primary`) | #5B3DF5 | reversal, selection, primary action. One accent only. |
-| `--accent-soft` / `--accent-ink` | #EEEBFE / #4126D9 | selected rows, accent badges |
+| `--accent` (`primary`) | #1558B8 | deep dodger blue: reversal, selection, primary action. One accent only. |
+| `--accent-soft` / `--accent-ink` | #E6EEFA / #0F4593 | selected rows, accent badges |
 | `--ok` / `--ok-soft` | #0E8F6A / #E5F5EF | survived, measured, brain-cell data |
 | `--bad` / `--bad-soft` | #D23B3B / #FCEBEB | failed, up in AD, low exposure |
 | `--gap` / `--gap-soft` | #A15C07 / #FDF1DE | evidence gaps, not preregistered |

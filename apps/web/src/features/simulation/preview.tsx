@@ -63,7 +63,7 @@ export function SimulationPreview() {
         <section className="grid gap-3">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {(['idle', 'scoring', 'done'] as const).map((s) => (
-              <button key={s} onClick={() => { setAuto(false); setState(s); }} className={`rounded-md border px-3 py-1 ${state === s ? 'border-[#5b3df5] bg-[#5b3df5] text-white' : 'border-[#e6e2d8] bg-white'}`}>{s}</button>
+              <button key={s} onClick={() => { setAuto(false); setState(s); }} className={`rounded-md border px-3 py-1 ${state === s ? 'border-primary bg-primary text-white' : 'border-[#e6e2d8] bg-white'}`}>{s}</button>
             ))}
             <button onClick={() => { setProgress(0); setState('scoring'); setAuto(true); }} className="rounded-md border border-[#12a36a] bg-white px-3 py-1 text-[#12a36a]">run screen</button>
             <label className="ml-2 flex items-center gap-2">progress
@@ -83,7 +83,7 @@ export function SimulationPreview() {
           <div className="grid gap-2">
             <div className="flex flex-wrap items-center gap-2 text-sm">
               {Object.keys(MOLECULES).map((k) => (
-                <button key={k} onClick={() => { setCustom(null); setMolKey(k); }} className={`rounded-md border px-3 py-1 ${!custom && molKey === k ? 'border-[#5b3df5] bg-[#5b3df5] text-white' : 'border-[#e6e2d8] bg-white'}`}>{k}</button>
+                <button key={k} onClick={() => { setCustom(null); setMolKey(k); }} className={`rounded-md border px-3 py-1 ${!custom && molKey === k ? 'border-primary bg-primary text-white' : 'border-[#e6e2d8] bg-white'}`}>{k}</button>
               ))}
               <label className="rounded-md border border-dashed border-[#a3a0a8] bg-white px-3 py-1">load JSON
                 <input type="file" accept="application/json" className="hidden" onChange={async (e) => {

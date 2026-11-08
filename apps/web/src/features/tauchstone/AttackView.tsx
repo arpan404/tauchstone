@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { CandidatePicker } from "@/app/CandidatePicker";
 import { ArrowDownIcon, ArrowRightIcon, ArrowUpIcon, ArrowCounterClockwiseIcon, CrosshairIcon, PlayIcon } from '@phosphor-icons/react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { cn } from 'cn';
@@ -193,7 +194,7 @@ export function AttackView() {
             className="mx-auto mt-[8vh] max-w-xl"
             icon={<CrosshairIcon />}
             title={<span role="heading" aria-level={2}>No candidate selected</span>}
-            action={<Button variant="outline" onClick={() => setStep('candidates')}>Choose candidate</Button>}
+            action={<div className="flex flex-col items-center gap-2"><CandidatePicker variant="button" /><Button variant="ghost" size="sm" onClick={() => setStep("candidates")}>Browse candidates</Button></div>}
           />
         ) : (
           <Panel className="mx-auto mt-[8vh] max-w-xl" aria-label="New experiment session">

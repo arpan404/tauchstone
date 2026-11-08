@@ -24,6 +24,7 @@ import { Kbd } from "@/components/ui/kbd";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -47,6 +48,8 @@ import {
 import { frozenPreregistrationSha256 } from "@/features/about/integrity";
 import { useUi, type StepId } from "@/store/ui";
 import { NAV_GROUPS } from "./nav";
+import { CandidatePicker } from "./CandidatePicker";
+import { ViewErrorBoundary } from "./ViewErrorBoundary";
 
 const ICONS: Partial<Record<StepId, Icon>> = {
   projects: SquaresFourIcon,
@@ -80,13 +83,12 @@ export function AppShell({
   onSearch: () => void;
   children: ReactNode;
 }) {
-  const { currentProjectId, setProject, compareIds, selectedCandidateId } = useUi();
+  const { currentProjectId, setProject, compareIds } = useUi();
   const { data: projects } = useProjects();
   const { data: frozen } = useCandidates();
   const health = useHealth();
   const mock = useMockStatus(frozen?.provenance);
   const project = projects?.find((p) => p.id === currentProjectId) ?? projects?.[0];
-  const candidate = frozen?.candidates.find((c) => c.id === selectedCandidateId);
   const expo = import.meta.env.VITE_EXPO === "1";
   const engine = health.isError ? "offline" : health.isPending ? "connecting" : "online";
 
@@ -129,6 +131,7 @@ export function AppShell({
                 <CaretUpDownIcon className="size-4 text-ink-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuGroup>
                 <DropdownMenuLabel>Projects</DropdownMenuLabel>
                 {projects?.map((p) => (
                   <DropdownMenuItem
@@ -142,6 +145,7 @@ export function AppShell({
                     {!p.preregistered && <StatusBadge tone="gap">not preregistered</StatusBadge>}
                   </DropdownMenuItem>
                 ))}
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => onNavigate("projects")}>
                   <GridFourIcon /> All projects
@@ -231,23 +235,13 @@ export function AppShell({
             </div>
             <div className="ml-auto flex items-center gap-2">
               {mock && <StatusBadge tone="gap">Synthetic data</StatusBadge>}
-              {selectedCandidateId && active !== "projects" && (
-                <button
-                  type="button"
-                  onClick={() => onNavigate("evidence")}
-                  aria-label="Selected candidate"
-                  className="hidden items-center gap-2 rounded-full border border-line bg-surface py-1 pr-3 pl-1.5 text-[13px] hover:border-primary sm:flex"
-                >
-                  <PillIcon weight="fill" className="size-5 rounded-full bg-accent-soft p-0.5 text-primary" />
-                  <span className="max-w-40 truncate font-medium text-ink">
-                    {candidate?.name ?? selectedCandidateId}
-                  </span>
-                  {candidate && typeof candidate.consensus === "number" && (
-                    <span className="font-mono text-[12px] text-ink-3">
-                      #{candidate.rank} · <span className="text-primary">{candidate.consensus.toFixed(2)}</span>
-                    </span>
-                  )}
-                </button>
+              {active !== "projects" && (
+                <CandidatePicker
+                  className="hidden sm:flex"
+                  onPicked={() => {
+                    if (!active || !["evidence", "attack", "report"].includes(active)) onNavigate("evidence");
+                  }}
+                />
               )}
               <button
                 type="button"
@@ -260,7 +254,7 @@ export function AppShell({
             </div>
           </header>
           <div id="workspace" tabIndex={-1} className="min-h-0 flex-1 overflow-auto">
-            {children}
+            <ViewErrorBoundary resetKey={`${active}`}>{children}</ViewErrorBoundary>
           </div>
           <footer className="shell-status flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-line bg-surface px-4 py-1.5 font-mono text-[11px] text-ink-3">
             <span className="flex items-center gap-1.5">

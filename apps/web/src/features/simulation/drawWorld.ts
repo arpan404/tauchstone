@@ -1,7 +1,7 @@
 import { blobPoints, type Cell, type Mol, type World } from './world';
 
-const VIOLET = [91, 61, 245] as const;
-const PINK = [232, 93, 156] as const;
+const VIOLET = [21, 88, 184] as const; // dodger-blue accent
+const PINK = [120, 128, 146] as const; // neutral slate second tint
 const GREEN = [18, 163, 106] as const;
 const rgba = (c: readonly number[], a: number) => `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`;
 
@@ -143,7 +143,7 @@ function drawMol(ctx: CanvasRenderingContext2D, m: Mol, scale: number) {
   for (const p of pts) {
     ctx.beginPath();
     ctx.arc(p.x, p.y, (p.kind ? 2.5 : 2.1) * (1 + p.z * 0.12), 0, Math.PI * 2);
-    ctx.fillStyle = p.kind ? (m.pink ? '#ef4b3f' : '#5b3df5') : rgba(tint, 0.85);
+    ctx.fillStyle = p.kind ? (m.pink ? '#5d6475' : '#1558b8') : rgba(tint, 0.85);
     ctx.fill();
   }
   ctx.globalAlpha = 1;

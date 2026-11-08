@@ -28,14 +28,14 @@ function palette(el: string): Palette {
 function drawEmpty({ ctx, width, height }: FrameInfo) {
   const r = Math.min(width, height) * 0.26;
   ctx.save();
-  ctx.strokeStyle = 'rgba(91,61,245,0.14)';
+  ctx.strokeStyle = 'rgba(21,88,184,0.12)';
   ctx.lineWidth = 1.5;
   ctx.setLineDash([3, 6]);
   ctx.beginPath();
   ctx.arc(width / 2, height / 2, r, 0, Math.PI * 2);
   ctx.stroke();
   ctx.setLineDash([]);
-  ctx.strokeStyle = 'rgba(91,61,245,0.07)';
+  ctx.strokeStyle = 'rgba(21,88,184,0.06)';
   ctx.beginPath();
   ctx.arc(width / 2, height / 2, r * 0.62, 0, Math.PI * 2);
   ctx.stroke();
@@ -256,7 +256,7 @@ export function MoleculeViewer(props: { molecule: Molecule3D | null; height?: nu
     >
       <canvas
         ref={canvasRef}
-        className={mol ? 'block h-full w-full cursor-grab touch-none outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-[#5b3df5]/40' : 'block h-full w-full'}
+        className={mol ? 'block h-full w-full cursor-grab touch-none outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-primary/40' : 'block h-full w-full'}
         role="img"
         aria-label={mol ? `3D structure ${mol.formula}` : 'No structure'}
         tabIndex={mol ? 0 : -1}

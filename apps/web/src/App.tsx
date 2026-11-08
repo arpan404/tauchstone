@@ -17,6 +17,7 @@ import { FileTextIcon } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
 import { ShellBoundaryContext } from "@/components/BoundaryBanner";
 import { AppShell } from "@/app/AppShell";
+import { CandidatePicker } from "@/app/CandidatePicker";
 import {
   Command,
   CommandDialog,
@@ -61,7 +62,12 @@ function Report() {
         <EmptyState
           icon={<FileTextIcon />}
           title="No candidate selected"
-          action={<Button onClick={() => setStep("candidates")}>Choose candidate</Button>}
+          action={
+            <div className="flex flex-col items-center gap-2">
+              <CandidatePicker variant="button" />
+              <Button variant="ghost" size="sm" onClick={() => setStep("candidates")}>Browse candidates</Button>
+            </div>
+          }
         />
       </div>
     );
@@ -148,7 +154,7 @@ export default function App() {
         title="Search workspace"
         description="Views and candidates"
       >
-        <Command>
+        <Command filter={(value, search) => (value.toLowerCase().includes(search.trim().toLowerCase()) ? 1 : 0)}>
           <CommandInput placeholder="Go to a view or candidate" />
           <CommandList>
             <CommandEmpty>No matches</CommandEmpty>

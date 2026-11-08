@@ -1,4 +1,5 @@
 import { lazy, Suspense, type ReactNode } from "react";
+import { CandidatePicker } from "@/app/CandidatePicker";
 import {
   ArrowSquareOutIcon,
   ColumnsIcon,
@@ -72,7 +73,7 @@ export function EvidenceView({
         className="min-h-80"
         icon={<PillIcon />}
         title="No candidate selected"
-        action={<Button onClick={() => setStep("candidates")}>Choose candidate</Button>}
+        action={<div className="flex flex-col items-center gap-2"><CandidatePicker variant="button" /><Button variant="ghost" size="sm" onClick={() => setStep("candidates")}>Browse candidates</Button></div>}
       />
     );
   } else if (isError) {

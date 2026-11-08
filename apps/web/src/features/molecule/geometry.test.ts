@@ -133,7 +133,7 @@ describe('labels and styles', () => {
   });
   it('uses the agreed element colours', () => {
     expect(elementStyle('C').color).toBe('#3a3846');
-    expect(elementStyle('N').color).toBe('#5b3df5');
+    expect(elementStyle('N').color).toBe('#3d59ab');
     expect(elementStyle('O').color).toBe('#ef4b3f');
     expect(elementStyle('S').color).toBe('#f2b138');
     expect(elementStyle('P').color).toBe('#f29b38');

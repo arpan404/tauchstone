@@ -17,7 +17,7 @@ export function doseLabel(dose: string): string {
   return dose.replace("uM", "µM");
 }
 
-/** Heat colour for a consensus score: reversal (negative) in the accent, mimicry in bad. */
+/** Heat colour for a consensus score: reversal (negative) in the accent, mimicry in neutral grey. */
 export function heat(consensus: number): { background: string; strong: boolean } {
   const t = Math.min(1, Math.abs(consensus) / 3);
   if (consensus < 0) {
@@ -29,7 +29,7 @@ export function heat(consensus: number): { background: string; strong: boolean }
   }
   const pct = Math.round(10 + t * 40);
   return {
-    background: `color-mix(in oklch, var(--bad) ${pct}%, var(--surface))`,
+    background: `color-mix(in oklch, var(--ink-3) ${pct}%, var(--surface))`,
     strong: false,
   };
 }

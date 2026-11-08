@@ -26,7 +26,7 @@
   --color-bad-soft: var(--bad-soft);
   --color-gap: var(--gap);
   --color-gap-soft: var(--gap-soft);
-  --shadow-overlay: 0 1px 2px rgb(20 21 26 / 0.06), 0 12px 32px -8px rgb(40 30 110 / 0.18);
+  --shadow-overlay: 0 1px 2px rgb(20 21 26 / 0.06), 0 12px 32px -8px rgb(20 60 120 / 0.16);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -78,8 +78,8 @@
   --ink: #14151a;
   --ink-2: #464a55;
   --ink-3: #6b7080;
-  --accent-soft: #eeebfe;
-  --accent-ink: #4126d9;
+  --accent-soft: #e6eefa;
+  --accent-ink: #0f4593;
   --ok: #0e8f6a;
   --ok-soft: #e5f5ef;
   --bad: #d23b3b;
@@ -92,7 +92,7 @@
   --s2: var(--surface-2);
   --mu: var(--ink-3);
   --fa: #9a9eab;
-  --ac: #5b3df5;
+  --ac: #1558b8;
   --acs: var(--accent-soft);
   --warm: #e08a1e;
   --pink: #d9488f;
@@ -102,7 +102,7 @@
   --card-foreground: var(--ink);
   --popover: var(--surface);
   --popover-foreground: var(--ink);
-  --primary: #5b3df5;
+  --primary: #1558b8;
   --primary-foreground: #fdfdfe;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--ink);
@@ -113,8 +113,8 @@
   --destructive: var(--bad);
   --border: var(--line);
   --input: var(--line-strong);
-  --ring: #5b3df5;
-  --chart-1: #5b3df5;
+  --ring: #1558b8;
+  --chart-1: #1558b8;
   --chart-2: var(--ok);
   --chart-3: var(--warm);
   --chart-4: var(--pink);
@@ -127,12 +127,12 @@
   --failure-surface: var(--bad-soft);
   --sidebar: var(--surface);
   --sidebar-foreground: var(--ink-2);
-  --sidebar-primary: #5b3df5;
+  --sidebar-primary: #1558b8;
   --sidebar-primary-foreground: #fdfdfe;
   --sidebar-accent: var(--accent-soft);
   --sidebar-accent-foreground: var(--accent-ink);
   --sidebar-border: var(--line);
-  --sidebar-ring: #5b3df5;
+  --sidebar-ring: #1558b8;
   --radius: 0.625rem;
   --font-readout: "Geist Mono Variable", ui-monospace, monospace;
 }

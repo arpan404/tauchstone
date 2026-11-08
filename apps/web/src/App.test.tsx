@@ -8,6 +8,10 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 import { useUi } from "./store/ui";
+vi.mock("@/api/mvpHooks", async (orig) => ({
+  ...(await orig<typeof import("@/api/mvpHooks")>()),
+  useProjectCandidates: () => ({ data: undefined }),
+}));
 vi.mock("@/api/hooks", () => ({
   useMockStatus: () => true,
   useHealth: () => ({ data: { status: "ok", mock: true } }),

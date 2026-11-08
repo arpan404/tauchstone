@@ -17,7 +17,7 @@ const STYLE = `
 @media (prefers-reduced-motion: reduce){.tsg-pulse,.tsg-ring,.tsg-spin{animation:none}}
 `;
 
-/** Small blob cell for a hidden test: grey pending, violet pulsing next, amber running, green survive, coral fail. */
+/** Small blob cell for a hidden test: grey pending, blue pulsing next, amber running, green survive, coral fail. */
 export function TestCellGlyph(props: { state: 'pending' | 'next' | 'running' | 'survive' | 'fail'; size?: number }) {
   const { state, size = 40 } = props;
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, '');

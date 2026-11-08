@@ -81,7 +81,7 @@ export function buildCalibrationOption(
 ): Record<string, unknown> {
   const ink3 = token('--ink-3', '#6B7080');
   const line = token('--line', '#E2E4E9');
-  const accent = token('--primary', '#5B3DF5');
+  const accent = token('--primary', '#1558B8');
   const axis = {
     type: 'value',
     min: 0,

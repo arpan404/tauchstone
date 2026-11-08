@@ -5,6 +5,10 @@ import { useUi } from '@/store/ui';
 import { AttackView } from './AttackView';
 
 const mocks = vi.hoisted(() => ({ start: vi.fn(), run: vi.fn(), snapshot: null as unknown }));
+vi.mock("@/api/mvpHooks", async (orig) => ({
+  ...(await orig<typeof import("@/api/mvpHooks")>()),
+  useProjectCandidates: () => ({ data: undefined }),
+}));
 vi.mock('@/api/hooks', () => ({
   useMockStatus: () => false,
   useCandidates: () => ({ data: { candidates: [{ id: 'drug-a', name: 'Drug A' }, { id: 'drug-b', name: 'Drug B' }] } }),
@@ -36,7 +40,7 @@ function restore() {
 it('links the empty workspace to candidate selection without starting a session', () => {
   useUi.setState({ selectedCandidateId: null });
   render(<AttackView />);
-  fireEvent.click(screen.getByRole('button', { name: 'Choose candidate' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Browse candidates' }));
   expect(useUi.getState().step).toBe('candidates');
   expect(mocks.start).not.toHaveBeenCalled();
 });
