@@ -70,7 +70,7 @@
 :root {
   color-scheme: light;
   /* Tauchstone system tokens: see docs/design/system.md */
-  --canvas: #e4eaf6;
+  --canvas: #e9eef8;
   --surface: #ffffff;
   --surface-2: #f3f6fb;
   --line: #e4e8f1;
@@ -136,9 +136,9 @@
   --radius: 0.75rem;
   --font-readout: "Geist Mono Variable", ui-monospace, monospace;
   /* Atmosphere and glass (see docs/design/system.md, Nov 8 direction) */
-  --atmosphere: radial-gradient(1100px 640px at 88% -14%, #a6bcf1 0%, rgb(166 188 241 / 0) 62%),
-    radial-gradient(900px 600px at -12% 112%, #c3d2f7 0%, rgb(195 210 247 / 0) 60%),
-    radial-gradient(700px 500px at 45% 55%, #dfe7f8 0%, rgb(223 231 248 / 0) 70%), #e4eaf6;
+  /* An even, low-contrast wash: no visible blobs or corners. */
+  --atmosphere: radial-gradient(140% 90% at 70% 0%, #dbe4f7 0%, rgb(219 228 247 / 0) 70%),
+    radial-gradient(120% 90% at 0% 100%, #dfe6f6 0%, rgb(223 230 246 / 0) 70%), #e9eef8;
   --glass-bg: rgb(255 255 255 / 0.78);
   --glass-border: rgb(255 255 255 / 0.78);
   --glass-shadow: 0 1px 2px rgb(15 24 48 / 0.05), 0 20px 48px -18px rgb(30 60 140 / 0.28);

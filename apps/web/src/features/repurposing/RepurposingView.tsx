@@ -138,7 +138,7 @@ export function RepurposingView({
       <BoundaryBanner />
       <MockRibbon show={mock} />
       <div className="flex-1 px-6 pb-6">
-        <Toolbar className="sticky top-0 z-20 mb-0 min-h-14 flex-wrap gap-y-2 bg-canvas py-2 lg:h-14 lg:flex-nowrap lg:py-0">
+        <Toolbar className="sticky top-0 z-20 mb-0 min-h-14 flex-wrap gap-y-2 bg-[rgb(233_238_248/0.88)] py-2 backdrop-blur-xl lg:h-14 lg:flex-nowrap lg:py-0">
           <ToggleGroup
             multiple
             value={keys}
