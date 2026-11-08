@@ -6,10 +6,18 @@ import pandas as pd
 import pytest
 
 from pipelines.common.provenance import Provenance, sha256_file
-from pipelines.lincs.exploratory_model import COMPOUNDS, OUTPUT, RANKING, predict_candidate, train_model
+from pipelines.lincs.exploratory_compare import compare
+from pipelines.lincs.exploratory_model import (
+    COMPOUNDS,
+    OUTPUT,
+    RANKING,
+    RANKING_ALL,
+    predict_candidate,
+    train_model,
+)
 
 
-def fixture_data(root):
+def fixture_data(root, all_labels=False):
     smiles = ['CCO', 'OCC', 'CCC', 'CCCC', 'CCN', 'CCCl', 'CCBr', 'CCF', 'CCCO', 'CCCCO',
               'c1ccccc1', 'Cc1ccccc1', 'c1ccncc1', 'C1CCCCC1', None, 'invalid']
     ids = [f'c{i}' for i in range(len(smiles))]
@@ -22,6 +30,13 @@ def fixture_data(root):
     Provenance(step='lincs_rank_compounds', dataset_accession='synthetic', parameters={
         'standardisation': 'ranking-contexts-only', 'signature': 'GSE132903__main.parquet',
         'gold_only': True, 'permutation_rule_for_real': True}).write(ranking)
+    if all_labels:
+        # The real all-signature sidecar predates the gold flag, so the key is absent.
+        allsig = root / RANKING_ALL
+        pd.DataFrame({'pert_id': ids, 'consensus_median': [-i / 20 for i in range(len(ids))]}).to_parquet(allsig)
+        Provenance(step='lincs_rank_compounds', dataset_accession='synthetic', parameters={
+            'standardisation': 'ranking-contexts-only', 'signature': 'GSE132903__main.parquet',
+            'permutation_rule_for_real': True}).write(allsig)
 
 
 def test_training_split_provenance_and_allowlist(tmp_path, monkeypatch):
@@ -71,6 +86,48 @@ def test_rejects_modified_discovery_provenance(tmp_path):
     assert not (tmp_path / OUTPUT).exists()
 
 
+def test_all_labels_variant_is_separate_and_labelled(tmp_path):
+    fixture_data(tmp_path, all_labels=True)
+    elsewhere = tmp_path / 'candidates/all'
+    report = train_model(tmp_path, labels='all', output=elsewhere)
+    assert not (tmp_path / OUTPUT).exists()
+    assert report['labels'] == 'all' and report['preregistered'] is False
+    assert report['training_sources'][1] == RANKING_ALL
+    assert any('not preregistered' in line for line in report['limitations'])
+    rows = pd.read_parquet(elsewhere / 'predictions.parquet')
+    assert rows.consensus_median.max() <= 0  # labels came from the all-signature file
+    gold = train_model(tmp_path, output=tmp_path / 'candidates/gold')
+    assert gold['labels'] == 'gold' and gold['split']['seed'] == report['split']['seed']
+
+
+def test_label_provenance_must_match_choice(tmp_path):
+    fixture_data(tmp_path, all_labels=True)
+    # A gold-only ranking placed where the all-signature one belongs is rejected, and vice versa.
+    (tmp_path / RANKING_ALL).with_name(Path(RANKING_ALL).name + '.provenance.json').write_text(
+        (tmp_path / RANKING).with_name(Path(RANKING).name + '.provenance.json').read_text())
+    with pytest.raises(ValueError, match='provenance'):
+        train_model(tmp_path, labels='all', output=tmp_path / 'x')
+    with pytest.raises(ValueError, match='labels'):
+        train_model(tmp_path, labels='everything', output=tmp_path / 'x')
+
+
+def test_compare_uses_shared_held_out_compounds():
+    def frame(split, offset):
+        return pd.DataFrame({'pert_id': [f'c{i}' for i in range(8)], 'group': [f'g{i // 2}' for i in range(8)],
+                             'split': split, 'consensus_median': [i / 10 + offset for i in range(8)],
+                             'predicted': [i / 10 + offset + .05 for i in range(8)]})
+    test, train = 'internal_test_scaffold', 'train'
+    gold = frame([test, test, test, test, train, train, train, train], 0)
+    allsig = frame([test, test, train, train, test, test, train, train], .5)
+    result = compare(gold, allsig, n_boot=20)
+    assert result['shared_test']['n_compounds'] == 2 and result['shared_test']['n_groups'] == 1
+    assert result['own_test']['gold']['n_test'] == 4 and result['own_test']['all']['n_test'] == 4
+    shared = result['shared_test']['gold_labels']
+    assert shared['gold_model']['mae'] == pytest.approx(.05)
+    assert shared['all_model']['mae'] == pytest.approx(.55)
+    assert shared['all_minus_gold']['mae'] == pytest.approx(.5)
+
+
 @pytest.mark.data
 def test_real_discovery_input_metadata():
     import os
@@ -81,3 +138,6 @@ def test_real_discovery_input_metadata():
         pytest.skip('Discovery data unavailable')
     _, scores, _ = _inputs(root)
     assert len(scores) == 5690
+    if (root / RANKING_ALL).exists():
+        _, scores, _ = _inputs(root, 'all')
+        assert len(scores) == 16482

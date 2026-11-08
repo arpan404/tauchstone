@@ -25,14 +25,24 @@ from pipelines.common.provenance import Provenance, sha256_file
 
 COMPOUNDS = 'processed/lincs/compounds.parquet'
 RANKING = 'processed/scores/GSE132903__gold_permctl__compound_ranking.parquet'
+# Exploratory, not preregistered: the same discovery ranking computed over all LINCS
+# signatures in the ranking contexts (gold filter off). Produced by the permutation-control
+# work; it labels about 3x more compounds. It only ever supplies training labels here.
+RANKING_ALL = 'processed/scores/GSE132903__permctl__compound_ranking.parquet'
+LABELS = {'gold': RANKING, 'all': RANKING_ALL}
 OUTPUT = 'processed/models/exploratory'
 TASK = 'Predict discovery GSE132903 consensus_median from molecular structure only'
+LABEL_NOTE = {'gold': 'Labels: gold-signature GSE132903 ranking (same scores as the frozen ranking).',
+              'all': 'Labels: all-signature GSE132903 ranking. Exploratory, not preregistered; '
+                     'not the frozen ranking.'}
 FEATURES = {'type': 'Morgan', 'radius': 2, 'bits': 1024}
 PARAMETERS = {'n_estimators': 200, 'min_samples_leaf': 3, 'n_jobs': 2}
 
 
-def _inputs(data_dir):
-    paths = [Path(data_dir) / name for name in (COMPOUNDS, RANKING)]
+def _inputs(data_dir, labels='gold'):
+    if labels not in LABELS:
+        raise ValueError(f'labels must be one of {sorted(LABELS)}')
+    paths = [Path(data_dir) / name for name in (COMPOUNDS, LABELS[labels])]
     rank = paths[1]
     sidecar = rank.with_name(rank.name + '.provenance.json')
     record = json.loads(sidecar.read_text())
@@ -41,7 +51,7 @@ def _inputs(data_dir):
             or record.get('output_sha256') != sha256_file(rank)
             or params.get('standardisation') != 'ranking-contexts-only'
             or Path(params.get('signature', '')).name != 'GSE132903__main.parquet'
-            or params.get('gold_only') is not True
+            or bool(params.get('gold_only')) is not (labels == 'gold')
             or params.get('permutation_rule_for_real') is not True):
         raise ValueError('Discovery ranking provenance failed verification')
     compounds = pd.read_parquet(paths[0], columns=['pert_id', 'pert_iname', 'canonical_smiles'])
@@ -85,12 +95,16 @@ def _finite(value):
     return float(value) if np.isfinite(value) else None
 
 
-def train_model(data_dir: Path, algorithm='random_forest', seed=20261105) -> dict:
-    """Train fixed settings, persist local artifacts, return JSON-safe report."""
+def train_model(data_dir: Path, algorithm='random_forest', seed=20261105, labels='gold',
+                output: Path | None = None) -> dict:
+    """Train fixed settings, persist local artifacts, return JSON-safe report.
+
+    labels picks the ranking that supplies training labels ('gold' default, 'all' exploratory).
+    output overrides the artifact folder (default: the one the API serves)."""
     if algorithm != 'random_forest':
         raise ValueError('Only random_forest is supported')
     start = time.monotonic()
-    compounds, scores, checksums = _inputs(data_dir)
+    compounds, scores, checksums = _inputs(data_dir, labels)
     frame, x, excluded = _prepare(compounds, scores)
     train, test = next(GroupShuffleSplit(n_splits=1, test_size=.2, random_state=seed).split(
         x, groups=frame['group']))
@@ -111,26 +125,30 @@ def train_model(data_dir: Path, algorithm='random_forest', seed=20261105) -> dic
     packages = {p: version(p) for p in ['rdkit', 'scikit-learn', 'numpy', 'pandas', 'scipy', 'joblib', 'pyarrow']}
     provenance = Provenance(step='exploratory_structure_model', dataset_accession='GSE132903',
                             inputs=checksums, model=algorithm, random_seed=seed,
-                            sample_filter='Discovery ranking only; missing/invalid structures skipped',
+                            sample_filter=f'Discovery ranking only ({labels} signatures); '
+                                          'missing/invalid structures skipped',
                             validation_context='internal_test_scaffold; outside preregistered benchmark',
-                            parameters={'task': TASK, 'features': FEATURES, 'model': PARAMETERS,
+                            parameters={'task': TASK, 'labels': labels, 'preregistered': False,
+                                        'features': FEATURES, 'model': PARAMETERS,
                                         'split': split, 'packages': packages})
     report = {'run_id': str(uuid.uuid4()), 'created_at': provenance.timestamp, 'algorithm': algorithm,
-              'task': TASK, 'seed': seed, 'n_train': len(train), 'n_test': len(test),
+              'task': TASK, 'labels': labels, 'preregistered': False, 'seed': seed,
+              'n_train': len(train), 'n_test': len(test),
               'n_excluded': sum(excluded.values()), 'exclusion_counts': excluded, 'split': split,
               'feature_count': 1024, 'metrics': {
                   'mae': _finite(mean_absolute_error(y[test], predicted)),
                   'baseline_mae': _finite(mean_absolute_error(y[test], baseline.predict(x[test]))),
                   'r2': _finite(r2_score(y[test], predicted)), 'spearman': _finite(correlation)},
-              'training_sources': [COMPOUNDS, RANKING], 'provenance': asdict(provenance),
+              'training_sources': [COMPOUNDS, LABELS[labels]], 'provenance': asdict(provenance),
               'limitations': ['Exploratory chemical generalization only; no clinical interpretation.',
+                              LABEL_NOTE[labels],
                               'Predicts discovery reversal scores, not independent biological evidence.',
                               'One internal scaffold split; no hyperparameter search or external validation.',
                               'Does not replace official rankings or the preregistered benchmark.',
                               'Missing covariates remain unspecified; no covariates enter this model.',
                               'Related scaffolds may remain similar across groups; salts are not standardized.',
                               'Human scientific review remains required.']}
-    out = Path(data_dir) / OUTPUT
+    out = Path(output) if output is not None else Path(data_dir) / OUTPUT
     out.mkdir(parents=True, exist_ok=True)
     predictions = frame[['pert_id', 'pert_iname', 'canonical_structure', 'group', 'consensus_median']].copy()
     predictions['split'] = 'train'
@@ -171,5 +189,9 @@ def predict_candidate(data_dir: Path, candidate_id: str) -> dict:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--data-dir', type=Path, default=Path.home() / 'Data/tauchstone')
+    parser.add_argument('--labels', choices=sorted(LABELS), default='gold')
+    parser.add_argument('--output', type=Path, default=None,
+                        help='artifact folder (default: the one the API serves)')
     args = parser.parse_args()
-    print(json.dumps(train_model(args.data_dir), indent=2, allow_nan=False))
+    print(json.dumps(train_model(args.data_dir, labels=args.labels, output=args.output),
+                     indent=2, allow_nan=False))
