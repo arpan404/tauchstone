@@ -14,14 +14,16 @@ import { RepurposingView } from "./RepurposingView";
 
 beforeEach(() => {
   vi.stubEnv("VITE_USE_MOCK", "0");
-  useUi.setState({ selectedCandidateId: null, step: "candidates" });
+  useUi.setState({ selectedCandidateId: null, step: "candidates", compareIds: [] });
 });
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
 });
-function setup() {
+function setup(
+  patch: (body: ReturnType<typeof mockProjectCandidates>) => void = () => {},
+) {
   const urls: string[] = [];
   vi.stubGlobal(
     "fetch",
@@ -30,19 +32,17 @@ function setup() {
       if (url === "/api/health")
         return { ok: true, json: async () => ({ mock: true }) };
       const parsed = new URL(url, "http://localhost");
-      return {
-        ok: true,
-        json: async () =>
-          mockProjectCandidates(
-            "project-1",
-            Object.fromEntries(
-              [...parsed.searchParams].map(([key, value]) => [
-                key,
-                key === "min_contexts" ? Number(value) : value === "true",
-              ]),
-            ),
-          ),
-      };
+      const body = mockProjectCandidates(
+        "project-1",
+        Object.fromEntries(
+          [...parsed.searchParams].map(([key, value]) => [
+            key,
+            key === "min_contexts" ? Number(value) : value === "true",
+          ]),
+        ),
+      );
+      patch(body);
+      return { ok: true, json: async () => body };
     }),
   );
   render(
@@ -101,4 +101,42 @@ it("shows an empty state for combined filters without substituting unfiltered ro
   fireEvent.click(screen.getByRole("button", { name: "Brain-penetrant" }));
   expect(await screen.findByText("No candidates")).toBeTruthy();
   expect(screen.queryByText("Cholic acid")).toBeNull();
+});
+it("highlights the selected candidate and opens Compare from the compare bar", async () => {
+  useUi.setState({ selectedCandidateId: "MOCK-0003" });
+  setup();
+  const cholic = (await screen.findByText("Cholic acid")).closest("tr")!;
+  expect(cholic.getAttribute("aria-selected")).toBe("true");
+  expect(screen.queryByRole("region", { name: "Compare selection" })).toBeNull();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Compare Cholic acid" }));
+  const bar = screen.getByRole("region", { name: "Compare selection" });
+  expect(
+    within(bar).getByRole("button", { name: "Compare 1" }).hasAttribute("disabled"),
+  ).toBe(true);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Compare Busulfan" }));
+  expect(within(bar).getByText("Cholic acid, Busulfan")).toBeTruthy();
+  fireEvent.click(within(bar).getByRole("button", { name: "Compare 2" }));
+  expect(useUi.getState().step).toBe("compare");
+  expect(useUi.getState().compareIds).toEqual(["MOCK-0003", "MOCK-0006"]);
+});
+it("caps compare at four and clears the selection", async () => {
+  setup();
+  await screen.findByText("Cholic acid");
+  for (const name of ["Ticrynafen", "Nepafenac", "Cholic acid", "Bavisant"])
+    fireEvent.click(screen.getByRole("checkbox", { name: `Compare ${name}` }));
+  expect(useUi.getState().compareIds).toHaveLength(4);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Compare Busulfan" }));
+  expect(useUi.getState().compareIds).toHaveLength(4);
+  fireEvent.click(screen.getByRole("button", { name: "Clear compare" }));
+  expect(useUi.getState().compareIds).toEqual([]);
+});
+it("labels rows and tables that are not preregistered", async () => {
+  setup((body) => {
+    body.preregistered = false;
+    body.candidates[1].preregistered = false;
+  });
+  const nepafenac = (await screen.findByText("Nepafenac")).closest("tr")!;
+  expect(within(nepafenac).getByText("not preregistered")).toBeTruthy();
+  expect(screen.getAllByText("not preregistered")).toHaveLength(2);
+  expect(within(nepafenac).getByText("predicted penetrant")).toBeTruthy();
 });
