@@ -1,32 +1,33 @@
-# Tauchstone: Second Life — agent guide
+# Tauchstone: Second Life agent guide
 
-Research platform: rank existing drugs whose LINCS L1000 response reverses an Alzheimer's
-brain expression signature (Second Life), then try to falsify each candidate on held-out
-evidence under a fixed budget (Tauchstone). Expo is Mon Nov 9 2026; code freeze Sun Nov 8, 8 pm.
+Second Life ranks existing drugs by how strongly their LINCS L1000 response reverses an
+Alzheimer's brain expression signature. Tauchstone tries to falsify each candidate on held-out
+evidence under a fixed budget. The expo is Mon Nov 9 2026; code freezes Sun Nov 8 at 8 pm.
 
-## Rules that are not negotiable
+## Non-negotiable rules
 
-1. **No leakage.** Nothing from a held-out context (GSE173955, GSE53697, held-out LINCS
-   contexts, composition-adjusted ranks, exposure lookups) may feed signature construction,
-   drug ranking, threshold θ, λ tuning, or demo-candidate choice. If you are unsure whether
-   something is held-out, check `data/manifests/preregistration.yaml` and ask.
-2. **Never merge cohorts** into one test. Each cohort gets its own signature.
-3. **Sign convention:** signatures are AD minus control (positive = up in AD). A drug
-   reverses the disease when its score is negative. Check direction on known genes
-   (e.g. GFAP up, SST/VGF down in AD cortex) before trusting any output.
-4. **Join key is Entrez Gene ID, stored as a string** (LINCS uses Entrez). Carry HGNC
-   symbol and Ensembl as extra columns.
-5. **Every processed output gets provenance**: use `pipelines/common/provenance.py`
-   (Python) or write the same JSON fields from R. Record the random seed for anything random.
-6. **Missing covariates are recorded as `unspecified`, never imputed.**
-7. **No clinical language.** Verdicts are SUPPORTED SO FAR, FRAGILE / CONTEXT-DEPENDENT or
-   INSUFFICIENT EVIDENCE, never true/false, never "treats", "effective", "safe", "dose".
-   Brain exposure is always labelled measured / curated / predicted. A PDB structure is
-   target context, never binding evidence. The boundary sentence ("Research hypothesis only...")
-   is carried by the PDF report, not by every page: Arpan removed it from the app shell on
-   Nov 8 2026. Its wording is still fixed, and `tests/redteam/test_wording.py` is what keeps
-   clinical language out of the UI.
-8. **The truth table never reaches the browser** except one value per committed experiment.
+1. **Keep held-out data out.** Held-out means GSE173955, GSE53697, held-out LINCS contexts,
+   composition-adjusted ranks and exposure lookups. None of it may feed signature construction,
+   drug ranking, threshold θ, λ tuning or demo-candidate choice. If unsure, check
+   `data/manifests/preregistration.yaml` and ask.
+2. **Give each cohort its own signature.** Never merge cohorts into one test.
+3. **Signatures are AD minus control.** Positive means up in AD; a negative drug score means
+   reversal. Before trusting any output, check direction on known genes: GFAP up, SST and VGF
+   down in AD cortex.
+4. **Join genes on Entrez Gene ID, stored as a string.** LINCS uses Entrez. Carry HGNC symbol
+   and Ensembl as extra columns.
+5. **Write provenance for every processed output** with `pipelines/common/provenance.py`, or
+   the same JSON fields from R. Record the random seed for anything random.
+6. **Record missing covariates as `unspecified`.** Never impute them.
+7. **Write research language, never clinical language.**
+   - Verdicts are SUPPORTED SO FAR, FRAGILE / CONTEXT-DEPENDENT or INSUFFICIENT EVIDENCE.
+     Never true/false, never "treats", "effective", "safe", "dose".
+   - Label brain exposure measured / curated / predicted, every time.
+   - A PDB structure is target context, never binding evidence.
+   - The boundary sentence ("Research hypothesis only...") has fixed wording and appears in the
+     PDF report. Arpan removed it from the app shell on Nov 8 2026. `tests/redteam/test_wording.py`
+     keeps clinical language out of the UI.
+8. **Keep the truth table on the server.** The browser gets one value per committed experiment.
 
 ## Where things live
 
@@ -34,31 +35,31 @@ evidence under a fixed budget (Tauchstone). Expo is Mon Nov 9 2026; code freeze 
 |---|---|
 | `$TS_DATA_DIR` (default `~/Data/tauchstone`) | `raw/` downloads, `processed/` Parquet. Outside git, shared by all worktrees. Never commit data. |
 | `data/manifests/` | `sources.toml` (what to download), `checksums.json` (frozen SHA-256), `preregistration.yaml` |
-| `contracts/` | Parquet schemas, `openapi.yaml`, mock fixtures. Frozen before parallel work; change only via the engineering lead. |
+| `contracts/` | Parquet schemas, `openapi.yaml`, mock fixtures. Frozen before parallel work; only the engineering lead changes them. |
 | `pipelines/geo/` | WS2, R: QC, limma (arrays), DESeq2 (counts), composition sensitivity |
-| `pipelines/lincs/` | WS3, Python: GCTX ingest (`gctx.py`, h5py; cmapPy is broken on NumPy 2), reversal scores, contexts |
+| `pipelines/lincs/` | WS3, Python: GCTX ingest (`gctx.py` on h5py; cmapPy is broken on NumPy 2), reversal scores, contexts |
 | `pipelines/evidence/` | WS4: Open Targets, HPA, ChEMBL, PDB. Cache everything locally; nothing live at demo time. |
 | `pipelines/tauchstone/` | WS5: truth table, policies, replay benchmark, evaluation |
 | `services/api/app/` | WS6: FastAPI. `TS_API_MOCK=1` serves `contracts/fixtures`. |
-| `apps/web/src/features/` | WS7: React. One folder per feature. |
+| `apps/web/src/features/` | WS7: React, one folder per feature |
 | `tests/` | WS8: `leakage/`, `permutation/`, `api_contract/` |
 
 ## Commands
 
-`make help` lists everything. Common: `make setup`, `make data`, `make unpack-lincs`,
+`make help` lists everything. Common ones: `make setup`, `make data`, `make unpack-lincs`,
 `make test`, `make test-r`, `make lint`, `make dev` (API :8000 + web :5173).
 
 - Python: `uv run ...` (Python 3.12, deps pinned in `uv.lock`). Add deps with `uv add`.
 - R: run `Rscript` from the repo root so `.Rprofile` activates renv. Add packages with
-  `renv::install()` then `renv::snapshot()`. If conda is on PATH, native R builds break;
+  `renv::install()`, then `renv::snapshot()`. Conda on PATH breaks native R builds;
   `scripts/setup_r.R` strips it.
-- Web: `cd apps/web && bun ...`. UI components via `bunx shadcn@latest add <name>`.
+- Web: `cd apps/web && bun ...`. Add UI components with `bunx shadcn@latest add <name>`.
 
 ## Working as a workstream agent
 
-- Stay inside your workstream's folder. Do not edit another workstream's files or `contracts/`;
-  if the contract is wrong, say so in your summary.
-- One branch per workstream; only the engineering lead merges.
-- Write tests next to what you build. Tests that need real data use `@pytest.mark.data`.
-- Report what you could not verify, especially anything scientific. A human signs off on
-  every signature, threshold and claim wording.
+- Edit only your workstream's folder. Leave other workstreams' files and `contracts/` alone;
+  if a contract is wrong, say so in your summary.
+- One branch per workstream. Only the engineering lead merges.
+- Write tests next to the code they cover. Mark tests that need real data `@pytest.mark.data`.
+- Report what you couldn't verify, especially anything scientific. A human signs off on every
+  signature, threshold and claim wording.
