@@ -23,7 +23,7 @@ The API tests cover malicious repository fields, forbidden attack-world access, 
 
 ## Run locally
 
-Start the local language-model server with `ollama serve`, then install the configured model once with `ollama pull qwen3:4b`. Model weights stay outside the repository. Start the application with `make dev`, select a candidate and open **AI lab**. When local inference is unavailable, the copilot says it fell back to evidence search. The **Model studio** tab can train or retrain from the existing discovery inputs and download the resulting report.
+Start the local language-model server with `ollama serve`, then install the configured model once with `ollama pull qwen3:4b`. Model weights stay outside the repository. Start the application with `make dev`. The AI lab page was removed on Nov 8; the structure model now shows up as the AI estimate column on My compounds, with its test numbers under "About this estimate". The `/lab/chat` and `/lab/model` endpoints still exist for that column and for scripted use.
 
 The trained model artifacts live in `$TS_DATA_DIR/processed/models/exploratory/`, outside git. Training needs the primary gold discovery ranking and the LINCS compound structures to be on the data machine already. If an artifact is missing, training shows an error instead of producing synthetic results. The first completed run on this machine used 4,510 training compounds and 1,123 internal test compounds, and excluded 57 invalid or missing structures. This is an exploratory evaluation with limited predictive signal and no external validation.
 

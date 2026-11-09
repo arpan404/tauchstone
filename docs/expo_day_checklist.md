@@ -22,7 +22,7 @@
 
 1. **Projects** → Alzheimer's · middle temporal gyrus.
 2. **Screen** → GSE132903 → Run screen. It scores 113,310 gold signatures in about 10 s, and the top hits stream in.
-   To show an upload, drop in `example_signature.csv`. It ranks as *not preregistered*.
+   To show an upload, drop in `example_signature.csv`. It is labelled *Exploratory*.
 3. **Candidates** → toggle Brain-cell data / Brain-penetrant, tick three rows → **Compare**.
 4. **Drug** → open a candidate: gaps (cancer lines only, single concentration, acute time point,
    brain exposure measured/curated/predicted), 3D molecule, context map, resource agreement.
@@ -36,8 +36,8 @@
 - Verdicts: SUPPORTED SO FAR, FRAGILE / CONTEXT-DEPENDENT, INSUFFICIENT EVIDENCE.
 - Brain exposure is always labelled measured, curated or predicted. A structure is target
   context, never binding evidence.
-- Ad-hoc tests, uploads and resource agreement (Perturb-Seqr, CLUE) are not preregistered.
-- The boundary line stays visible in the footer of every page.
+- Ad-hoc tests, uploads and resource agreement (Perturb-Seqr, CLUE) are labelled Exploratory: they were added after the preregistration froze.
+- The boundary sentence is printed in every PDF report. The app shell no longer shows it.
 
 ## If something breaks
 

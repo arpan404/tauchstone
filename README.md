@@ -90,7 +90,7 @@ These screenshots show real data (GSE132903, 1,816 ranked drugs) at 1600×1000. 
 | **Report (PDF export)** | **Validation (frozen benchmark)** |
 | ![Report](docs/figures/mvp-report.png) | ![Validation](docs/figures/mvp-validation.png) |
 
-Uploads, ad-hoc tests and resource agreement are labelled *not preregistered*. The [integrity log](docs/integrity_log.md) records each one.
+Uploads, ad-hoc tests and resource agreement are labelled *Exploratory*. The [integrity log](docs/integrity_log.md) records each one.
 
 ## What it claims, and what it doesn't
 
