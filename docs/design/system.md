@@ -1,14 +1,15 @@
 # Tauchstone UI system (Nov 8 redesign)
 
-Binding for every view. The goal: the app reads as one precise lab instrument, not a website.
-AGENTS.md rules still win (no clinical language, measured/curated/predicted labels,
-"Exploratory" labels on anything outside the preregistration, no hidden outcomes before a committed experiment).
+Every view follows this. The app should read as one precise lab instrument, not a website.
+AGENTS.md rules still win: no clinical language, measured/curated/predicted labels,
+"Exploratory" labels on anything outside the preregistration, no hidden outcomes before a committed experiment.
 
 ## Design read
 
-Product UI for a drug-repurposing research instrument. Audience: computational biologists, and
-expo judges looking from one to three metres away. Language: plate reader / sequencer software.
-Calm chrome, dense and exact data, one accent. Dials: variance 4, motion 4, density 6.
+This is product UI for a drug-repurposing research instrument. The audience is computational
+biologists, plus expo judges looking from one to three metres away. The visual language is plate
+reader and sequencer software, with calm chrome, dense and exact data and one accent. Dials:
+variance 4, motion 4, density 6.
 
 ## Tokens (defined in `apps/web/src/index.css`; never hard-code hex in views)
 
@@ -73,12 +74,12 @@ The page title lives in the top bar. Views never render their own page title.
 
 ## Shared components (`src/components/system/`, import from `@/components/system`)
 
-- `Panel` (title?, actions?, children, flush?) : the only container.
+- `Panel` (title?, actions?, children, flush?) is the only container.
 - `StatusBadge` tones: `neutral | accent | ok | bad | gap`. Short labels only (max 4 words). Legacy `Chip` from `@/components/mvp` now renders it.
-- `Readout` (label, value, unit?, size `sm|md|lg|xl`, tone?) : mono value over a 12px label.
-- `PlateMap` : 16×24 well plate; the signature element. On Screen it shows progress only (1 well ≈ 295 gold signatures in scoring order). Never place drugs or hits on wells: a well is not a drug.
-- `EmptyState` (icon, title, action?) : one line plus one action. No paragraphs.
-- `Toolbar` : row of filters/actions above a table.
+- `Readout` (label, value, unit?, size `sm|md|lg|xl`, tone?) shows a mono value over a 12px label.
+- `PlateMap` is a 16×24 well plate and the signature element. On Screen it shows progress only (1 well ≈ 295 gold signatures in scoring order). Never place drugs or hits on wells. A well is not a drug.
+- `EmptyState` (icon, title, action?) is one line plus one action. No paragraphs.
+- `Toolbar` is a row of filters/actions above a table.
 - shadcn primitives in `src/components/ui/` (Button, Table, Tabs, Tooltip, Select, Dialog,
   Checkbox, Skeleton, ToggleGroup, Sonner). Customise through tokens, never inline colours.
 - Icons: **Phosphor** (`@phosphor-icons/react`), weight `regular` at 16px, `fill` only for
@@ -91,12 +92,14 @@ The page title lives in the top bar. Views never render their own page title.
 
 - Labels, not sentences. If a string explains how the system works, delete it. If a user needs
   it to act, make it a label, tooltip or empty state.
-- Keep, verbatim where they exist: the boundary text in the PDF report, the `Exploratory` label (renamed from "not preregistered" on Nov 8; same meaning, same tooltip),
+- Keep these verbatim where they exist: the boundary text in the PDF report, the `Exploratory` label,
   `measured / curated / predicted` exposure labels, verdict names (SUPPORTED SO FAR,
   FRAGILE / CONTEXT-DEPENDENT, INSUFFICIENT EVIDENCE), `Report only` on resource agreement.
+  The `Exploratory` label was renamed from "not preregistered" on Nov 8 and keeps the same
+  meaning and tooltip.
 - No em dashes or en dashes in visible text. Use `·` at most once per line; prefer columns.
 - Sentence case. Buttons say what happens: "Run screen", "Commit & run test", "Download PDF".
-- Loading states are skeletons shaped like the content. Errors: what failed plus Retry.
+- Loading states are skeletons shaped like the content. Errors say what failed and offer Retry.
 
 ## Quality floor
 
@@ -105,7 +108,7 @@ to one column under 768px, `prefers-reduced-motion` respected, tests updated not
 
 ## Nov 8 direction: atmosphere and glass (supersedes the boxed look above)
 
-Approved by Arpan from a mockup inspired by Chai Discovery, Benchling and Recursion. Where this
+Arpan approved this from a mockup inspired by Chai Discovery, Benchling and Recursion. Where this
 section conflicts with the sections above, this section wins.
 
 - **Atmosphere.** The app background is an even, low-contrast blue wash (`atmosphere` on the
@@ -117,18 +120,18 @@ section conflicts with the sections above, this section wins.
   dashed boxes, no hairline-boxed tables. Empty cells and wells are soft tinted fills
   (`bg-ink/[0.035]`, rounded 8px). Radius: 18px panels, 12px inner tiles and rows, pills for
   tags and buttons.
-- **A hero per page.** Each page opens with one hero `glass` panel: mono id or eyebrow line,
+- **A hero per page.** Each page opens with one hero `glass` panel. It holds a mono id or eyebrow line,
   a large light title (40-48px, weight 400, tracking -0.035em, `font-heading`), pill tags, the
   page's key number as a large light accent readout (`text-primary`, 48-58px mono), and the
   page's actions as pill buttons on the right (primary = dark ink `Button` default, others
   `outline`). Where the page has a natural visual (molecule, plate, belief gauge, policy plot),
-  it sits in the hero; a soft blurred copy behind it is allowed only if it stays subtle (no coloured blobs).
+  it sits in the hero. A soft blurred copy behind it is allowed only if it stays subtle, with no coloured blobs.
 - **Icons.** Phosphor everywhere it helps scanning: a soft icon chip before every panel title
   (`Panel icon`), a leading icon on every button, small icons on stat labels and on meaningful
   tags (exposure, brain cells, withdrawn, Exploratory), icons in empty states. Weight
   `regular` (16-18px); `fill` only for the active state; `duotone` allowed in hero chips.
-- **Tables.** Inside `glass`, flush. Header row is quiet 11.5px ink-3. Rows have no hard lines:
-  rounded 12px rows; hover = `bg-primary/6`; selected = `bg-primary/10 ring-1 ring-primary/25`
+- **Tables.** Tables sit flush inside `glass`. The header row is quiet 11.5px ink-3. Rows have no hard lines.
+  Each row is rounded 12px. Hover = `bg-primary/6`; selected = `bg-primary/10 ring-1 ring-primary/25`
   with ink text. Numbers mono.
 - **Contrast and depth (Arpan, Nov 8).** States must be unmistakable at a glance, and the UI keeps
   a 3D feel without drop shadows on states:
@@ -151,7 +154,7 @@ section conflicts with the sections above, this section wins.
 
 Light is the default; the top-bar switch offers Light, Dark and Match system (stored as `ts-theme`
 in localStorage, applied before paint by the script in `index.html`). Dark is neutral black, not
-navy, with the same single blue accent. Never hard-code white for tiles: use `bg-frost/N`,
+navy, with the same single blue accent. Never hard-code white for tiles. Use `bg-frost/N`,
 `ring-rim/N`, `border-rim/N` (white in light mode, grey in dark) and `text-on-ink` on `bg-ink`.
 `bg-white` and `text-white` are only for content sitting on the blue selected pill and for the
 report paper preview, which stays white like the PDF. Canvas views read the theme through

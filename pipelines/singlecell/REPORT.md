@@ -1,6 +1,6 @@
 # Real exploratory run report
 
-Runtime 65.96 seconds. 13 fitted signatures; 11 insufficient-donor signatures. GSE272082 starts with 3 control and 3 sEOAD donors per region; inferred donor IDs and platform exclusions are documented in README. GSE175814 starts with 2 per group. Counts below follow QC and the 20-nucleus pseudobulk gate.
+The run took 65.96 seconds and produced 13 fitted signatures and 11 insufficient-donor signatures. GSE272082 starts with 3 control and 3 sEOAD donors per region. The README documents the inferred donor IDs and platform exclusions. GSE175814 starts with 2 per group. The counts below are after QC and the 20-nucleus pseudobulk gate.
 
 | Signature | Control / AD donors | Nuclei | FDR < 0.05 genes |
 | --- | --- | --- | --- |
@@ -29,9 +29,9 @@ Runtime 65.96 seconds. 13 fitted signatures; 11 insufficient-donor signatures. G
 | GSE175814|oligodendrocytes | 2 / 2 | 5832 | not fitted |
 | GSE175814|opc | 2 / 2 | 1395 | not fitted |
 
-Astrocyte GFAP is positive in PFC, EC and HIP: t=4.82/3.42/0.26 and FDR=0.213/0.216/0.963. PFC inhibitory SST and VGF are negative, FDR=0.021/0.015. These descriptive sign checks agree with contrast direction, without validating annotation or a general disease pattern. Twelve queries use the FDR fallback.
+Astrocyte GFAP is positive in PFC, EC and HIP, with t=4.82/3.42/0.26 and FDR=0.213/0.216/0.963. PFC inhibitory SST and VGF are negative, with FDR=0.021/0.015. These descriptive sign checks agree with the contrast direction. They do not validate the annotation or show a general disease pattern. Twelve queries use the FDR fallback.
 
-The 20 drugs have mixed directions across fitted signatures. Negative consensus indicates expression reversal only. No candidate selection or benchmark conclusion follows.
+The 20 drugs have mixed directions across fitted signatures. A negative consensus indicates expression reversal only. No candidate selection or benchmark conclusion follows from it.
 
 | Pool rank | Compound | Negative consensus / 13 |
 | --- | --- | --- |
@@ -59,10 +59,10 @@ The 20 drugs have mixed directions across fitted signatures. Negative consensus 
 ## Verification
 
 - Final make test: 172 passed, 5 skipped; web typecheck passed.
-- Singlecell real-output tests: 6 passed. Data-marked suite: 32 passed, 1 skipped before panel generation; panel test subsequently passed.
-- make test-r: 37 passed; existing SummarizedExperiment import replacement warning.
-- Web install, build, typecheck, lint, test and check:api passed, 48 tests. Existing lint and Vite warnings remain.
-- Real API on port 8200: HTTP 200, 24 signatures and 20 drugs. Server stopped after verification.
+- Singlecell real-output tests: 6 passed. Data-marked suite: 32 passed and 1 skipped before panel generation. The panel test passed after that.
+- make test-r: 37 passed, with the existing SummarizedExperiment import replacement warning.
+- Web install, build, typecheck, lint, test and check:api passed, with 48 tests. Existing lint and Vite warnings remain.
+- Real API on port 8200: HTTP 200, 24 signatures and 20 drugs. The server was stopped after the check.
 - No frozen files or contracts changed. No data committed.
 
-Human scientific sign-off remains required for inferred donor IDs, marker annotation, thresholds and claim wording. Small sample sizes, crude marker typing and unmodelled covariates limit interpretation. Results are exploratory, not part of the preregistered benchmark.
+Inferred donor IDs, marker annotation, thresholds and claim wording still need human scientific sign-off. Small sample sizes, crude marker typing and unmodelled covariates limit interpretation. These results are exploratory and not part of the preregistered benchmark.
