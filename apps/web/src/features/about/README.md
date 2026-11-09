@@ -24,13 +24,3 @@ Open http://localhost:5177/src/features/about/dev.html directly. Until integrati
 Benchmark values and the serving preregistration hash come from useBenchmark. MockRibbon reads both server health and result provenance. If an API response is missing, the panel does not fill it with frozen headline values. integrity.ts holds a verbatim copy of the historical integrity log, which the panel renders as a timeline with the original result summary and permutation definitions below it. A test checks that copy against docs/integrity_log.md. The frozen-record hash is separate from the API hash. If they differ outside mock mode, the panel shows an alert.
 
 The standalone dev.html is a Vite development entry, not a production route. About appears in the production app only after the orchestrator imports it into the navigation.
-
-## Review evidence
-
-Screenshots use the in-browser mock and are labelled synthetic on screen:
-
-- [1280 × 800 pipeline and benchmark](screenshots/about-1280.jpg)
-- [1920 × 1080 limitations, hash and timeline](screenshots/about-integrity-1920.jpg)
-- [390 × 844 mobile pipeline](screenshots/about-mobile.jpg)
-
-The README's real-data screenshot paths are still placeholders for Arpan's Mac. No real-data scientific result or offline bundle was verified here.
