@@ -1,4 +1,4 @@
-# Tauchstone: Second Life — plan for the remaining work (parallel agents)
+# Plan for the remaining work on Tauchstone: Second Life (parallel agents)
 
 > **Superseded by [`mvp_plan.md`](mvp_plan.md)** (Nov 7). Kept for history.
 
@@ -8,8 +8,8 @@ Expo: **Mon Nov 9**. Code freeze: **Sun Nov 8, 8 pm**. This file is the brief fo
 
 A website a judge drives in 3 minutes.
 
-1. **Second Life (find):** a real Alzheimer's brain signature (195 human brains, GSE132903). Every LINCS
-   drug is scored for how strongly it pushes that signature the other way. The result is a ranked list
+1. **Second Life (find):** a real Alzheimer's brain signature (195 human brains, GSE132903). The pipeline
+   scores every LINCS drug by how strongly it pushes that signature the other way. The result is a ranked list
    of 1,816 drugs that have been tested in humans, each with an evidence card: targets, brain
    expression, AD association, approval status, brain exposure and a 3D target structure.
 2. **Tauchstone (attack):** for a chosen drug, the system picks the hidden test most likely to break
@@ -33,8 +33,8 @@ before anyone pays to test them."*
 | Offline Docker bundle | `make demo`, `make up`, `scripts/offline_check.sh`, `docs/offline.md` |
 | QA / red team, integrity log | `docs/qa_report.md`, `docs/integrity_log.md`, 169 tests |
 
-**Frozen, do not change:** the preregistration, the truth table, the benchmark results, and the
-science rules in `contracts/algorithms.md`. The remaining work is presentation, polish and checks.
+The preregistration, the truth table, the benchmark results and the science rules in
+`contracts/algorithms.md` are frozen. Do not change them. The remaining work is presentation, polish and checks.
 A science change now invalidates the benchmark.
 
 ## Rules for every agent
@@ -75,7 +75,7 @@ Timeline:
 - **Sat evening:** UI freeze. S6 records the fallback video on Arpan's Mac with real data.
 - **Sun:** human rehearsal with Wi-Fi off. Code freeze at 8 pm.
 
-**Data on Rijan's Mac:** there is no real data there, so UI tracks build against mock mode
+Rijan's Mac has no real data, so UI tracks build against mock mode
 (`TS_API_MOCK=1 make api` + `VITE_USE_MOCK=0 bun run dev`, or `VITE_USE_MOCK=1`). The orchestrator on
 Arpan's Mac checks every branch against real data (`TS_API_MOCK=0`) before merging.
 
@@ -93,7 +93,7 @@ Common to every brief: read `AGENTS.md` and `docs/parallel_plan.md`, stay in you
 every existing test green, don't touch `App.tsx` (S1 excepted), push your branch to `origin`,
 and open a PR to `main` with screenshots for UI work and anything you could not verify.
 
-### S1 — Lab-instrument restyle
+### S1. Lab-instrument restyle
 
 > Restyle the Tauchstone: Second Life web app (`apps/web`; React 19, Vite 8, Tailwind v4, shadcn/ui,
 > ECharts, Mol*) as a credible **lab instrument** on an expo monitor seen from 3 m:
@@ -113,7 +113,7 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 > - Check at 1280×800 and 1920×1080. Done = build, typecheck, lint, test and check:api pass, plus
 >   screenshots of all 5 views.
 
-### S2 — 3D expo scene
+### S2. 3D expo scene
 
 > In `apps/web/src/features/expo-scene/`, build an optional full-screen **expo mode** with Three.js (add
 > only `three` and `@types/three`). Export one lazily loaded component `<ExpoScene onClose />`; the
@@ -129,7 +129,7 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 >   It must work offline.
 > - Done = a full attack runs inside the scene on mock data, with a short recording in the PR.
 
-### S3 — Story mode and landing screen
+### S3. Story mode and landing screen
 
 > The website is the pitch, so there is no slide deck. Build two new screens:
 > - **(a)** `apps/web/src/features/landing/`: one screen.
@@ -155,7 +155,7 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 >   store fields, add them in `src/store/story.ts`.
 > - Done = the tour runs end to end on mock data, with a recording in the PR.
 
-### S4 — Science loose ends (Arpan's Mac, real data)
+### S4. Science loose ends (Arpan's Mac, real data)
 
 > Without changing any frozen output (truth table, benchmark, preregistration):
 > - **(A)** The two flagged exposure rows, locked as xfail in `tests/redteam/test_exposure_bounds.py`:
@@ -169,7 +169,7 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 >   report the Spearman correlation between CLUE tau and our consensus for overlapping top-50
 >   compounds. Report only.
 
-### S5 — README and in-site "How it works"
+### S5. README and in-site "How it works"
 
 > - Rewrite `README.md` for judges:
 >   - what it does in 5 lines, plus screenshots (Arpan's Mac can provide them after S1)
@@ -179,11 +179,11 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 > - Also build `apps/web/src/features/about/`: an in-site "How it works and how we kept it honest"
 >   panel, exporting `<About />`. It contains a pipeline diagram and the integrity log as a readable
 >   timeline (render `docs/integrity_log.md` content, copied into a TS module), the preregistration
->   hash, and the honest limitations: the permutation gate not met at 17/20; the top 5 not beyond the
+>   hash, and the limitations: the permutation gate not met at 17/20; the top 5 not beyond the
 >   null; the decision-aware co-primary not beating random.
-> - Use only claims as the docs state them.
+> - State each claim only as the docs state it.
 
-### S6 — Reliability and fallback
+### S6. Reliability and fallback
 
 > - **(A)** `tests/e2e/demo_walkthrough.spec.ts` (Playwright): drives the 3-minute demo against the
 >   Docker stack (`make up`): volcano, ranking, Piperacillin evidence with Mol*, attack with two
@@ -195,7 +195,7 @@ and open a PR to `main` with screenshots for UI work and anything you could not 
 >   images to `~/Data/tauchstone/expo/expo-images.tar.gz`, and write a checksum manifest.
 > - **(C)** A one-page `docs/expo_day_checklist.md`.
 
-### S7 — Optional single-cell exploratory panel
+### S7. Optional single-cell exploratory panel
 
 > Only start if S1–S6 are on track. Build pseudobulk per donor and cell type from GSE272082 and
 > GSE175814, run limma-voom AD vs control per cell type, and score the top 20 pool drugs against each.

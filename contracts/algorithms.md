@@ -15,7 +15,7 @@ Global conventions
 
 ## 1. Disease signatures (WS2, R)
 
-Per cohort, separately; cohorts are never merged.
+Each cohort is processed separately; cohorts are never merged.
 
 | Cohort | Role | Input | Method |
 |---|---|---|---|
@@ -25,8 +25,8 @@ Per cohort, separately; cohorts are never merged.
 
 1. **Labels.** `group = factor(levels = c("control", "AD"))`; coefficient `groupAD`. Assert the
    expected counts (97/98, 9/8, 8/10) or stop.
-2. **Covariates** age, sex, PMI, RIN, batch: use one only if present for every included sample;
-   otherwise record it as `unspecified`. Never impute, never drop samples to fit a covariate.
+2. **Covariates.** Age, sex, PMI, RIN and batch. Use one only if it is present for every included
+   sample; otherwise record it as `unspecified`. Never impute, never drop samples to fit a covariate.
    Design `~ <covariates> + group`.
 3. **Gene mapping.** Arrays: probes with exactly one Entrez ID in GPL10558 annot; collapse to the
    probe with the highest mean. TPM table: symbol → Entrez via org.Hs.eg.db SYMBOL, then ALIAS
@@ -42,12 +42,12 @@ Per cohort, separately; cohorts are never merged.
    (perm_id, entrez_id, stat).
 8. **Sign check** on GFAP, CD44, SERPINA3 (expect up) and SST, VGF, NPTX2, BDNF (expect down);
    ≥ 5/7 must match in GSE132903 before anything downstream is trusted.
-9. **Reproduction**: Spearman ρ of `stat` between GSE132903 and each held-out cohort. Report only.
+9. **Reproduction.** Spearman ρ of `stat` between GSE132903 and each held-out cohort. Report only.
 
 ### 1b. Cell-composition sensitivity (Tier 2, WS2)
 
 Marker sets (prereg): neuron, astrocyte, microglia, oligodendrocyte, from a published brain cell-type
-marker list. The list and version are recorded in provenance. Per sample, score = mean of
+marker list. Provenance records the list and version. Per sample, score = mean of
 row-z-scored log expression over the set's genes present. Refit the GSE132903 model with
 the four scores added as covariates → `GSE132903__composition_adjusted.parquet` (same columns).
 
@@ -69,7 +69,7 @@ fdr < 0.05 and stat < 0. Ties broken by p_value, then entrez_id. If either set h
 genes, use the top 150 by stat ignoring FDR and flag it. The permutation control uses the top-150
 rule for both the real and the permuted queries.
 
-**Precompute once:** `order = argsort(-X, axis=1)` and its inverse, `rank`, both int16, cached as `.npy`.
+**Precompute once.** `order = argsort(-X, axis=1)` and its inverse, `rank`, both int16, cached as `.npy`.
 
 **wtcs** (CMap weighted connectivity, Subramanian 2017). For set S (n genes) in row i, walk the
 genes in `order`:
@@ -97,8 +97,8 @@ Compound score = median over ranking contexts, with IQR. A compound is ranked on
 
 **Permutation control.** Run the full pipeline per permuted query. For each of the top 50,
 p_perm = (1 + #perms with score ≤ real score) / 201. The control passes if every top-20 compound has
-p_perm < 0.05. **θ** (prereg) = **25th** percentile (5th, 10th and 25th are all recorded) of the pooled ranking-context consensus across all
-permutations.
+p_perm < 0.05. **θ** (prereg) = **25th** percentile of the pooled ranking-context consensus across all
+permutations. The 5th, 10th and 25th percentiles are all recorded.
 
 **Candidate pool** (prereg). Only compounds with a clinical history can be Tauchstone candidates.
 LINCS compounds are matched to Open Targets 26.09 `drug_molecule` by full InChIKey, or else by the
@@ -109,10 +109,10 @@ development pool is eligible ranks 51–100, and the demo candidates are eligibl
 
 **Signature set** (prereg). Only LINCS gold signatures are used: distil_cc_q75 ≥ 0.2,
 0 ≤ pct_self_rank_q25 ≤ 5 and ≥ 2 replicates (Subramanian et al. 2017). That leaves 113,310 of 312,438
-signatures and 5,690 rankable compounds. They are used for scaling, aggregation, held-out contexts and
-permutations. History, disclosed: the first run used all signatures. In the clinical pool, 0 of the
+signatures and 5,690 rankable compounds. Scaling, aggregation, held-out contexts and permutations
+all use them. For the record, the first run used all signatures. In the clinical pool, 0 of the
 top 20 ranked compounds were more extreme than the shuffled-label null at the same rank, against 15/20
-with gold only. Neither run passes the strict "all top 20 at p < 0.05" gate (14/20 vs 17/20), and that
+with gold only. Neither run passes the strict "all top 20 at p < 0.05" gate (14/20 vs 17/20). This
 is reported as is.
 
 **Known-positive check.** Compounds reported in prior AD CMap papers should rank above the median.
@@ -145,18 +145,18 @@ with 0% undecided before testing, so no strategy could matter. On the developmen
 
 The chosen rule is top 25% (θ = 25th percentile of the null) with q = 0.7. With the median of 4 hidden
 tests, a drug with no effect satisfies the claim about 5% of the time (P(≥ 3 of 4) at 0.25 ≈ 0.051).
-The benchmark pool was not looked at.
+Nobody looked at the benchmark pool.
 
-**Cohort QC gate** (prereg; decided on signature quality before any candidate outcome was computed):
-a held-out cohort enters S_d only if its gene-level statistics agree with the primary signature,
+**Cohort QC gate** (prereg; decided on signature quality before any candidate outcome was computed).
+A held-out cohort enters S_d only if its gene-level statistics agree with the primary signature,
 with Spearman ρ ≥ 0.2 over shared genes. GSE173955 passes (ρ = 0.50). GSE53697 fails (ρ = −0.002), so it
 is reported in the reproduction table but is not a hidden test.
 
-History, disclosed: the first gate was "≥ 100 genes at FDR < 0.05". GSE173955 first appeared to
+For the record, the first gate was "≥ 100 genes at FDR < 0.05". GSE173955 first appeared to
 pass with 2,182 such genes, but that was a TPM compositional artifact (98% of genes "down"). After
 quantile normalization of log2(TPM+1) it has 0 such genes, so the first gate would have excluded every
-held-out cohort. With the person's sign-off, the gate was replaced by the correlation gate above,
-before any truth-table outcome was computed. Queries built from a held-out cohort use the top-150 rule
+held-out cohort. With the person's sign-off, the correlation gate above replaced it before any
+truth-table outcome was computed. Queries built from a held-out cohort use the top-150 rule
 when fewer than 10 genes pass FDR < 0.05 (§2).
 
 Row schema (`processed/tauchstone/truth_table.parquet`): candidate_id, context_id, context_type,
@@ -181,13 +181,13 @@ survivals needed.
   Cap at 1.
 - Different type: 0.1.
 
-**P(survive | x, D)**: a similarity-weighted Beta posterior.
+**P(survive | x, D)** is a similarity-weighted Beta posterior.
 
 - Prior per type: Beta(κ·m_t, κ·(1 − m_t)) with κ = 2. m_t is the survive rate of type t among
   development candidates (prereg). Use m_t = 0.5 if a type has no development data.
 - α_x = κ·m_t + Σ_c w(x,c)·y_c and β_x = κ·(1 − m_t) + Σ_c w(x,c)·(1 − y_c), summed over everything
   observed (ranking contexts) and revealed so far.
-- The ranking contexts' total weight is capped at 4 per hidden x: if their Σw exceeds 4, scale those
+- The ranking contexts' total weight is capped at 4 per hidden x. If their Σw exceeds 4, scale those
   weights by 4/Σw. Without this, dozens of ranking contexts swamp the prior. Revealed contexts are
   never scaled.
 - p_x = α_x / (α_x + β_x).
