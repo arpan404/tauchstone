@@ -40,7 +40,8 @@ posterior, Attack/Learn policies, the replay benchmark and calibration. Output g
    "Most likely to break the claim: 62% chance this test fails."
 8. Benchmark paired tests use per-candidate seed-means of
    `experiments_to_correct_verdict` (the spec's "the metric"), Holm-corrected
-   over the five hybrid-vs-other comparisons.
+   over 10 comparisons: each of the two co-primary policies against each of the
+   five baselines (see item 18).
 9. The fragile-recall CI skips cluster-bootstrap reps that draw zero fragile
    candidates. This can only happen in tiny test worlds.
 10. `select_lambda` uses 5 dev seeds `[20261105..20261109]`, and ties break toward

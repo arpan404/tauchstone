@@ -14,8 +14,8 @@ Changes go through the engineering lead.
 2. **GSE53697** counts are partly non-integer. The pipeline rounds them before DESeq2 and logs the rounding.
 3. **LINCS context split.** 30% of each compound's contexts are held out (always leaving ≥ 3 for
    ranking, seed 20261105). They never enter the ranking, the score scaling or θ.
-4. **Survive rules** are set per context type (algorithms.md §3). Signature-type contexts use a top-5%
-   rule, LINCS contexts use consensus ≤ θ, and brain exposure uses a threshold on measured evidence.
+4. **Survive rules** are set per context type (algorithms.md §3). Signature-type contexts use a top-25%
+   rule (`top_25pct_compounds` in the preregistration), LINCS contexts use consensus ≤ θ, and brain exposure uses a threshold on measured evidence.
 5. **Join key.** Entrez Gene ID, stored as a string. HGNC symbol and Ensembl are extra columns.
 6. **Approval status** comes from ChEMBL `max_phase`, not DrugBank.
 7. **Brain exposure on the evidence card.** The card shows only the *predicted* level before an
