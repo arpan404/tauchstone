@@ -78,7 +78,7 @@ Attack/Learn policies, replay benchmark, calibration. Output:
     suffixed `_descriptive` and whose `p_holm` holds the UNCORRECTED p-value —
     schema-valid, labelled descriptive, reported as descriptive only.
 19. Theta default comes from prereg `ranking.permutation_control_run`
-    (gold run since 0f4c619); `--permctl` overrides. Unrankable candidates
+    (gold run since 9faa921); `--permctl` overrides. Unrankable candidates
     (absent or < 3 ranking contexts in a cohort/adjusted query) fail with
     "not rankable" appended to the rule string (the row schema has no detail
     column).

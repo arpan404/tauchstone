@@ -16,7 +16,7 @@ preregistration was frozen.
 | 8 | permutation control | All signatures: 0/20 of the clinical pool's top 20 beat the selection-aware rank-matched null | Gold LINCS signatures only (15/20 beat it). Neither passes the strict "all top 20 at p < 0.05" gate. See "Permutation control numbers" below for exact definitions | ranking and permutation null only | the person |
 | 9 | development pool | Claim held for 4% of development drugs, 0% undecided before testing | Survive = top 25% / θ at the 25th null percentile, q = 0.7 (no-effect claim rate ≈ 5%) | development pool only (pool ranks 51–100) | the person |
 | 10 | development pool | — | λ = 0.5, λ_lookahead = 0, type priors from development survive rates | development pool only | rule in spec |
-| 11 | freeze | — | `preregistration.yaml` frozen, sha256 `21f7460e…bb8a3`, commit `8ed0885` | — | the person |
+| 11 | freeze | — | `preregistration.yaml` frozen, sha256 `21f7460e…bb8a3`, commit `e11071c` (earlier ID `8ed0885`) | — | the person |
 | 12 | after freeze | Benchmark code had ignored the preregistration and used code defaults; early-ending runs were scored wrong; the guard misparsed the file | Code fixes only. The frozen file was untouched | — | lead (bug fixes) |
 | 13 | after freeze | The truth table had been built while exposure extraction was still running. The final evidence build removed one misclassified assay (plaque binding read as brain/plasma Kp), which changed one brain-exposure outcome (resveratrol, benchmark pool) | Benchmark re-run on the final truth table under the same frozen rules. All results unchanged to 2 decimals. The earlier summary is kept as `benchmark_summary__before_exposure_fix.json` | — | lead (data fix) |
 
@@ -189,6 +189,7 @@ the frozen ranking, θ, λ, the truth table, the benchmark or any verdict, and e
 | Nov 8 | Live cell-line panel on Screen | No: counts from the frozen scoring, held-out scores never sent | Shown during a screen |
 | Nov 8 | Boundary sentence moved from every page to the PDF report | No | AGENTS.md rule 7 updated |
 | Nov 8 | Purity and sourcing check on the Drug page, from expert advice (vendor-sample purity from the Broad Drug Repurposing Hub sample QC, 2020) | No: display only, feeds no ranking, threshold, hidden test or verdict | Shown on the Drug page and in the report |
+| Nov 8 | Repository recreated; commit IDs changed. File contents, dates and the preregistration's SHA-256 did not. Earlier to current IDs: `docs/commit_id_map_2026-11-08.txt` | No | Recorded here |
 
 ### Preregistration v2 (Nov 8)
 

@@ -20,7 +20,7 @@ The preregistered primary analysis is the **46 drugs undecided before testing, o
 
 Read the [integrity log](docs/integrity_log.md) before interpreting the result. It records method changes, the development pool, code fixes after freeze and the final exposure-data correction. Its historical headline rounds random accuracy to 0.88. The website reads current figures from `/benchmark`.
 
-The [frozen preregistration](data/manifests/preregistration.yaml), committed at `8ed0885`, has SHA-256:
+The [frozen preregistration](data/manifests/preregistration.yaml), committed at `e11071c` (earlier ID `8ed0885`), has SHA-256:
 
 ```text
 21f7460e4319a7e30a24af50d7b3cfa2da84adbd0313b44250ed6bd1834bb8a3

@@ -149,7 +149,7 @@ export function About() {
           </section>
           <section aria-labelledby="about-freeze">
             <h3 id="about-freeze">Preregistration record</h3>
-            <p>Preregistration committed at <code>8ed0885</code>. SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
+            <p>Preregistration committed at <code>e11071c</code> (earlier ID <code>8ed0885</code>). SHA-256 of <code>data/manifests/preregistration.yaml</code>:</p>
             <code className="about-hash"><FingerprintIcon aria-hidden />{frozenPreregistrationSha256}</code>
             {data && <p className="text-[12.5px] text-ink-3">{mock ? 'Synthetic API/fixture hash' : 'API preregistration SHA-256'}: <code className="break-all">{data.preregistration_sha256}</code></p>}
           </section>

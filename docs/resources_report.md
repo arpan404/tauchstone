@@ -44,7 +44,7 @@ Perturb-Seqr includes LINCS L1000 chemical data, so agreement can reflect shared
 
 Run `uv run python -m pipelines.resources.collect`; replay without network with `uv run python -m pipelines.resources.collect --offline`. Defaults use $TS_DATA_DIR or ~/Data/tauchstone. Raw responses and request metadata live in raw/resources/{resource}/, named with UTC timestamp and SHA-256; query.json records the exact symbols and Entrez IDs. Processed resources/agreement.parquet has a provenance sidecar including input hashes, raw response hashes, parameters, git commit and output checksum. No randomness is used.
 
-Processing commit: `857d4b6cb5f66f15cd002af7ae77263142830b62-dirty`.
+Processing commit: `e99c4bfeb360d48394d8e2c8adf9bc1382480e89-dirty` (earlier ID `857d4b6c`).
 
 perturb_seqr: 16 cached artifacts; fetched_at 2026-11-07T21:35:57+00:00 to 2026-11-07T21:36:25+00:00.
 clue: 23 cached artifacts; fetched_at 2026-11-08T13:26:44+00:00 to 2026-11-08T13:40:38+00:00.

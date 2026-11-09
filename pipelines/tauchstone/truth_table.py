@@ -66,7 +66,7 @@ def require(path: Path) -> Path:
 
 
 def _default_permctl() -> str:
-    """Permutation-control run name from the preregistration (gold since 0f4c619)."""
+    """Permutation-control run name from the preregistration (gold since 9faa921)."""
     import yaml
 
     prereg = yaml.safe_load((MANIFESTS / "preregistration.yaml").read_text())

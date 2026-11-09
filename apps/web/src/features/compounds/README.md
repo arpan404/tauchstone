@@ -7,7 +7,7 @@ Exports:
 - `CompoundsView` / `MyCompoundsView` from `features/compounds` accepts optional `projectId` and `onBuildTests(result)`.
 - `api/mvpHooks.ts` exports `useProjectCandidates`, `useDrug`, `useDrugResources`, and `useLookup`. Query keys include project scope and filters. Errors stay errors; server requests never fall back to fixtures.
 
-B1 owns `App.tsx` and the Zustand store. Route My compounds to `CompoundsView`, pass the selected project's ID to all three views, and wire Compare/Report callbacks to the shell. Compare checkboxes currently use local component state because the store at `4416474` has no comparison set. Compare/Report are disabled until their routes appear in `STEPS` or callbacks are supplied. Candidate selection uses the existing `selectedCandidateId` and `evidence` step.
+B1 owns `App.tsx` and the Zustand store. Route My compounds to `CompoundsView`, pass the selected project's ID to all three views, and wire Compare/Report callbacks to the shell. Compare checkboxes currently use local component state because the store at `2f509d3` has no comparison set. Compare/Report are disabled until their routes appear in `STEPS` or callbacks are supplied. Candidate selection uses the existing `selectedCandidateId` and `evidence` step.
 
 C owns the molecule viewer. `EvidenceView` discovers `features/molecule/MoleculeViewer.tsx` with Vite's typed module glob and renders its named `MoleculeViewer` export when present. Otherwise it renders a plain inline placeholder. The B2 fixture has no invented molecular coordinates. Mol* remains lazy loaded for API-provided target structures.
 
@@ -24,7 +24,7 @@ VITE_USE_MOCK=1 bun run dev --port 5175
 
 Open `http://localhost:5175/src/features/compounds/preview.html`. This development-only entry previews all three actual components without changing B1's routes. Its navigation is a preview harness, not the production shell. The standard production build does not include this entry.
 
-For server mode, run the API with `TS_API_MOCK=1` and point Vite's `TS_API_URL` at it, then run `VITE_USE_MOCK=0 bun run dev`. At base commit `4416474`, `/projects/{id}/candidates` and `/drugs/{id}` return 404: backend tracks must land before an end-to-end server-mode check. No real data or scientific claims were verified on this machine.
+For server mode, run the API with `TS_API_MOCK=1` and point Vite's `TS_API_URL` at it, then run `VITE_USE_MOCK=0 bun run dev`. At base commit `2f509d3`, `/projects/{id}/candidates` and `/drugs/{id}` return 404: backend tracks must land before an end-to-end server-mode check. No real data or scientific claims were verified on this machine.
 
 Verified: `bun run build`, `bun run typecheck`, `bun run lint`, `bun run test`, `bun run check:api`. The suite has 67 passing tests, including filter request parameters, empty filter intersections, row/checkbox navigation, ranking-context combinations and time points, preregistration labels, action callbacks, lookup parsing/project scope, fixture ranks, and attack readiness. Existing lint warnings and bundle-size warnings remain.
 
