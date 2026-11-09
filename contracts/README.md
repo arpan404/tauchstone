@@ -11,15 +11,15 @@ Changes go through the engineering lead.
 ## Decisions taken (defaults; the science lead may revise them before the preregistration hash)
 
 1. **GSE173955** has no counts on GEO (TPM only, 8 AD + 10 non-AD), so it uses limma-trend on log2(TPM+1).
-2. **GSE53697** counts are partly non-integer, so they are rounded before DESeq2, and the rounding is logged.
+2. **GSE53697** counts are partly non-integer. The pipeline rounds them before DESeq2 and logs the rounding.
 3. **LINCS context split.** 30% of each compound's contexts are held out (always leaving ≥ 3 for
    ranking, seed 20261105). They never enter the ranking, the score scaling or θ.
 4. **Survive rules** are set per context type (algorithms.md §3). Signature-type contexts use a top-5%
-   rule, LINCS contexts use consensus ≤ θ, and brain exposure is a measured-evidence threshold.
-5. **Join key**: Entrez Gene ID as a string; HGNC symbol and Ensembl are extra columns.
+   rule, LINCS contexts use consensus ≤ θ, and brain exposure uses a threshold on measured evidence.
+5. **Join key.** Entrez Gene ID, stored as a string. HGNC symbol and Ensembl are extra columns.
 6. **Approval status** comes from ChEMBL `max_phase`, not DrugBank.
 7. **Brain exposure on the evidence card.** The card shows only the *predicted* level before an
    attack. Measured CNS exposure is a hidden validation context, so showing it up front would
    leak a hidden outcome.
-8. **Score sign.** All scores are negative = reversal, matching the demo script. The plan's
-   R(d) = mean of Z(−τ), Z(GSEA), Z(−cos) is the same ranking with the sign flipped.
+8. **Score sign.** For every score, negative = reversal, matching the demo script. The plan's
+   R(d) = mean of Z(−τ), Z(GSEA), Z(−cos) gives the same ranking with the sign flipped.

@@ -1,5 +1,5 @@
 # pipelines/geo
 
-WS2 Disease signatures (R). QC, probe->Entrez mapping, limma (GSE132903), DESeq2/limma-trend (held-out cohorts), cell-composition sensitivity. Output: processed/signatures/*.parquet + QC report.
+WS2 builds the disease signatures in R. It runs QC, maps probes to Entrez IDs, fits limma for GSE132903 and DESeq2 or limma-trend for the held-out cohorts, and runs the cell-composition sensitivity check. Output goes to processed/signatures/*.parquet, with a QC report.
 
 Read /AGENTS.md first.

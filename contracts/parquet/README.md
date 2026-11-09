@@ -1,8 +1,8 @@
 # Processed tables
 
 Everything lives under `$TS_DATA_DIR/processed/` (default `~/Data/tauchstone/processed`), and each
-file has a `<file>.provenance.json` sidecar. Gene IDs are strings. Scores: negative = reversal.
-Algorithms: [../algorithms.md](../algorithms.md).
+file has a `<file>.provenance.json` sidecar. Gene IDs are strings. A negative score means reversal.
+The methods are in [../algorithms.md](../algorithms.md).
 
 | File | Owner | Columns |
 |---|---|---|
@@ -17,7 +17,7 @@ Algorithms: [../algorithms.md](../algorithms.md).
 | `lincs/compounds.parquet` | WS3 | pert_id, pert_iname, canonical_smiles, inchi_key, n_signatures, n_contexts |
 | `lincs/context_split.parquet` | WS3 | pert_id, context_id, split (`ranking`/`held_out`) |
 | `scores/{name}__signature_scores.parquet` | WS3 | sig_id, pert_id, context_id, split, wtcs, ks, cosine, z_wtcs, z_ks, z_cosine, consensus |
-| `scores/{name}__context_scores.parquet` | WS3 | pert_id, context_id, split, cell_id, pert_idose, pert_itime, consensus, z_wtcs, z_ks, z_cosine — **server-only** (held-out rows) |
+| `scores/{name}__context_scores.parquet` | WS3 | pert_id, context_id, split, cell_id, pert_idose, pert_itime, consensus, z_wtcs, z_ks, z_cosine; **server-only** (held-out rows) |
 | `scores/{name}__compound_ranking.parquet` | WS3 | rank, pert_id, pert_iname, consensus_median, consensus_q25, consensus_q75, n_ranking_contexts, n_held_out_contexts, z_wtcs_median, z_ks_median, z_cosine_median |
 | `scores/{name}__permutation_null.parquet` | WS3 | perm_id, pert_id, consensus_median |
 | `scores/{name}__permutation_summary.parquet` | WS3 | pert_id, real_score, p_perm (θ in provenance) |
@@ -25,8 +25,8 @@ Algorithms: [../algorithms.md](../algorithms.md).
 | `evidence/brain_expression.parquet` | WS4 | entrez_id, context, kind (`region`/`cell_type`), ntpm, source_url |
 | `evidence/ad_association.parquet` | WS4 | ensembl_id, entrez_id, score, datatype_scores (json), source_url |
 | `evidence/approval.parquet` | WS4 | pert_id, chembl_id, max_phase, status, source_url |
-| `evidence/exposure.parquet` | WS4 | pert_id, level, measure (`kp`/`pampa_pe`/`csf`/`predicted_mpo`), value, unit, is_measured, summary, source_url — **measured rows are server-only until revealed** |
+| `evidence/exposure.parquet` | WS4 | pert_id, level, measure (`kp`/`pampa_pe`/`csf`/`predicted_mpo`), value, unit, is_measured, summary, source_url; **measured rows are server-only until revealed** |
 | `evidence/structures.parquet` | WS4 | uniprot, pdb_id, method, resolution_angstrom, local_path |
-| `tauchstone/truth_table.parquet` | WS5 | candidate_id, context_id, context_type, label, value, threshold, outcome, rule, tissue, region, platform, cell_id, pert_idose, pert_itime — **server-only** |
+| `tauchstone/truth_table.parquet` | WS5 | candidate_id, context_id, context_type, label, value, threshold, outcome, rule, tissue, region, platform, cell_id, pert_idose, pert_itime; **server-only** |
 | `tauchstone/benchmark_runs.parquet` | WS5 | policy, candidate_id, seed, step, context_id, p_survive_before, outcome, p_claim_before, p_claim_after, verdict |
 | `tauchstone/benchmark_summary.json` | WS5 | the `Benchmark` schema in openapi.yaml |
